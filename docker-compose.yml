@@ -1,0 +1,33 @@
+# Ports: 8080 Keycloak (auth) | 8000 main backend | 8001-8010 reserved for the ten team services
+# All values come from .env. Use the Makefile: it creates .env files and the shared network.
+name: gradian
+
+services:
+  keycloak:
+    image: keycloak/keycloak:26.0
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}   # keeps the token `iss` identical inside and outside docker
+      DEV_USER_PASSWORD: ${DEV_USER_PASSWORD}   # used by keycloak/gradian-realm.json
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    ports: ["${KEYCLOAK_PORT}:8080"]
+
+  backend:
+    build: .
+    env_file: .env
+    environment:
+      # inside docker, reach Keycloak by service name
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/gradian/protocol/openid-connect/certs
+      TEAM_URL: http://team{n}:{port}
+    volumes: [".:/app"]
+    ports: ["${BACKEND_PORT}:8000"]
+    depends_on: [keycloak]
+
+# Shared with every teams/teamN compose project, so the core can reach team services by name.
+networks:
+  default:
+    name: gradian
+    external: true

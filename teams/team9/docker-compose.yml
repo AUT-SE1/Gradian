@@ -1,0 +1,17 @@
+# Team 9: Smart university/major selection. Port 8009.
+# Run from the repo root with `make 9`, or alone here with `docker compose up --build`
+# (needs `docker network create gradian` once and a .env copied from .env.example).
+name: gradian-team9
+services:
+  team9:
+    build: .
+    env_file: .env
+    volumes: [".:/app"]
+    # Bound to localhost only: the service trusts the X-User-* headers the core gateway sets,
+    # so the outside world must reach it through the gateway (/api/teams/9/), never directly.
+    ports: ["127.0.0.1:8009:8009"]
+
+networks:
+  default:
+    name: gradian
+    external: true
