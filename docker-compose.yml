@@ -25,6 +25,7 @@ services:
     volumes: [".:/app"]
     ports: ["${BACKEND_PORT}:8000"]
     depends_on: [keycloak]
+    command: python manage.py runserver 0:8000
 
 # Shared with every teams/teamN compose project, so the core can reach team services by name.
 networks:
