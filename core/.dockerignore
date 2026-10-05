@@ -1,8 +1,6 @@
 .venv/
-db.sqlite3
+.git/
 __pycache__/
-.env
-build/
-staticfiles/
 .mypy_cache/
 .ruff_cache/
+db.sqlite3

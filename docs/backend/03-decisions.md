@@ -34,6 +34,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-13 | Django's test runner with an `integration` tag | Chosen |
 | DEC-14 | Project groups as Core tables with many-to-many membership | Assumed (Q2, Q3) |
 | DEC-15 | API and platform conventions | Proposed |
+| DEC-16 | ruff and strict mypy for code quality | Chosen |
 
 ## Decisions
 
@@ -52,6 +53,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Keycloak is the only place where credentials and identity attributes live. Mobile number is the username. Email, first name and last name are required profile attributes.
 - **Alternatives:** Django's own user model and sessions (rejected: cannot give single sign-on to separate group projects).
 - **Consequences:** Every service trusts Keycloak-issued tokens. Keycloak is another container to run and another configuration to version, which is why the realm is committed as a template.
+- **Implementation note (step 1):** DES-IDP-04 says a scope adds `gradian-core` to the token audience. The realm template attaches the audience mapper (and the `consultant_type` mapper) to the `gradian-web` client instead of defining a custom client scope, because a custom scope would mean the realm file also has to define Keycloak's built-in `profile`, `email` and `roles` scopes. The tokens are identical. This was written without a running Keycloak, so verify the import against Keycloak 26.0 early (also the service-account roles for the Admin API and the `briefRepresentation` parameter used by `sync_keycloak_users`); switch to a scope if the TA prefers one.
 
 ### DEC-03 PostgreSQL
 
@@ -68,6 +70,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Docker Compose runs the stack. A Makefile is the single interface for local operation. The Makefile only orders steps; the logic lives in scripts and `manage.py` commands.
 - **Alternatives:** `just` or a task runner (nicer syntax but another install); plain scripts (no discoverable interface); running everything by hand (error-prone for 20 teams).
 - **Consequences:** Make is not installed by default on Windows, so the underlying commands must stay runnable without it (DES-OPS-05). Targets are documented through `make help`.
+- **Implementation note (step 1):** The host needs only Docker, Compose v2 and make. `make lint`, `format`, `typecheck` and `test` run in the `tools` Compose service (profile `tools`, Python 3.13), not on the host. The design lists `test` as needing no containers; it still needs no running stack, but it does run inside a tools container.
 
 ### DEC-05 Login on a Keycloak-hosted themed page
 
@@ -92,6 +95,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** The Core Service keeps a profile row per user, keyed by Keycloak's `sub`. It is created and refreshed from token claims, with a sync command as a safety net.
 - **Alternatives:** Reading Keycloak on every request (slow, couples availability); a Keycloak event webhook (near-instant but needs a Keycloak plugin and more moving parts).
 - **Consequences:** A Keycloak change reaches the Core Service within one access-token lifetime. An event listener can be added later without changing the model.
+- **Refinement (step 1):** DES-ID-03 compares claims with the cache on every request. Taken literally, this undoes a `PATCH /me`: right after the write-through the user's still-valid token carries the old values and would overwrite the new cache. The profile therefore records `identity_synced_at`, and a token issued before that moment (`iat`, compared at one-second resolution) is not used to refresh identity fields. Tokens issued afterwards refresh the cache as designed.
 
 ### DEC-08 Identity edits written through to Keycloak first
 
@@ -100,6 +104,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Changes to identity fields made through `PATCH /api/v1/me` go to the Keycloak Admin API first; the cache is updated only after Keycloak accepts them.
 - **Alternatives:** Editing the cache and syncing later (the two could disagree, which breaks SYS-ID-03); making identity read-only in Core (simplest, but the profile-completion services need a way to edit).
 - **Consequences:** The `gradian-core` service account needs user-management rights in Keycloak, and a Keycloak outage makes identity edits fail with 502.
+- **Implementation note (step 1):** `PATCH /me` accepts `email`, `first_name` and `last_name` (written through) and the Core-owned `field_of_study`, `avatar_url`, `bio`. It does not accept `mobile` or `role`: the mobile number is the login and no verification step exists, and roles are assigned by an administrator in Keycloak. An email already used in the realm returns 409 `identity_conflict`.
 
 ### DEC-09 Panel from a single realm role
 
@@ -140,6 +145,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Tests are Django `TestCase` classes. Those that need the running stack are tagged `integration`; `make test` excludes the tag and `make test-integration` selects it. No additional test framework is required.
 - **Alternatives:** pytest with markers (more features, an extra dependency).
 - **Consequences:** Fast tests replace Keycloak with a fake key set. Integration tests use a test-only client, so DES-IDP-09 exists only outside production.
+- **Implementation note (step 1):** Fast tests run on in-memory SQLite through `gradian.settings_test`, so `make test` needs no containers and no `.env`. Integration tests run inside the `core` container against PostgreSQL and the real Keycloak.
 
 ### DEC-14 Project groups as Core tables
 
@@ -156,3 +162,11 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Versioned base path `/api/v1/`; one error shape with English codes and Persian messages; OpenAPI 3 generated from code; structured JSON logs; Persian locale and Tehran time zone; configurable CORS and rate limits.
 - **Alternatives:** Unversioned paths (breaking changes would hit every group at once); English-only messages (the product is Persian).
 - **Consequences:** Removing or renaming anything under `/api/v1/` after groups integrate needs a new version.
+
+### DEC-16 ruff and strict mypy
+
+- **Status:** Chosen (requested for the project; not a requirement).
+- **Realizes:** DES-OPS-02, DES-OPS-04 (the `lint`, `format` and `typecheck` targets), supports SYS-OPS-04.
+- **Decision:** ruff is the only linter and formatter; mypy runs in strict mode with `django-stubs` and `djangorestframework-stubs` over the Core Service, its tests and `scripts/`. Both are configured in `core/pyproject.toml` and run through `make lint`, `make format` and `make typecheck`. The rules and the workflow are in `CONTRIBUTING.md`.
+- **Alternatives:** black, isort and flake8 (three tools and three configurations instead of one); pyright (faster, but the Django plugin is stronger in mypy).
+- **Consequences:** Dev tools are pinned in `core/requirements-dev.txt`, separate from runtime dependencies. They run in a `tools` Compose service (the `dev` stage of `core/Dockerfile`), so no Python is needed on the host (see the DEC-04 note). Every function is annotated and `Any` stays at the edges. `django-stubs-ext` is a runtime dependency so generic annotations like `ModelAdmin[Profile]` work. A change that fails `make check` is not merged.

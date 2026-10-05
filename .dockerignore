@@ -1,6 +1,0 @@
-.env
-.venv/
-.git/
-db.sqlite3
-__pycache__/
-teams/
