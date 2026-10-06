@@ -1,0 +1,114 @@
+{
+  "realm": "gradian",
+  "displayName": "Gradian",
+  "enabled": true,
+  "sslRequired": "external",
+
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": false,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "verifyEmail": false,
+  "rememberMe": true,
+
+  "accessTokenLifespan": 600,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 2592000,
+  "ssoSessionMaxLifespanRememberMe": 2592000,
+
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "maxFailureWaitSeconds": 900,
+  "waitIncrementSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fa"],
+  "defaultLocale": "fa",
+
+  "roles": {
+    "realm": [
+      {"name": "student", "description": "Student panel"},
+      {"name": "consultant", "description": "Consultant and top-ranker panel (see attribute consultant_type)"},
+      {"name": "professor", "description": "Professor panel"},
+      {"name": "admin", "description": "Admin panel"},
+      {"name": "service", "description": "Machine clients (group services) calling the Core Service"}
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "gradian-web",
+      "name": "Gradian frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["${FRONTEND_URL}/auth/callback"],
+      "webOrigins": ["${FRONTEND_URL}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${FRONTEND_URL}/"
+      },
+      "protocolMappers": [
+        {
+          "name": "gradian-core-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "gradian-core",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "consultant_type",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "consultant_type",
+            "claim.name": "consultant_type",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "gradian-core",
+      "name": "Gradian Core Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "${KEYCLOAK_CORE_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+
+  "users": [
+    {
+      "username": "service-account-gradian-core",
+      "enabled": true,
+      "serviceAccountClientId": "gradian-core",
+      "clientRoles": {
+        "realm-management": ["view-users", "query-users", "manage-users", "view-realm"]
+      }
+    }
+  ]
+}

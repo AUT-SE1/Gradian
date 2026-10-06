@@ -1,0 +1,54 @@
+{
+  "attributes": [
+    {
+      "name": "username",
+      "displayName": "${username}",
+      "validations": {
+        "pattern": {"pattern": "^09\\d{9}$", "error-message": "شماره موبایل باید به شکل 09123456789 باشد."}
+      },
+      "permissions": {"view": ["admin", "user"], "edit": ["admin"]}
+    },
+    {
+      "name": "email",
+      "displayName": "${email}",
+      "required": {"roles": ["admin", "user"]},
+      "validations": {"email": {}, "length": {"max": 254}},
+      "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
+    },
+    {
+      "name": "firstName",
+      "displayName": "${firstName}",
+      "required": {"roles": ["admin", "user"]},
+      "validations": {
+        "length": {"min": 1, "max": 100},
+        "pattern": {"pattern": "^[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام فقط می‌تواند شامل حروف باشد."}
+      },
+      "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
+    },
+    {
+      "name": "lastName",
+      "displayName": "${lastName}",
+      "required": {"roles": ["admin", "user"]},
+      "validations": {
+        "length": {"min": 1, "max": 100},
+        "pattern": {"pattern": "^[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام خانوادگی فقط می‌تواند شامل حروف باشد."}
+      },
+      "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
+    },
+    {
+      "name": "mobile",
+      "displayName": "Mobile number",
+      "required": {"roles": ["admin"]},
+      "validations": {
+        "pattern": {"pattern": "^09\\d{9}$", "error-message": "شماره موبایل باید به شکل 09123456789 باشد."}
+      },
+      "permissions": {"view": ["admin", "user"], "edit": ["admin"]}
+    },
+    {
+      "name": "consultant_type",
+      "displayName": "Consultant type",
+      "validations": {"options": {"options": ["consultant", "top_ranker"]}},
+      "permissions": {"view": ["admin", "user"], "edit": ["admin"]}
+    }
+  ]
+}

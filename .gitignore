@@ -5,8 +5,12 @@ __pycache__/
 *.sqlite3
 
 # Environment files
+build/
+staticfiles/
+.mypy_cache/
+.ruff_cache/
+
 .env
-**/.env
 .env.*
 **/.env.*
 !.env.example
