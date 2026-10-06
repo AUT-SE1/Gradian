@@ -1,0 +1,29 @@
+name: gradian-frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+      VITE_DEV_PROXY_TARGET: ${VITE_DEV_PROXY_TARGET:-http://core:8000}
+      VITE_DEFAULT_LANGUAGE: ${VITE_DEFAULT_LANGUAGE:-fa}
+      VITE_DEFAULT_THEME: ${VITE_DEFAULT_THEME:-light}
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+    networks:
+      - gradian
+
+# The backend Compose project creates this shared network.
+# Start the backend stack first, or create it once with: docker network create gradian
+networks:
+  gradian:
+    external: true
+    name: gradian
+
+volumes:
+  frontend_node_modules:
