@@ -1,6 +1,9 @@
+.git
+.gitignore
 .env
+**/.env
 .venv/
-.git/
-db.sqlite3
 __pycache__/
-teams/
+*.py[cod]
+*.sqlite3
+frontend/
