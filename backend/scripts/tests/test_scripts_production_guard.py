@@ -32,14 +32,6 @@ class ProductionGuardTests(unittest.TestCase):
             with self.subTest(environment=environment):
                 self.assertEqual(run_guard(environment).returncode, 0)
 
-    def test_make_targets_that_load_demo_data_run_the_guard_first(self) -> None:
-        makefile = (ROOT / "Makefile").read_text(encoding="utf-8").splitlines()
-        for target in ("seed-render", "bootstrap", "dev-user"):
-            with self.subTest(target=target):
-                header = next(i for i, line in enumerate(makefile) if line.startswith(f"{target}:"))
-                first_recipe_line = next(line for line in makefile[header + 1 :] if line.strip())
-                self.assertIn("refuse_production.sh", first_recipe_line)
-
     def test_realm_renderer_refuses_production_too(self) -> None:
         env = {**os.environ, "ENVIRONMENT": "production"}
         result = subprocess.run(

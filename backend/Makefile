@@ -16,11 +16,19 @@ RUN_TOOLS   = $(COMPOSE) run --rm -T --user $(HOST_USER) -e HOME=/tmp
 CORE_TOOLS  = $(RUN_TOOLS) tools
 ROOT_TOOLS  = $(RUN_TOOLS) -w /repo tools
 PY_PATHS   := . ../scripts
-BASE_DEPS  := $(CORE_ENV) network
-TOOLS_DEPS := $(BASE_DEPS) tools-image
+
+COMPOSE_FILE := docker-compose.yml
+TOOLS_INPUTS := $(COMPOSE_FILE) core/Dockerfile \
+                $(wildcard core/requirements*.txt) \
+                $(wildcard core/pyproject.toml) \
+                $(wildcard core/poetry.lock) \
+                $(wildcard core/setup.py) $(wildcard core/setup.cfg)
 
 TOOLS_STAMP := build/.tools-image
 REALM_JSON  := build/realm-gradian.json
+
+BASE_DEPS  := $(CORE_ENV) network
+TOOLS_DEPS := $(BASE_DEPS) tools-image
 
 ifeq ($(TEAMS),all)
   SELECTED := $(ALL_TEAMS)
@@ -57,9 +65,9 @@ help: ## Show this help
 
 env: $(CORE_ENV) ## Create .env from .env.example if missing (never overwrites)
 
-tools-image: $(TOOLS_STAMP) ## Build the tools image (only rebuilds when inputs change)
+tools-image: $(TOOLS_STAMP) ## Build the tools image (rebuilds only when its inputs change)
 
-$(TOOLS_STAMP): $(CORE_ENV) tools/Dockerfile $(wildcard tools/**)
+$(TOOLS_STAMP): $(TOOLS_INPUTS)
 	@mkdir -p build
 	$(COMPOSE) build tools
 	@touch $@
