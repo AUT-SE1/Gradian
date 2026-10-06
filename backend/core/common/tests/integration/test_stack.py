@@ -15,7 +15,7 @@ class StackTests(IntegrationTestCase):
 
     def test_keycloak_issuer_matches_what_core_expects(self) -> None:
         """If KC_HOSTNAME and KEYCLOAK_ISSUER disagree, every token would be refused."""
-        realm_url = f"{settings.KEYCLOAK_INTERNAL_URL}/realms/{settings.KEYCLOAK_REALM}"
+        realm_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}"
         url = f"{realm_url}/.well-known/openid-configuration"
         document = requests.get(url, timeout=5).json()
         self.assertEqual(document["issuer"], settings.KEYCLOAK_ISSUER)

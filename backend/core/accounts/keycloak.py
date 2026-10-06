@@ -73,14 +73,14 @@ class KeycloakAdminClient:
 
     @property
     def _admin_base(self) -> str:
-        return f"{settings.KEYCLOAK_INTERNAL_URL}/admin/realms/{settings.KEYCLOAK_REALM}"
+        return f"{settings.KEYCLOAK_URL}/admin/realms/{settings.KEYCLOAK_REALM}"
 
     def _access_token(self) -> str:
         with self._lock:
             if self._token and time.monotonic() < self._expires_at - 30:
                 return self._token
             url = (
-                f"{settings.KEYCLOAK_INTERNAL_URL}/realms/{settings.KEYCLOAK_REALM}"
+                f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}"
                 "/protocol/openid-connect/token"
             )
             try:

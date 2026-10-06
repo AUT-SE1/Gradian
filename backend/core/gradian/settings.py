@@ -75,8 +75,8 @@ DATABASES = {
         "NAME": env.require("POSTGRES_DB"),
         "USER": env.require("POSTGRES_USER"),
         "PASSWORD": env.require("POSTGRES_PASSWORD"),
-        "HOST": env.get("POSTGRES_HOST", "localhost"),
-        "PORT": env.get("POSTGRES_PORT", "5432"),
+        "HOST": env.require("POSTGRES_HOST"),
+        "PORT": env.require("POSTGRES_PORT"),
     }
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -98,10 +98,10 @@ if not KEYCLOAK_ISSUER.endswith(f"/realms/{KEYCLOAK_REALM}"):
     raise ImproperlyConfigured(
         f"KEYCLOAK_ISSUER must end with /realms/{KEYCLOAK_REALM}, got {KEYCLOAK_ISSUER!r}"
     )
-KEYCLOAK_INTERNAL_URL = env.get(
-    "KEYCLOAK_INTERNAL_URL", KEYCLOAK_ISSUER.removesuffix(f"/realms/{KEYCLOAK_REALM}")
+KEYCLOAK_URL = env.get(
+    "KEYCLOAK_URL", KEYCLOAK_ISSUER.removesuffix(f"/realms/{KEYCLOAK_REALM}")
 ).rstrip("/")
-KEYCLOAK_JWKS_URL = f"{KEYCLOAK_INTERNAL_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
+KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
 KEYCLOAK_WEB_CLIENT_ID = env.get("KEYCLOAK_WEB_CLIENT_ID", "gradian-web")
 # The audience every token must carry, and the client whose service account calls the Admin API.
 KEYCLOAK_CORE_CLIENT_ID = env.get("KEYCLOAK_CORE_CLIENT_ID", "gradian-core")

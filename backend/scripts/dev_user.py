@@ -148,8 +148,8 @@ def main() -> int:
             consultant_type=args.consultant_type,
         )
         admin = Admin(
-            setting("KEYCLOAK_INTERNAL_URL", "http://keycloak:8080"),
-            setting("KEYCLOAK_REALM", "gradian"),
+            setting("KEYCLOAK_URL"),
+            setting("KEYCLOAK_REALM"),
             setting("KEYCLOAK_ADMIN_USER"),
             setting("KEYCLOAK_ADMIN_PASSWORD"),
         )

@@ -163,13 +163,13 @@ ps: $(ALL_ENVS) ## Show containers for core and all teams
 logs: ## Follow core logs
 	$(COMPOSE) logs -f
 
-shell: ## Open a Django shell in the core container
+shell: up-core ## Open a Django shell in the core container
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py shell
 
-manage: ## Run manage.py in the core container: make manage CMD="sync_keycloak_users --dry-run"
+manage: up-core ## Run manage.py in the core container: make manage CMD="sync_keycloak_users --dry-run"
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py $(CMD)
 
-test-integration: ## Tests tagged "integration", against the running stack
+test-integration: up-core ## Tests tagged "integration", against the running stack
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) $(INTEGRATION_CMD)
 
 $(ALL_ENVS): %.env: | %.env.example
