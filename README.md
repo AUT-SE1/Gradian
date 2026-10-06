@@ -52,3 +52,20 @@ Run one team alone: `cd teams/teamN && docker compose up --build` (needs `docker
 
 ## Test
     python manage.py test
+
+
+## Frontend
+
+فرانت‌اند React/TypeScript در پوشه‌ی `frontend/` قرار دارد و با Compose ریشه همراه Keycloak و بک‌اند اجرا می‌شود:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- Keycloak: http://localhost:8080
+
+راهنمای اجرای فرانت‌اند: [`frontend/README.md`](frontend/README.md)  
+راهنمای معماری و قرارداد استفاده از AI: [`frontend/GRADIAN_FRONTEND_PROJECT_GUIDE.md`](frontend/GRADIAN_FRONTEND_PROJECT_GUIDE.md)
