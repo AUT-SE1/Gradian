@@ -1,6 +1,7 @@
 # Contributing
 
-Rules for working on the Core Service (`core/`) and the repository scripts (`scripts/`).
+Rules for working on the Core Service (`core/`) and the repository scripts (`scripts/`), both in the
+`backend/` folder of the monorepo. Run `make` from `backend/`.
 Requirements, design and decisions live in [`docs/backend/`](docs/backend/); this file is only
 about how we write and check code.
 
@@ -80,8 +81,10 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
   remain; we turn that on once the system is complete.
 - Only tag a test with a requirement it really verifies. A test that exercises part of a
   requirement belongs to the test-plan level it matches (see `docs/backend/04-test-plan.md`).
-- A test must not depend on the contents of your `.env`. Tests that start a subprocess point
-  `DOTENV_FILE` at a file that does not exist.
+- A test must not depend on the contents of your `.env`.
+- Do not write a test that only restates a setting or the realm file: it duplicates the decision it
+  checks and breaks whenever that decision changes. Behaviour that Keycloak or Django implements is
+  marked `EXT` in the test plan instead (DEC-17). Test the code we write on top of it.
 
 ## Conventions
 

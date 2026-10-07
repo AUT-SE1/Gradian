@@ -19,7 +19,7 @@ def claims(**overrides: object) -> dict[str, object]:
     return {k: v for k, v in base.items() if v is not None}
 
 
-@covers("SYS-ID-02")
+@covers("SYS-ID-01", "SYS-ID-02")
 class IdentityFromClaimsTests(SimpleTestCase):
     def test_complete_claims_give_a_normalized_identity(self) -> None:
         identity = identity_from_claims(claims(), "student")
@@ -53,6 +53,7 @@ class IdentityFromClaimsTests(SimpleTestCase):
         self.assertEqual(identity.consultant_type, "")
 
 
+@covers("SYS-ID-01")
 class NameValidationTests(SimpleTestCase):
     def test_valid_names(self) -> None:
         for name in ["علی", "سارا", "می\u200cخواهم", "Ali Reza", "ا" * 100]:

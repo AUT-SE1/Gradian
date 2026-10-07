@@ -173,7 +173,7 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | SYS-NFR-05 | Language: the system defaults to Persian and the Tehran time zone; user-facing messages are Persian. | N-8 | Inferred (Persian UI) |
 | SYS-NFR-06 | Observability: sign-in provisioning, role failures and identity sync changes are logged. | N-7 | Proposed |
 | SYS-NFR-07 | Documentation: a README gets a newcomer to a running system, and an integration guide tells a group how to connect a service. | N-3, N-6 | Proposed |
-| SYS-NFR-08 | Verifiability: every requirement in this document is covered by at least one automated or scripted check, and a report lists any that are not. | N-7 | Proposed |
+| SYS-NFR-08 | Verifiability: every requirement in this document is covered by at least one automated or scripted check, or is marked in the test plan as relying on an external implementation, and a report lists any that are neither. | N-7 | Proposed |
 
 ## 5. Acceptance criteria
 

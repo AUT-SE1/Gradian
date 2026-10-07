@@ -25,7 +25,6 @@ TOOLS_INPUTS := $(COMPOSE_FILE) core/Dockerfile \
                 $(wildcard core/setup.py) $(wildcard core/setup.cfg)
 
 TOOLS_STAMP := build/.tools-image
-REALM_JSON  := build/realm-gradian.json
 
 BASE_DEPS  := $(CORE_ENV) network
 TOOLS_DEPS := $(BASE_DEPS) tools-image
@@ -104,10 +103,7 @@ schema: $(TOOLS_DEPS) ## Export and validate the OpenAPI schema to build/openapi
 migrations: $(TOOLS_DEPS) ## Create migrations after a model change
 	$(CORE_TOOLS) python manage.py makemigrations
 
-seed-render: $(REALM_JSON) ## Render build/realm-gradian.json, the Keycloak realm import file
-	@:
-
-$(REALM_JSON): $(BASE_DEPS) scripts/render_realm.py
+seed-render: $(TOOLS_DEPS) ## Render build/realm-gradian.json, the Keycloak realm import file
 	@./scripts/refuse_production.sh seed-render
 	@mkdir -p build
 	$(ROOT_TOOLS) python scripts/render_realm.py

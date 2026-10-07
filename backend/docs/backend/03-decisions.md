@@ -35,6 +35,9 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-14 | Project groups as Core tables with many-to-many membership | Assumed (Q2, Q3) |
 | DEC-15 | API and platform conventions | Proposed |
 | DEC-16 | ruff and strict mypy for code quality | Chosen |
+| DEC-17 | Rely on external components for behaviour they own | Chosen |
+| DEC-18 | One address for Keycloak, for browsers and containers | Chosen |
+| DEC-19 | Monorepo with `backend/` and `frontend/` | Chosen |
 
 ## Decisions
 
@@ -70,7 +73,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Docker Compose runs the stack. A Makefile is the single interface for local operation. The Makefile only orders steps; the logic lives in scripts and `manage.py` commands.
 - **Alternatives:** `just` or a task runner (nicer syntax but another install); plain scripts (no discoverable interface); running everything by hand (error-prone for 20 teams).
 - **Consequences:** Make is not installed by default on Windows, so the underlying commands must stay runnable without it (DES-OPS-05). Targets are documented through `make help`.
-- **Implementation note (step 1):** The host needs only Docker, Compose v2 and make. `make lint`, `format`, `typecheck` and `test` run in the `tools` Compose service (profile `tools`, Python 3.13), not on the host. The design lists `test` as needing no containers; it still needs no running stack, but it does run inside a tools container.
+- **Implementation note (step 1):** The host needs only Docker, Compose v2 and make. `make lint`, `format`, `typecheck` and `test` run in the `tools` Compose service (profile `tools`, Python 3.13), not on the host. The design lists `test` as needing no containers; it still needs no running stack, but it does run inside a tools container. Keycloak runs as root in `docker-compose.yml` so that its named data volume is writable; that is for local development only.
 
 ### DEC-05 Login on a Keycloak-hosted themed page
 
@@ -170,3 +173,25 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** ruff is the only linter and formatter; mypy runs in strict mode with `django-stubs` and `djangorestframework-stubs` over the Core Service, its tests and `scripts/`. Both are configured in `core/pyproject.toml` and run through `make lint`, `make format` and `make typecheck`. The rules and the workflow are in `CONTRIBUTING.md`.
 - **Alternatives:** black, isort and flake8 (three tools and three configurations instead of one); pyright (faster, but the Django plugin is stronger in mypy).
 - **Consequences:** Dev tools are pinned in `core/requirements-dev.txt`, separate from runtime dependencies. They run in a `tools` Compose service (the `dev` stage of `core/Dockerfile`), so no Python is needed on the host (see the DEC-04 note). Every function is annotated and `Any` stays at the edges. `django-stubs-ext` is a runtime dependency so generic annotations like `ModelAdmin[Profile]` work. A change that fails `make check` is not merged.
+
+### DEC-17 Rely on external components for behaviour they own
+
+- **Status:** Chosen (requested by the project owner).
+- **Realizes:** supports SYS-NFR-08, changes how SYS-AUTH-01, 04, 05, 09, SYS-ID-01, SYS-OPS-06, SYS-NFR-01 and SYS-NFR-05 are verified.
+- **Decision:** Where Keycloak or Django implements a behaviour and tests it themselves (sign-in, remember me, brute-force lockout, registration being off, HTTPS hardening, default language and time zone), we configure the component and mark the requirement `EXT` in the test plan. We do not write an automated test that restates the configuration. The MANUAL checklist confirms the behaviour once on a clean machine. SYS-NFR-08 was reworded to allow this: a requirement needs a test or an `EXT` mark.
+- **Alternatives:** Test the configuration (tests duplicate the settings, and every new required variable had to be added to the tests as well); an integration test per behaviour against the real Keycloak (valuable but slow, and it tests Keycloak, not our code).
+- **Consequences:** Fewer tests to maintain. Code we write on top of these components stays tested. A mistake in our configuration is caught by the manual checklist and by use, not by `make test`. `scripts/req_coverage.py` lists the externally relied-on requirements so the reliance is visible.
+
+### DEC-18 One address for Keycloak
+
+- **Status:** Chosen (made by the project owner).
+- **Realizes:** DES-IDP-01, DES-IDP-06; replaces the separate public and internal Keycloak URLs.
+- **Decision:** `KEYCLOAK_URL` (default `http://keycloak:8080`) is the only Keycloak address. The Core Service and the tools use it, and Compose passes it to Keycloak as `KC_HOSTNAME`, so the `iss` claim of every token is `KEYCLOAK_URL/realms/<realm>` whichever address a client used to fetch the token. `KEYCLOAK_ISSUER` still exists and must equal that value.
+- **Alternatives:** A public and an internal URL (two variables that must agree, and a mismatch makes every token invalid); deriving the issuer from `KEYCLOAK_URL` (one variable fewer, proposed in the review).
+- **Consequences:** The host name `keycloak` must resolve on every machine whose browser talks to Keycloak, so add `127.0.0.1 keycloak` to the hosts file, or the console and the browser sign-in redirect to an address that does not resolve. Commands such as `curl` against `localhost:8080` still work. The published port must stay 8080 because the port is part of the URL.
+
+### DEC-19 Monorepo
+
+- **Status:** Chosen (made by the project owner).
+- **Decision:** The repository root holds `backend/` (everything in this document set, with its own Makefile, Compose file and `.env`) and `frontend/` (React and TypeScript). Commands are run from `backend/`. The repository layout drawing in 02 Design describes the contents of `backend/`.
+- **Consequences:** Backend tooling and the Docker `tools` service see only `backend/`. A root README should point to both parts. Contracts between the two (sign-in flow, role names, API base path) are decided in the backend documents and recorded in the handoff.

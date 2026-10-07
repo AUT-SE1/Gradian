@@ -42,6 +42,26 @@ class RequirementCoverageTests(unittest.TestCase):
         required = set(req_coverage.required_ids(ROOT / "docs" / "backend" / "01-requirements.md"))
         self.assertEqual(sorted(req_coverage.covered_ids(ROOT) - required), [])
 
+    def test_external_marks_are_read_from_the_test_plan(self) -> None:
+        external = req_coverage.external_ids(ROOT / "docs" / "backend" / "04-test-plan.md")
+        self.assertIn("SYS-AUTH-01", external)
+        self.assertNotIn("SYS-AUTH-02", external)
+
+    def test_external_marks_only_name_requirements_that_exist(self) -> None:
+        required = set(req_coverage.required_ids(ROOT / "docs" / "backend" / "01-requirements.md"))
+        external = req_coverage.external_ids(ROOT / "docs" / "backend" / "04-test-plan.md")
+        self.assertEqual(sorted(external - required), [])
+
+    def test_only_the_level_column_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            plan = Path(tmp) / "plan.md"
+            plan.write_text(
+                "| SYS-AUTH-01 | EXT, MANUAL | text |\n"
+                "| SYS-AUTH-02 | UNIT | the word EXT here does not count |\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(req_coverage.external_ids(plan), {"SYS-AUTH-01"})
+
     def test_a_gap_is_reported_and_strict_fails(self) -> None:
         script = ROOT / "scripts" / "req_coverage.py"
         loose = subprocess.run([str(script)], capture_output=True, text=True, check=False)
@@ -49,5 +69,7 @@ class RequirementCoverageTests(unittest.TestCase):
             [str(script), "--strict"], capture_output=True, text=True, check=False
         )
         self.assertEqual(loose.returncode, 0, loose.stdout)
-        self.assertIn("without a test", loose.stdout)  # not every requirement is built yet
+        self.assertIn(
+            "neither a test nor an EXT mark", loose.stdout
+        )  # not every requirement is built yet
         self.assertEqual(strict.returncode, 1)

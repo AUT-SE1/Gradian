@@ -16,6 +16,9 @@ This plan says how each requirement in 01 is verified and how the tests are set 
 | STATIC | Static and drift checks | No | `make lint`, `make seed-check`, CI | Lint, formatting, missing migrations, fixture drift, OpenAPI compatibility, secret scan |
 | MANUAL | Acceptance checklist | Yes | A person, on a clean machine | Setup from scratch, role walkthroughs, the commands themselves |
 | PERF | Performance | Yes | Occasional manual run | Latency under the load in SYS-NFR-02 |
+| EXT | Relied on | No | Review of the configuration, and the MANUAL checklist | Behaviour that an external component (Keycloak, Django) implements and documents. We own only how it is configured, and we do not write an automated test for it (DEC-17) |
+
+**Relying on an external component.** A test that only restates our own configuration, such as asserting the value of a setting or the contents of the realm file, duplicates the decision it checks and fails whenever that decision legitimately changes. For behaviour that Keycloak or Django provides and tests itself, the traceability tables below mark the requirement `EXT`, name the component, and leave confirmation to the MANUAL checklist, which runs once on a clean machine. A requirement marked `EXT` counts as covered in `scripts/req_coverage.py`, which lists it separately so the reliance stays visible. Code we write on top of the component, such as claim validation or error messages, is still tested.
 
 ## 2. How the tests are set up and run
 
@@ -62,7 +65,7 @@ CI runs `lint`, `seed-check` and `test` on every push. A second job starts the C
 
 ### 2.5 Linking tests to requirements
 
-A helper decorator `@covers("SYS-AUTH-02", "SYS-AUTH-07")` adds the tags `req-SYS-AUTH-02` and so on to a test. A script `scripts/req_coverage.py` reads the requirement IDs from `01-requirements.md`, collects the tags from the test code, and lists any requirement with no test (SYS-NFR-08). It runs in `make lint` and in CI.
+A helper decorator `@covers("SYS-AUTH-02", "SYS-AUTH-07")` adds the tags `req-SYS-AUTH-02` and so on to a test. A script `scripts/req_coverage.py` reads the requirement IDs from `01-requirements.md`, collects the tags from the test code and the `EXT` marks from section 3 below, and lists any requirement with neither a test nor an `EXT` mark, and separately those that rely only on an external implementation (SYS-NFR-08). It runs in `make lint` and in CI.
 
 ## 3. Traceability: requirement to verification
 
@@ -72,15 +75,15 @@ Levels are those in section 1. A requirement may be checked at several levels.
 
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
-| SYS-AUTH-01 | INTEG, MANUAL | A real token is obtained for a seeded user with mobile number and password; a wrong password is refused; the login page shows the expected fields |
+| SYS-AUTH-01 | EXT, MANUAL | Keycloak authenticates the mobile number and password. Manual: a seeded user of each role signs in, a wrong password is refused, the login page shows the expected fields |
 | SYS-AUTH-02 | UNIT, API, INTEG | Role resolver for each single role and for a top-ranker; `/me` returns the right `panel` and `home_path`; a seeded user of each role gets the AC-ROUTE panel from a real token |
 | SYS-AUTH-03 | INTEG | A token from one sign-in is accepted by the Core Service and by the reference group service |
-| SYS-AUTH-04 | INTEG, MANUAL | Realm configuration (read through the Admin API) shows the remember-me and idle session settings; manual check of a remembered session |
-| SYS-AUTH-05 | INTEG | A temporary user is locked after 5 wrong passwords; the error is identical for an unknown mobile number and a wrong password |
+| SYS-AUTH-04 | EXT, MANUAL | Keycloak implements remember me and the session lifetimes. Manual: a remembered session survives closing the browser, a normal one does not |
+| SYS-AUTH-05 | EXT, MANUAL | Keycloak's brute-force protection locks an account after repeated failures and gives one error for every kind of failure. Manual: lock a temporary user, and compare the error for an unknown number |
 | SYS-AUTH-06 | API, MANUAL | `/auth/config` returns the end-session and landing URLs; the logout icon ends the session and returns to the landing page |
 | SYS-AUTH-07 | UNIT, API | No panel role gives 403 `role_not_assigned`; two panel roles give 403 `ambiguous_role`; `offline_access` is ignored |
 | SYS-AUTH-08 | API, INTEG | An inactive profile gets 403 `account_disabled`; a disabled Keycloak user cannot sign in; the sync command deactivates users deleted in Keycloak |
-| SYS-AUTH-09 | INTEG | Registration and password-reset flows are unavailable in the realm |
+| SYS-AUTH-09 | EXT, MANUAL | The realm has registration and password reset switched off. Manual: the login page offers neither |
 | SYS-ACC-01 | API | The anonymous column of the access matrix (section 4) |
 | SYS-ACC-02 | API, INTEG | The whole access matrix; a real-token spot check for one user per role |
 
@@ -88,7 +91,7 @@ Levels are those in section 1. A requirement may be checked at several levels.
 
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
-| SYS-ID-01 | INTEG | Creating a Keycloak user without email, names or mobile fails; every seeded user is complete |
+| SYS-ID-01 | UNIT, EXT | The Core Service refuses a token that lacks a required identity claim (403 `incomplete_identity`); Keycloak's user profile stops an incomplete account from being created |
 | SYS-ID-02 | API, INTEG | A first request creates a profile; a changed claim updates the cache in the same request; after an email change in Keycloak, the next token shows it; `sync_keycloak_users --dry-run` reports a planted mismatch and writes nothing, a real run fixes it |
 | SYS-ID-03 | API | Identity fields are read-only in serializers and in the Django admin |
 | SYS-ID-04 | UNIT | Normalizer table: Persian digits, Arabic digits, `+98`, `0098`, too short, wrong prefix |
@@ -133,20 +136,20 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | SYS-OPS-03 | MANUAL | `make test` passes with no containers running; `make test-integration` runs only tagged tests |
 | SYS-OPS-04 | MANUAL | `make help` lists every target; the same sequence works on two different machines |
 | SYS-OPS-05 | STATIC | A script checks that `.env.example` lists every variable the settings read; a secret scan finds nothing in the repository |
-| SYS-OPS-06 | UNIT | Starting with a required variable missing fails with a message naming it |
+| SYS-OPS-06 | UNIT, EXT | The helper that reads a required variable raises an error naming it; that the settings module fails at startup is Django's behaviour |
 
 ### Quality attributes
 
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
-| SYS-NFR-01 | API, STATIC | Captured logs and error bodies contain no token or password; `manage.py check --deploy` passes for production settings; the rate limit returns 429 past the configured limit |
+| SYS-NFR-01 | API, EXT | Captured logs and error bodies contain no token or password; the rate limit returns 429 past the configured limit. HTTPS and the standard hardening are Django's security settings; `manage.py check --deploy` can be run by hand with production settings |
 | SYS-NFR-02 | PERF | At 50 concurrent users, `/me` and `/panel/services` stay within 300 ms at the 95th percentile |
 | SYS-NFR-03 | API, INTEG | With the key fetch failing after a first success, a valid token still works; with Keycloak stopped, `/health/ready` fails |
 | SYS-NFR-04 | STATIC | The exported OpenAPI schema is compared with the frozen baseline; removals and renames fail |
-| SYS-NFR-05 | UNIT | `LANGUAGE_CODE` is `fa`, `TIME_ZONE` is `Asia/Tehran`, and a sample error message is Persian while its code is English |
+| SYS-NFR-05 | UNIT, EXT | Every error message is Persian while its code is English. The default language and time zone are Django settings and are not asserted |
 | SYS-NFR-06 | API | Log records exist for profile creation, a role-resolution failure and a sync change |
 | SYS-NFR-07 | MANUAL | Someone follows the README to a running system; the integration guide exists |
-| SYS-NFR-08 | STATIC | `scripts/req_coverage.py` reports no requirement without a test |
+| SYS-NFR-08 | STATIC | `scripts/req_coverage.py` reports no requirement with neither a test nor an `EXT` mark |
 
 ## 4. Access matrix test (AC-ACCESS)
 

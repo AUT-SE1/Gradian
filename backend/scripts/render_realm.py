@@ -14,10 +14,11 @@ added to this file by the seed generator in a later step.
 import argparse
 import copy
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any
+
+from envfile import is_production
 
 ROOT = Path(__file__).resolve().parent.parent
 USER_PROFILE_PROVIDER = "org.keycloak.userprofile.UserProfileProvider"
@@ -58,7 +59,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=ROOT / "build" / "realm-gradian.json")
     args = parser.parse_args()
 
-    if os.environ.get("ENVIRONMENT") == "production":
+    if is_production(ROOT):
         print("error: refusing to render a realm file with ENVIRONMENT=production", file=sys.stderr)
         return 1
 
