@@ -4,7 +4,7 @@ from typing import Any
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -16,6 +16,7 @@ from accounts.errors import IdentityConflictError, IdentityProviderUnavailableEr
 from accounts.permissions import IsPanelUser
 from accounts.principals import UserPrincipal
 from accounts.serializers import AuthConfigSerializer, MeSerializer, MeUpdateSerializer
+from common.schema import CONFLICT, FORBIDDEN, PROVIDER_DOWN, UNAUTHENTICATED, error
 from common.throttling import PublicRateThrottle
 
 logger = logging.getLogger("gradian.accounts")
@@ -28,7 +29,15 @@ class AuthConfigView(APIView):
     permission_classes = (AllowAny,)
     throttle_classes = (PublicRateThrottle,)
 
-    @extend_schema(responses=AuthConfigSerializer)
+    @extend_schema(
+        tags=["Auth"],
+        summary="Sign-in settings for the frontend",
+        description="Public. The issuer, client id and URLs the frontend needs to sign in and out.",
+        responses={
+            200: AuthConfigSerializer,
+            429: error("`throttled`: too many requests; see `details.retry_after_seconds`."),
+        },
+    )
     def get(self, request: Request) -> Response:
         data = {
             "issuer": settings.KEYCLOAK_ISSUER,
@@ -49,11 +58,49 @@ class MeView(APIView):
             raise PermissionDenied
         return user.profile
 
-    @extend_schema(responses=MeSerializer)
+    @extend_schema(
+        tags=["Identity"],
+        summary="Who am I",
+        description=(
+            "Identity, display name, `panel` and `home_path` of the caller. The profile is created "
+            "on the first call and refreshed from the token when its claims changed."
+        ),
+        responses={
+            200: MeSerializer,
+            401: UNAUTHENTICATED,
+            403: FORBIDDEN,
+            409: CONFLICT,
+            502: PROVIDER_DOWN,
+        },
+    )
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(self._profile(request)).data)
 
-    @extend_schema(request=MeUpdateSerializer, responses=MeSerializer)
+    @extend_schema(
+        tags=["Identity"],
+        summary="Change my profile",
+        description=(
+            "Email and names are written to Keycloak first and cached only if Keycloak accepts "
+            "them. Field of study, avatar and bio are stored here. Mobile number and role cannot "
+            "be changed."
+        ),
+        request=MeUpdateSerializer,
+        examples=[
+            OpenApiExample(
+                "Change the name and bio",
+                value={"first_name": "محمد", "bio": "دانشجوی سال اول"},
+                request_only=True,
+            )
+        ],
+        responses={
+            200: MeSerializer,
+            400: error("`validation_error`: `details` maps each invalid field to its problems."),
+            401: UNAUTHENTICATED,
+            403: FORBIDDEN,
+            409: CONFLICT,
+            502: PROVIDER_DOWN,
+        },
+    )
     def patch(self, request: Request) -> Response:
         """Identity changes go to Keycloak first; the cache changes only if Keycloak accepts
         them (DES-ID-05)."""

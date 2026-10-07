@@ -8,7 +8,8 @@ _DEFAULTS = {
     "POSTGRES_DB": "unused",
     "POSTGRES_USER": "unused",
     "POSTGRES_PASSWORD": "unused",
-    "KEYCLOAK_ISSUER": "http://keycloak.test/realms/gradian",
+    "KEYCLOAK_PUBLIC_URL": "http://keycloak.test",
+    "KEYCLOAK_URL": "http://keycloak.internal.test",
     "KEYCLOAK_CORE_CLIENT_SECRET": "test-client-secret",
     "FRONTEND_URL": "http://frontend.test",
 }

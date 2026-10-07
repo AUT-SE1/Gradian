@@ -45,7 +45,7 @@ def render(
             standardFlowEnabled=False,
         )
         test_client.pop("redirectUris", None)
-        test_client.pop("webOrigins", None)
+        test_client["webOrigins"] = ["${CORE_ORIGIN}"]
         realm["clients"].append(test_client)
     return realm
 

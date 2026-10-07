@@ -36,7 +36,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-15 | API and platform conventions | Proposed |
 | DEC-16 | ruff and strict mypy for code quality | Chosen |
 | DEC-17 | Rely on external components for behaviour they own | Chosen |
-| DEC-18 | One address for Keycloak, for browsers and containers | Chosen |
+| DEC-18 | Public and internal addresses for Keycloak | Chosen |
 | DEC-19 | Monorepo with `backend/` and `frontend/` | Chosen |
 
 ## Decisions
@@ -182,13 +182,13 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Alternatives:** Test the configuration (tests duplicate the settings, and every new required variable had to be added to the tests as well); an integration test per behaviour against the real Keycloak (valuable but slow, and it tests Keycloak, not our code).
 - **Consequences:** Fewer tests to maintain. Code we write on top of these components stays tested. A mistake in our configuration is caught by the manual checklist and by use, not by `make test`. `scripts/req_coverage.py` lists the externally relied-on requirements so the reliance is visible.
 
-### DEC-18 One address for Keycloak
+### DEC-18 Public and internal addresses for Keycloak
 
 - **Status:** Chosen (made by the project owner).
-- **Realizes:** DES-IDP-01, DES-IDP-06; replaces the separate public and internal Keycloak URLs.
-- **Decision:** `KEYCLOAK_URL` (default `http://keycloak:8080`) is the only Keycloak address. The Core Service and the tools use it, and Compose passes it to Keycloak as `KC_HOSTNAME`, so the `iss` claim of every token is `KEYCLOAK_URL/realms/<realm>` whichever address a client used to fetch the token. `KEYCLOAK_ISSUER` still exists and must equal that value.
-- **Alternatives:** A public and an internal URL (two variables that must agree, and a mismatch makes every token invalid); deriving the issuer from `KEYCLOAK_URL` (one variable fewer, proposed in the review).
-- **Consequences:** The host name `keycloak` must resolve on every machine whose browser talks to Keycloak, so add `127.0.0.1 keycloak` to the hosts file, or the console and the browser sign-in redirect to an address that does not resolve. Commands such as `curl` against `localhost:8080` still work. The published port must stay 8080 because the port is part of the URL.
+- **Realizes:** DES-IDP-01, DES-IDP-06.
+- **Decision:** Two addresses, each used for what it can do. `KEYCLOAK_PUBLIC_URL` (default `http://localhost:8080`) is what browsers use; Compose gives it to Keycloak as `KC_HOSTNAME`, so it is the `iss` claim of every token whichever address a client used to fetch the token, and the Core Service derives `KEYCLOAK_ISSUER` from it. `KEYCLOAK_URL` (default `http://keycloak:8080`) is how the Core Service and the tools reach Keycloak inside the Compose network, for the signing keys and the Admin API. Verified against Keycloak 26.0.8: a request through the internal name reports the public issuer, and the console stays on the public address.
+- **Alternatives:** One address for everything (`http://keycloak:8080`): one variable, but every browser needs a hosts-file entry, the console and sign-in redirect to a name that does not resolve without it, and the published port is fixed to 8080; a separately configured issuer (a third variable that must agree with the other two).
+- **Consequences:** No hosts-file step. `localhost` is never used by a container to reach Keycloak (inside a container it is the container itself). The published Keycloak port must match the port in `KEYCLOAK_PUBLIC_URL`. The integration test that compares the issuer Keycloak reports with the one the Core Service derives catches a mismatch between `KC_HOSTNAME` and the public address.
 
 ### DEC-19 Monorepo
 

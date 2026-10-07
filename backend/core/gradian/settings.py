@@ -90,17 +90,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# ISSUER must equal the `iss` claim, i.e. the URL clients sign in through.
-# INTERNAL_URL is how this server reaches Keycloak (inside docker: http://keycloak:8080).
-KEYCLOAK_ISSUER = env.require("KEYCLOAK_ISSUER").rstrip("/")
+# PUBLIC_URL is what browsers use. Compose gives it to Keycloak as its hostname, so it is also the
+# `iss` claim of every token, and the issuer is derived from it. KEYCLOAK_URL is how this server
+# reaches Keycloak (inside Compose: http://keycloak:8080). The two differ and both are correct.
 KEYCLOAK_REALM = env.get("KEYCLOAK_REALM", "gradian")
-if not KEYCLOAK_ISSUER.endswith(f"/realms/{KEYCLOAK_REALM}"):
-    raise ImproperlyConfigured(
-        f"KEYCLOAK_ISSUER must end with /realms/{KEYCLOAK_REALM}, got {KEYCLOAK_ISSUER!r}"
-    )
-KEYCLOAK_URL = env.get(
-    "KEYCLOAK_URL", KEYCLOAK_ISSUER.removesuffix(f"/realms/{KEYCLOAK_REALM}")
-).rstrip("/")
+KEYCLOAK_PUBLIC_URL = env.require("KEYCLOAK_PUBLIC_URL").rstrip("/")
+KEYCLOAK_ISSUER = f"{KEYCLOAK_PUBLIC_URL}/realms/{KEYCLOAK_REALM}"
+KEYCLOAK_URL = env.require("KEYCLOAK_URL").rstrip("/")
 KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
 KEYCLOAK_WEB_CLIENT_ID = env.get("KEYCLOAK_WEB_CLIENT_ID", "gradian-web")
 # The audience every token must carry, and the client whose service account calls the Admin API.
@@ -127,12 +123,26 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Gradian Core Service",
-    "DESCRIPTION": "Identity, panels and group-service registry. Source of truth for the API.",
+    "DESCRIPTION": (
+        "Identity, panels and group-service registry. Source of truth for the API.\n\n"
+        "**Trying it out.** Click *Authorize*. Under `keycloakPassword` enter a mobile number and "
+        "its password; the token is then sent with every request. Choose *Logout* to sign in as "
+        "another user. Under `keycloakBearer` you can paste an access token instead. Errors always "
+        "have the shape `{code, message, details}`."
+    ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "SERVE_AUTHENTICATION": [],
     "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+        "tryItOutEnabled": True,
+        "filter": True,
+    },
+    "SWAGGER_UI_OAUTH2_CONFIG": {} if IS_PRODUCTION else {"clientId": "gradian-test"},
 }
 
 # DES-XC-01: JSON lines with request id and user `sub`.
