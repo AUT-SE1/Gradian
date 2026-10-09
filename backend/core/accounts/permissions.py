@@ -9,3 +9,9 @@ class IsAdminPanelUser(HasPanelRole):
     """A signed-in person whose panel is the admin panel."""
 
     allowed_roles = (Role.ADMIN,)
+
+
+class IsStudentPanelUser(HasPanelRole):
+    """A signed-in person whose panel is the student panel."""
+
+    allowed_roles = (Role.STUDENT,)

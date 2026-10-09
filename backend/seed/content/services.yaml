@@ -1,0 +1,158 @@
+# The service entries of AC-SERVICES, in display order within each panel. `target_url` empty
+# means "not connected yet". To connect a service for good, set `target_url` and `mode`
+# (redirect, the default, or embed) here, then run `make seed` and `make bootstrap`; an edit made in the Django
+# admin is quicker for a try-out but is replaced the next time the fixture is loaded.
+services:
+  - key: student.simulated-exam
+    title_fa: آزمون شبیه‌ساز کنکور
+    title_en: Simulated Konkur exam
+    description: شرکت در آزمون‌های جامع شبیه‌ساز کنکور با شرایط و زمان‌بندی واقعی و دریافت کارنامه.
+    icon: exam
+    owner_group: 1
+  - key: student.topic-exam
+    title_fa: آزمون مبحثی
+    title_en: Topic-based exam
+    description: آزمون‌های مبحثی برای تثبیت هر درس و پیدا کردن نقاط ضعف.
+    icon: topic
+    owner_group: 2
+  - key: student.final-exam-12th
+    title_fa: امتحان نهایی دوازدهم
+    title_en: 12th-grade final exam
+    description: منابع و نمونه‌سؤال‌های امتحان نهایی دوازدهم برای آمادگی بهتر.
+    icon: school
+    owner_group: 3
+  - key: student.major-selection
+    title_fa: انتخاب رشته هوشمند
+    title_en: Smart major selection
+    description: انتخاب رشته و دانشگاه با کمک تحلیل رتبه و علاقه‌مندی‌های شما.
+    icon: compass
+    owner_group: 9
+  - key: student.top-ranker-experiences
+    title_fa: تجارب رتبه‌های برتر و رفع اشکال درسی
+    title_en: Top-rankers' experiences and Q&A
+    description: تجربه‌های رتبه‌های برتر و پرسش و پاسخ برای رفع اشکال درسی.
+    icon: trophy
+    owner_group: 10
+  - key: student.courses
+    title_fa: دوره‌های آموزشی و نکته و تست
+    title_en: Courses and test tips
+    description: دوره‌های آموزشی ویدیویی و مجموعه نکته و تست در همه دروس.
+    icon: video
+    owner_group: 8
+  - key: student.private-class
+    title_fa: کلاس خصوصی
+    title_en: Private class
+    description: رزرو کلاس خصوصی آنلاین با استادان برتر.
+    icon: teacher
+    owner_group: 4
+  - key: student.marketplace
+    title_fa: خرید و فروش منابع و کتاب
+    title_en: Book and resource marketplace
+    description: خرید و فروش کتاب و منابع کمک‌آموزشی نو و دست‌دوم.
+    icon: book
+    owner_group: 6
+  - key: student.counseling-planning
+    title_fa: مشاوره و برنامه‌ریزی
+    title_en: Counseling and planning
+    description: مشاوره با مشاوران باتجربه و برنامه‌ریزی مطالعه روزانه.
+    icon: calendar
+    owner_group: 5
+  - key: student.experience-exchange
+    title_fa: شبکه اجتماعی تبادل تجربیات
+    title_en: Experience-exchange network
+    description: شبکه‌ای برای گفتگو و تبادل تجربه میان داوطلبان کنکور.
+    icon: community
+    owner_group: 10
+
+  - key: consultant.profile
+    title_fa: تکمیل پروفایل حرفه‌ای
+    title_en: Complete professional profile
+    description: سوابق، تخصص و ساعت‌های دسترسی خود را کامل کنید.
+    icon: profile
+    owner_group: 10
+  - key: consultant.student-reports
+    title_fa: داشبورد گزارشات دانش آموز
+    title_en: Student reports dashboard
+    description: پیشرفت و وضعیت مطالعه دانش‌آموزان تحت مشاوره شما.
+    icon: chart
+    owner_group: 7
+  - key: consultant.add-experiences
+    title_fa: اضافه کردن تجربیات
+    title_en: Add experiences
+    description: تجربه‌های خود را برای کمک به داوطلبان ثبت کنید.
+    icon: pencil
+    owner_group: 10
+  - key: consultant.resolve-problems
+    title_fa: رفع اشکال درسی
+    title_en: Resolve academic problems
+    description: به پرسش‌های درسی داوطلبان پاسخ دهید.
+    icon: help
+    owner_group: 8
+  - key: consultant.counseling-sessions
+    title_fa: جلسات مشاوره آنلاین
+    title_en: Online counseling sessions
+    description: جلسات مشاوره آنلاین خود را برگزار و مدیریت کنید.
+    icon: calendar
+    owner_group: 5
+  - key: consultant.resources-hub
+    title_fa: هاب منابع و جزوات کنکور
+    title_en: Konkur resources and notes hub
+    description: منابع و جزوات کنکور را بارگذاری و دسته‌بندی کنید.
+    icon: folder
+    owner_group: 6
+
+  - key: professor.profile
+    title_fa: تکمیل پروفایل حرفه‌ای
+    title_en: Complete professional profile
+    description: سوابق علمی، تخصص و ساعت‌های دسترسی خود را کامل کنید.
+    icon: profile
+    owner_group: 10
+  - key: professor.progress-dashboard
+    title_fa: داشبورد پیشرفت تحصیلی
+    title_en: Academic progress dashboard
+    description: پیشرفت تحصیلی دانش‌آموزان کلاس‌های خود را دنبال کنید.
+    icon: chart
+    owner_group: 7
+  - key: professor.exam-question-management
+    title_fa: مدیریت آزمون و سوال
+    title_en: Exam and question management
+    description: آزمون بسازید و بانک سؤال خود را مدیریت کنید.
+    icon: exam
+    owner_group: 8
+  - key: professor.create-course
+    title_fa: ایجاد دوره آموزشی
+    title_en: Create course
+    description: دوره آموزشی جدید بسازید و محتوای آن را بارگذاری کنید.
+    icon: video
+    owner_group: 10
+  - key: professor.private-class
+    title_fa: کلاس خصوصی
+    title_en: Private class
+    description: کلاس‌های خصوصی و زمان جلسه‌های خود را مدیریت کنید.
+    icon: teacher
+    owner_group: 4
+  - key: professor.resources-hub
+    title_fa: هاب منابع و جزوات کنکور
+    title_en: Konkur resources and notes hub
+    description: منابع و جزوات خود را منتشر و با داوطلبان به اشتراک بگذارید.
+    icon: folder
+    owner_group: 6
+
+  - key: admin.exam-bank
+    title_fa: بانک آزمون و شبیه‌ساز
+    title_en: Exam and simulator bank
+    description: آزمون‌ها و شبیه‌سازها را بسازید، ویرایش و منتشر کنید.
+    icon: exam
+    owner_group: 2
+  - key: admin.counseling-sessions
+    title_fa: جلسات مشاوره آنلاین
+    title_en: Online counseling sessions
+    description: بر جلسات مشاوره آنلاین نظارت کنید و آن‌ها را مدیریت کنید.
+    icon: calendar
+    owner_group: 5
+  - key: admin.store-management
+    title_fa: مدیریت محصولات فروشگاه
+    title_en: Store product management
+    description: کتاب‌ها، جزوه‌ها و دوره‌های فروشگاه را مدیریت کنید.
+    icon: store
+    owner_group: 6

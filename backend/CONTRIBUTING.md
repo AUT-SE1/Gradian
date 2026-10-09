@@ -2,7 +2,7 @@
 
 Rules for working on the Core Service (`core/`) and the repository scripts (`scripts/`), both in the
 `backend/` folder of the monorepo. Run `make` from `backend/`.
-Requirements, design and decisions live in [`docs/backend/`](docs/backend/); this file is only
+Requirements, design and decisions live in [`docs/`](docs/); this file is only
 about how we write and check code.
 
 ## Setup
@@ -82,7 +82,7 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 - `make lint` lists requirements without a test. Making that report fail (`--strict` in
   `scripts/req_coverage.py`) is for once the system is complete.
 - Only tag a test with a requirement it really verifies. A test that exercises part of a
-  requirement belongs to the test-plan level it matches (see `docs/backend/04-test-plan.md`).
+  requirement belongs to the test-plan level it matches (see `docs/04-test-plan.md`).
 - A test must not depend on the contents of your `.env`.
 - Do not write a test that only restates a setting or the realm file: it duplicates the decision it
   checks and breaks whenever that decision changes. Behaviour that Keycloak or Django implements is
@@ -105,7 +105,7 @@ compatible, or say so in the pull request and bump the version.
   blank lines and good names instead. A Makefile target gets its one-line `##` help text and
   nothing more. This applies to every file type, including Makefiles, YAML, TOML, shell and
   `.env.example`.
-- **Layout.** Follow `docs/backend/02-design.md`: Django project in `core/`, apps beside
+- **Layout.** Follow `docs/02-design.md`: Django project in `core/`, apps beside
   `gradian/`, scripts in `scripts/`. Business logic lives in plain modules (`accounts/mobile.py`,
   `accounts/roles.py`, ...) so it can be unit-tested without a database; views stay thin.
 - **Docker only.** Nothing in the Makefile may need Python or any other language runtime on the
@@ -127,5 +127,5 @@ compatible, or say so in the pull request and bump the version.
 - **Makefile.** It only orders steps. Logic belongs in `scripts/` or a `manage.py` command so it
   also runs without `make` (DES-OPS-05).
 - **Commits and reviews.** Small, focused changes. Say which requirement or design item a change
-  serves (for example `SYS-ID-05`). Update the decision log (`docs/backend/03-decisions.md`) when a
+  serves (for example `SYS-ID-05`). Update the decision log (`docs/03-decisions.md`) when a
   decision changes; requirements and design change only with the TA's agreement.

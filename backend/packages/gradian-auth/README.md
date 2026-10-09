@@ -10,8 +10,9 @@ by `sub`, authorize by role.
 
 | Module | Use it to |
 | --- | --- |
-| [`middleware`](#middleware-and-decorators-plain-django) | Authenticate every request of a plain Django service |
-| [`decorators`](#middleware-and-decorators-plain-django) | `@require_user(...)`, `@require_service` on plain views |
+| [`middleware`](#middleware-and-decorators-plain-django) | Authenticate every request of a plain Django service (Bearer header, or the sign-in cookie) |
+| [`oidc`](#pages-reached-by-redirect-single-sign-on) | Sign people in on the **pages** of your service, by single sign-on (login, callback, logout) |
+| [`decorators`](#middleware-and-decorators-plain-django) | `@require_user(...)`, `@require_page_user(...)`, `@require_service` on plain views |
 | [`drf`](#drf) | Authentication class, permission classes and error handler for DRF |
 | [`principals`](#principals) | The caller: `UserPrincipal` or `ServicePrincipal` |
 | [`claims`](#claims) | Token claims to an `Identity`, role extraction, name validation |
@@ -43,6 +44,9 @@ a token meant for group 4 is refused by group 3.
 | --- | --- | --- |
 | `GRADIAN_PUBLIC_PATHS` | `("/health",)` | Plain-Django middleware only: path prefixes that are never authenticated |
 | `GRADIAN_PRINCIPAL_BUILDER` | `gradian_auth.principals.build_principal` | Dotted path of a function from claims to principal; Core replaces it |
+| `GRADIAN_SERVICE_URL` | none | Pages only: this service as the browser reaches it, e.g. `http://localhost:8001` |
+| `GRADIAN_FRONTEND_URL` | none | Pages only: where the panel lives, e.g. `http://localhost:5173` |
+| `GRADIAN_COOKIE_AUTH` | `False` | Pages only: also accept the token in the sign-in cookie |
 
 ## Quickstart: plain Django
 
@@ -129,11 +133,73 @@ Decorators (they need the middleware; without it every view stays closed):
 | --- | --- | --- |
 | `@require_user("a", "b")` | a person with panel `a` or `b` | 401 `not_authenticated`, or 403 `permission_denied` |
 | `@require_user()` | any signed-in person | same |
+| `@require_page_user(...)` | like `require_user`, for a **page** | a visitor who is not signed in is sent to sign in and back (GET and HEAD); anything else as above |
 | `@require_service` | a platform service (client-credentials token) | same |
 
 `require_user` needs the parentheses; `@require_user` alone raises `TypeError` at import. Decorators
 are for synchronous function views; for class-based views use `method_decorator`. `current_principal(request)`
 returns the principal or `None`.
+
+## Pages reached by redirect (single sign-on)
+
+People reach your service from the panel by **redirect**: the entry in the panel points at your
+address, and the person arrives with no token in the URL. They are already signed in at Keycloak, so
+your page sends them there and they come straight back, with no second login. This module does it
+with your service's own client (`group-N`), which the realm allows to sign people in at your address
+(`group_services` in `seed/people.yaml`; group N is on port 8000 + N).
+
+```python
+# settings.py
+MIDDLEWARE = [..., "gradian_auth.middleware.KeycloakAuthMiddleware"]
+KEYCLOAK_CLIENT_ID = "group-3"
+KEYCLOAK_CLIENT_SECRET = os.environ["KEYCLOAK_CLIENT_SECRET"]  # services.csv, never committed
+GRADIAN_SERVICE_URL = "http://localhost:8003"
+GRADIAN_FRONTEND_URL = "http://localhost:5173"
+GRADIAN_COOKIE_AUTH = True
+GRADIAN_PUBLIC_PATHS = ("/health", "/auth")
+
+# urls.py
+(path("auth/", include("gradian_auth.oidc_urls")),)  # /auth/login, /auth/callback, /auth/logout
+
+# views.py
+from gradian_auth.decorators import current_principal, require_page_user
+from gradian_auth.oidc import panel_url
+
+
+@require_page_user("student")
+def my_page(request):
+    principal = current_principal(request)
+    return render(
+        request, "page.html", {"name": principal.identity.first_name, "back": panel_url(principal)}
+    )
+```
+
+What happens: a visitor without a session opens `/my-page`; the decorator sends them to
+`/auth/login?next=/my-page`; that redirects to Keycloak; Keycloak, seeing the person's session, sends
+them back to `/auth/callback`; the service trades the code for a token (with its secret and PKCE),
+checks it like any other token, keeps it in an **HttpOnly, `SameSite=Lax` cookie** that lives as long
+as the token (10 minutes), and returns to `/my-page`. When the cookie expires the next visit signs in
+again the same way, which also picks up a changed role.
+
+Rules this module enforces, so you do not have to:
+
+- the `state` is checked and used once, and PKCE is used;
+- `next` may only be a path on your own service (no open redirect);
+- a token meant for another service is refused (the audience is your client id) and no cookie is set;
+- an expired or invalid cookie means "not signed in", never a JSON error shown to a browser;
+- a request with an `Authorization` header is judged on the header alone: a good cookie never rescues
+  a bad header.
+
+Link back to the panel with `panel_url(principal)` (`/student`, `/professor`, ...), and to sign out
+send the person to `/auth/logout`: it clears the cookie and ends the Keycloak session, then returns
+to the panel's landing page. Keycloak may ask the person to confirm.
+
+Your pages are cookie-authenticated, so protect forms that change things with Django's CSRF
+middleware, as for any cookie-based site. An API call from a program still sends
+`Authorization: Bearer`.
+
+Errors: `invalid_login` (400) when the sign-in cannot be completed (stale or forged state, Keycloak
+refused the code); `identity_provider_unavailable` (502) when Keycloak cannot be reached.
 
 ## drf
 
@@ -221,7 +287,7 @@ field. A principal must be a `UserPrincipal` or `ServicePrincipal` (a subclass i
 
 Every error has the body `{"code": "invalid_token", "message": "<Persian>", "details": {}}` with a
 stable English `code`. Shared codes: `not_authenticated`, `invalid_token`, `permission_denied`,
-`ambiguous_role`, `incomplete_identity`, `identity_provider_unavailable`, plus DRF's
+`ambiguous_role`, `incomplete_identity`, `invalid_login`, `identity_provider_unavailable`, plus DRF's
 `validation_error`, `not_found`, `throttled`, ... Add your own:
 
 ```python
@@ -263,7 +329,7 @@ keys, so your tests need no running Keycloak.
 - Authenticate every path except health. A forgotten decorator on a plain-Django view means anyone
   with a valid token can call it; prefer `@require_user()` on everything.
 - Service tokens (`aud` has only `gradian-core`) are refused by group services. That is intended.
-- Browsers calling your service from the frontend need CORS: install `django-cors-headers` and allow
+- Pages opened by redirect need none of this. Browsers calling your *API* from the frontend need CORS: install `django-cors-headers` and allow
   the frontend origin; this package does not do it.
 
 ## Tests

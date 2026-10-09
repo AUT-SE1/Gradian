@@ -50,11 +50,12 @@ def main() -> int:
     parser.add_argument(
         "--strict", action="store_true", help="exit 1 if any requirement has no test"
     )
+    parser.add_argument("--root", type=Path, default=ROOT, help="the backend folder to read")
     args = parser.parse_args()
 
-    docs = ROOT / "docs"
+    docs = args.root / "docs"
     required = required_ids(docs / "01-requirements.md")
-    covered = covered_ids(ROOT)
+    covered = covered_ids(args.root)
     external = external_ids(docs / "04-test-plan.md")
     unknown = sorted((covered | external) - set(required))
     external_only = [item for item in required if item in external and item not in covered]

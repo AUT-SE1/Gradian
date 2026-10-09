@@ -16,8 +16,10 @@ from django.http import HttpRequest, HttpResponse
 
 from gradian_auth.errors import ApiError, NotAuthenticatedError, PermissionDeniedError
 from gradian_auth.middleware import error_response
+from gradian_auth.oidc import login_redirect
 from gradian_auth.principals import Principal, ServicePrincipal, UserPrincipal
 
+_SAFE = {"GET", "HEAD"}
 P = ParamSpec("P")
 View = Callable[Concatenate[HttpRequest, P], HttpResponse]
 
@@ -40,12 +42,16 @@ def _check(request: HttpRequest, roles: tuple[str, ...], service: bool) -> ApiEr
     return None
 
 
-def _guard(roles: tuple[str, ...], service: bool) -> Callable[[View[P]], View[P]]:
+def _guard(
+    roles: tuple[str, ...], service: bool, page: bool = False
+) -> Callable[[View[P]], View[P]]:
     def decorator(view: View[P]) -> View[P]:
         @functools.wraps(view)
         def wrapper(request: HttpRequest, /, *args: P.args, **kwargs: P.kwargs) -> HttpResponse:
             refusal = _check(request, roles, service)
             if refusal is not None:
+                if page and isinstance(refusal, NotAuthenticatedError) and request.method in _SAFE:
+                    return login_redirect(request)
                 return error_response(refusal)
             return view(request, *args, **kwargs)
 
@@ -60,8 +66,16 @@ def require_user(*roles: str) -> Callable[[View[P]], View[P]]:
     return _guard(tuple(roles), service=False)
 
 
+def require_page_user(*roles: str) -> Callable[[View[P]], View[P]]:
+    """Like `require_user`, for a page: a visitor who is not signed in is sent to sign in (and
+    comes back to the page) instead of getting a JSON 401. Needs `gradian_auth.oidc_urls`."""
+    if roles and callable(roles[0]):
+        raise TypeError("use @require_page_user() with parentheses")
+    return _guard(tuple(roles), service=False, page=True)
+
+
 def require_service[**Q](view: View[Q]) -> View[Q]:
     return _guard((), service=True)(view)
 
 
-__all__ = ["current_principal", "require_service", "require_user"]
+__all__ = ["current_principal", "require_page_user", "require_service", "require_user"]

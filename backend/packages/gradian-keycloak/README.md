@@ -33,7 +33,7 @@ Put these in your Django `settings.py`. They are read on every call.
 | `KEYCLOAK_PUBLIC_URL` | yes | The address browsers use, e.g. `http://localhost:8080`. It is the `iss` of every token. |
 | `KEYCLOAK_URL` | yes | The address your container uses, e.g. `http://keycloak:8080`. The two differ and both are right (DEC-18). |
 | `KEYCLOAK_CLIENT_ID` | yes | **Your service's own Keycloak client**, e.g. `group-3`. Tokens must name it in `aud`. |
-| `KEYCLOAK_CLIENT_SECRET` | only for `service_token` and `admin_client` | The client's secret. Group secrets are in `build/credentials/services.csv` (`make users`). |
+| `KEYCLOAK_CLIENT_SECRET` | for `service_token`, `admin_client` and signing people in on your pages (`gradian_auth.oidc`) | The client's secret. Group secrets are in `build/credentials/services.csv` (`make users`). |
 | `KEYCLOAK_REALM` | no | Default `gradian`. |
 | `KEYCLOAK_TIMEOUT_SECONDS` | no | Default `5`. |
 

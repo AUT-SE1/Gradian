@@ -29,8 +29,11 @@ core/<app>/tests/
     test_*.py                  # fast tests: UNIT and API
     integration/test_*.py      # INTEG, every class tagged "integration"
 core/tests/helpers/
+    seed.py                    # the demo content of seed/ built in memory for fast tests
+    repo.py                    # reaching scripts/ and teams/ from integration tests
     base.py                    # ApiTestCase: fake key set and a stubbed Admin API client
     keycloak.py                # real-token helper and temporary-user helper
+core/tests/test_access_matrix.py    # AC-ACCESS: every cell and the three extra cases
 packages/<package>/src/<module>/tests/
     test_*.py                  # tests of the shared packages, run by `make test`
 scripts/tests/                 # tests for the seed generator and check_service
@@ -67,6 +70,18 @@ CI runs `check` on every push. A second job runs `itest`. Running tests for one 
 
 A helper decorator `@covers("SYS-AUTH-02", "SYS-AUTH-07")` adds the tags `req-SYS-AUTH-02` and so on to a test. A script `scripts/req_coverage.py` reads the requirement IDs from `01-requirements.md`, collects the tags from the test code and the `EXT` marks from section 3 below, and lists any requirement with neither a test nor an `EXT` mark, and separately those that rely only on an external implementation (SYS-NFR-08). It runs in `make lint` and in CI.
 
+### 2.6 Performance (PERF)
+
+`make perf` signs in ten seeded students and drives 50 concurrent users for 20 seconds, each asking
+`/api/v1/me`, `/api/v1/panel` and `/api/v1/panel/services` in turn over one connection. It reports
+requests, failures and the 50th, 95th and 99th percentile per endpoint, and exits 1 if any request
+failed or a p95 is over 300 ms. The result depends on the machine and the server, so a run is only
+meaningful on the hardware that will host the system, with the setup written beside the result.
+
+| Date | Setup | Result |
+| --- | --- | --- |
+| 2026-10-10 | Development check only: one shared vCPU running Keycloak, Core and the load threads; Django development server and gunicorn (4 workers, 2 threads); SQLite | 0 failed requests in about 4,800 per run; p95 between 164 and 367 ms across three runs, so not conclusive. Run `make perf` on the real machine before groups integrate and record it here |
+
 ## 3. Traceability: requirement to verification
 
 Levels are those in section 1. A requirement may be checked at several levels.
@@ -77,7 +92,7 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | --- | --- | --- |
 | SYS-AUTH-01 | EXT, MANUAL | Keycloak authenticates the mobile number and password. Manual: a seeded user of each role signs in, a wrong password is refused, the login page shows the expected fields |
 | SYS-AUTH-02 | UNIT, API, INTEG | Role resolver for each single role and for a top-ranker; `/me` returns the right `panel` and `home_path`; a seeded user of each role gets the AC-ROUTE panel from a real token |
-| SYS-AUTH-03 | INTEG | A token from one sign-in is accepted by the Core Service and by the reference group service |
+| SYS-AUTH-03 | UNIT, INTEG | A token from one sign-in is accepted by the Core Service and by the reference group service; for pages reached by redirect: the sign-in flow checks state, PKCE and the audience, keeps the token in an HttpOnly cookie no longer than the token, and refuses a forged or reused state (UNIT); with a real Keycloak session from the panel, the reference service's page opens with no login form shown, and without a session one login on Keycloak's page lands on it (INTEG) |
 | SYS-AUTH-04 | EXT, MANUAL | Keycloak implements remember me and the session lifetimes. Manual: a remembered session survives closing the browser, a normal one does not |
 | SYS-AUTH-05 | EXT, MANUAL | Keycloak's brute-force protection locks an account after repeated failures and gives one error for every kind of failure. Manual: lock a temporary user, and compare the error for an unknown number |
 | SYS-AUTH-06 | API, MANUAL | `/auth/config` returns the end-session and landing URLs; the logout icon ends the session and returns to the landing page |
@@ -117,7 +132,7 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | SYS-INT-02 | INTEG | The reference group service accepts a valid token and refuses a missing token, a wrong audience and a wrong role |
 | SYS-INT-03 | API | `internal/users/{sub}` and `internal/users` work with a service token and not with a user token; the list filters by role |
 | SYS-INT-04 | INTEG | `check_service.py` passes on the reference service and fails on a deliberately broken one |
-| SYS-INT-05 | MANUAL | One entry in `embed` mode and one in `redirect` mode work from the frontend |
+| SYS-INT-05 | API, INTEG, MANUAL | The panel API reports `redirect` (the default) and `embed` entries; a redirected page of the reference service signs the person in through Keycloak (see SYS-AUTH-03); manual: opening an entry from the frontend lands on the group's page |
 
 ### Seed data
 
@@ -128,7 +143,7 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | SYS-DATA-03 | UNIT | Per-role counts match AC-SEED and do not depend on the number of groups (10 and 3) |
 | SYS-DATA-04 | UNIT | The generator is deterministic (two runs, identical output); realm user ids equal the fixture ids; the password never reaches a fixture. `loaddata` twice is Django's own behaviour with fixed primary keys |
 | SYS-DATA-05 | UNIT, MANUAL | One file lists every seeded user with role, name, mobile and password, another each group's client id and secret; files are replaced, private and readable in Excel. Manual: `make users` writes them to the git-ignored directory |
-| SYS-DATA-06 | API | After bootstrap there are 25 service entries, landing content and widget data |
+| SYS-DATA-06 | UNIT, API, INTEG | The demo content equals AC-SERVICES (keys, titles, order) and every block has its documented shape; after bootstrap the real stack serves 25 entries, every landing section and the widgets |
 | SYS-DATA-07 | UNIT | `seed`, `realm`, `users` and `bootstrap` refuse to run with `ENVIRONMENT=production` |
 
 ### Local operation
@@ -136,9 +151,9 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
 | SYS-OPS-01 | MANUAL, INTEG | On a clean clone, `make start` reaches a healthy `/health/ready`; checked by someone other than the author |
-| SYS-OPS-02 | MANUAL | After changing data, `make reset` restores the seeded state |
-| SYS-OPS-03 | MANUAL | `make test` passes with no containers running; `make itest` runs only tagged tests |
-| SYS-OPS-04 | MANUAL | `make help` lists every target; the same sequence works on two different machines |
+| SYS-OPS-02 | STATIC, MANUAL | `reset` removes the volumes and then runs `start`, which loads every fixture the seed writes; manual: after changing data, `make reset` restores the seeded state |
+| SYS-OPS-03 | STATIC, MANUAL | `test` excludes the integration tag and starts nothing, `itest` starts the system and runs only that tag; manual: `make test` passes with no containers running |
+| SYS-OPS-04 | STATIC, MANUAL | Every Makefile target has the help text `make help` is built from, and `.PHONY` names only defined targets; manual: the same sequence works on two different machines |
 | SYS-OPS-05 | STATIC | A script checks that `.env.example` lists every variable the settings read; a secret scan finds nothing in the repository |
 | SYS-OPS-06 | UNIT, EXT | The helper that reads a required variable raises an error naming it; that the settings module fails at startup is Django's behaviour |
 
@@ -147,12 +162,12 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
 | SYS-NFR-01 | API, EXT | Captured logs and error bodies contain no token or password; the rate limit returns 429 past the configured limit. HTTPS and the standard hardening are Django's security settings; `manage.py check --deploy` can be run by hand with production settings |
-| SYS-NFR-02 | PERF | At 50 concurrent users, `/me` and `/panel/services` stay within 300 ms at the 95th percentile |
+| SYS-NFR-02 | PERF | `make perf` (`scripts/perf_load.py`): 50 concurrent users against `/me`, `/panel` and `/panel/services` stay within 300 ms at the 95th percentile with no failed request. The unit tests check the tool's percentiles and verdict; the requirement is met only by a run on the intended machine (section 2.6) |
 | SYS-NFR-03 | API, INTEG | With the key fetch failing after a first success, a valid token still works; with Keycloak stopped, `/health/ready` fails |
-| SYS-NFR-04 | STATIC | The exported OpenAPI schema is compared with the frozen baseline; removals and renames fail |
+| SYS-NFR-04 | STATIC | `make schema` compares the exported OpenAPI schema with `docs/openapi-baseline.yaml` (`scripts/api_compat.py`); a removed or renamed path, method, response, parameter, schema, property or enum value, a changed type, or a newly required input fails; additions pass |
 | SYS-NFR-05 | UNIT, EXT | Every error message is Persian while its code is English. The default language and time zone are Django settings and are not asserted |
 | SYS-NFR-06 | API | Log records exist for profile creation, a role-resolution failure and a sync change |
-| SYS-NFR-07 | MANUAL | Someone follows the README to a running system; the integration guide exists |
+| SYS-NFR-07 | STATIC, MANUAL | Every relative link in the documents resolves, the README names the commands to a running system and links the integration guide, which covers credentials, token validation, the internal API, embed and redirect, CORS and framing, and `check-service`, and lists every service entry with its owner; manual: someone follows the README to a running system |
 | SYS-NFR-08 | STATIC | `scripts/req_coverage.py` reports no requirement with neither a test nor an `EXT` mark |
 
 ## 4. Access matrix test (AC-ACCESS)

@@ -54,7 +54,7 @@ services:
       additional_contexts:
         packages: ./packages
     env_file: .env
-    volumes: ["./core:/app", "./packages:/packages"]
+    volumes: ["./core:/app", "./packages:/packages", ".:/repo:ro"]
     ports: ["${CORE_PORT}:8000"]
     depends_on:
       db: {condition: service_healthy}
@@ -66,6 +66,15 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
+
+  dev-frontend:
+    profiles: ["dev-frontend"]
+    image: nginx:1.27-alpine
+    volumes:
+      - ./dev-frontend/public:/usr/share/nginx/html:ro
+      - ./dev-frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports: ["5173:80"]
+    depends_on: [core]
 
   tools:
     profiles: ["tools"]

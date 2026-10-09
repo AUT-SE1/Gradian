@@ -7,7 +7,7 @@ COMPOSE         ?= docker compose
 CORE_SERVICE    ?= core
 EXEC_FLAGS      ?=
 CMD             ?=
-FIXTURES        ?= profiles
+FIXTURES        ?= profiles services landing widgets
 INTEGRATION_CMD ?= python manage.py test --tag=integration --keepdb -v2
 
 CORE_ENV   := .env
@@ -20,7 +20,8 @@ MYPY_PATHS := . ../scripts $(addprefix ../,$(wildcard packages/*/src))
 
 TOOLS_INPUTS := docker-compose.yml core/Dockerfile $(wildcard core/requirements*.txt) \
                 $(wildcard core/pyproject.toml) $(wildcard packages/*/pyproject.toml)
-TOOLS_STAMP  := build/.tools-image
+TOOLS_HASH   := $(shell cat $(TOOLS_INPUTS) | (sha256sum 2>/dev/null || shasum -a 256) | cut -c1-12)
+TOOLS_STAMP  := build/.images-$(TOOLS_HASH)
 TOOLS_DEPS   := $(CORE_ENV) network tools-image
 
 ifeq ($(TEAMS),all)
@@ -36,17 +37,17 @@ ALL_ENVS := $(CORE_ENV) $(foreach n,$(ALL_TEAMS),teams/team$(n)/.env)
 team_cmd  = $(COMPOSE) -f teams/team$(1)/docker-compose.yml
 team_each = @set -e; for n in $(1); do echo "==> team $$n: $(2)"; $(call team_cmd,$$n) $(2); done
 
-.PHONY: help start stop reset check itest users format logs shell manage \
-        env network tools-image seed realm up bootstrap lint typecheck test schema migrations packages
+.PHONY: help start stop reset check itest users format logs shell django-shell manage \
+        env network tools-image seed realm up bootstrap lint typecheck test schema migrations packages dev-frontend check-service baseline perf
 
 help: ## Show this help
 	@echo "Usage: make <target> [VAR=value]"
 	@echo ""
 	@echo "Main targets, the ones you normally run:"
-	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## [^(]/ {printf "  %-11s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## [^(]/ {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Steps they are made of, to run one on its own:"
-	@awk 'BEGIN {FS = ":.*## \\(step\\) "} /^[a-z-]+:.*## \(step\) / {printf "  %-11s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## \\(step\\) "} /^[a-z-]+:.*## \(step\) / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Variables: TEAMS=\"1 6 5\"|all (teams to start), CMD=\"...\" (for manage), COMPOSE, EXEC_FLAGS"
 	@echo "Only Docker, Docker Compose v2 and make are needed on the host."
@@ -55,20 +56,27 @@ start: up bootstrap ## Start everything with demo data [seed realm up bootstrap]
 
 stop: $(ALL_ENVS) ## Stop and remove the containers, keep the data
 	$(call team_each,$(ALL_TEAMS),stop)
-	$(COMPOSE) stop
-
-down: $(ALL_ENVS) ## Wipe all data, delete every container and volumes
-	$(call team_each,$(ALL_TEAMS),down)
-	$(COMPOSE) down -v
+	$(COMPOSE) --profile dev-frontend stop
 
 reset: $(ALL_ENVS) ## Wipe all data, then start clean [stop, then start]
-	$(MAKE) down
+	$(call team_each,$(ALL_TEAMS),down)
+	$(COMPOSE) --profile dev-frontend down -v
 	$(MAKE) start
 
 check: lint typecheck test schema ## All static checks and fast tests, before every push [lint typecheck test schema]
 
 itest: start ## Tests that need the running system [start, then the integration tests]
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) $(INTEGRATION_CMD)
+
+dev-frontend: up ## Serve a throwaway sign-in tester on http://localhost:5173 (see dev-frontend/README.md)
+	$(COMPOSE) --profile dev-frontend up -d dev-frontend
+
+perf: $(TOOLS_DEPS) ## Load test: 50 concurrent users against /me and the panel endpoints, p95 must stay within 300 ms (needs the stack)
+	$(ROOT_TOOLS) python scripts/perf_load.py --url http://core:8000 $(ARGS)
+
+check-service: $(TOOLS_DEPS) ## Check that a group service follows the integration rules: make check-service URL=http://team1:8001 [ARGS=...]
+	@test -n "$(URL)" || { echo "error: give URL=, for example http://team1:8001" >&2; exit 2; }
+	$(ROOT_TOOLS) python scripts/check_service.py --url $(URL) $(ARGS)
 
 users: $(TOOLS_DEPS) ## Write the seeded users' sign-in details and the group service credentials to build/credentials/
 	@./scripts/refuse_production.sh users
@@ -96,14 +104,15 @@ env: $(ALL_ENVS) ## (step) Create every missing .env from its .env.example, with
 network: ## (step) Create the shared Docker network
 	@docker network inspect $(NET) >/dev/null 2>&1 || docker network create $(NET)
 
-tools-image: $(TOOLS_STAMP) ## (step) Build the tools image, only when its inputs changed
+tools-image: $(TOOLS_STAMP) ## (step) Build the tools and core images, only when their inputs changed
 
 $(TOOLS_STAMP): $(TOOLS_INPUTS)
 	@mkdir -p build
-	$(COMPOSE) build tools
+	$(COMPOSE) build tools core
+	@rm -f build/.tools-image build/.images-*
 	@touch $@
 
-seed: $(TOOLS_DEPS) ## (step) Generate the user fixture from seed/
+seed: $(TOOLS_DEPS) ## (step) Generate the fixtures (users, services, landing, widgets) from seed/
 	@./scripts/refuse_production.sh seed
 	$(ROOT_TOOLS) python scripts/seed_generate.py
 
@@ -126,7 +135,7 @@ lint: $(TOOLS_DEPS) ## (step) ruff, formatting, .env.example, missing migrations
 	$(CORE_TOOLS) ruff check $(PY_PATHS)
 	$(CORE_TOOLS) ruff format --check $(PY_PATHS)
 	$(CORE_TOOLS) python manage.py makemigrations --check --dry-run
-	$(ROOT_TOOLS) python scripts/req_coverage.py
+	$(ROOT_TOOLS) python scripts/req_coverage.py --strict
 
 typecheck: $(TOOLS_DEPS) ## (step) mypy in strict mode
 	$(CORE_TOOLS) mypy $(MYPY_PATHS)
@@ -136,14 +145,18 @@ test: $(TOOLS_DEPS) ## (step) Fast tests, no system needed
 	$(CORE_TOOLS) python ../packages/run_tests.py
 	$(RUN_TOOLS) -w /repo -e PYTHONPATH=scripts tools python -m unittest discover -s scripts/tests
 
-schema: $(TOOLS_DEPS) ## (step) Export and validate the OpenAPI schema to build/openapi.yaml
+schema: $(TOOLS_DEPS) ## (step) Export and validate the OpenAPI schema, and check it against the frozen baseline
 	@mkdir -p build
 	$(CORE_TOOLS) python manage.py spectacular --validate --fail-on-warn --file ../build/openapi.yaml
+	$(ROOT_TOOLS) python scripts/api_compat.py docs/openapi-baseline.yaml build/openapi.yaml
+
+baseline: schema ## (step) Freeze the current OpenAPI schema as the baseline later changes are compared with
+	cp build/openapi.yaml docs/openapi-baseline.yaml
 
 packages: $(TOOLS_DEPS) ## (step) Build the package wheels into build/wheels/ for services outside this repository
 	$(ROOT_TOOLS) python scripts/build_packages.py
 
-makemigrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
+migrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
 	$(CORE_TOOLS) python manage.py makemigrations
 
 $(ALL_ENVS): %.env: | %.env.example

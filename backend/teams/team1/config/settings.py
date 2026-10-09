@@ -28,13 +28,17 @@ KEYCLOAK_URL = os.environ["KEYCLOAK_URL"]
 KEYCLOAK_CLIENT_ID = os.environ["KEYCLOAK_CLIENT_ID"]
 KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET", "")
 
+# Sign-in on this service's own pages (people arrive here by redirect from the panel).
+GRADIAN_SERVICE_URL = os.environ.get("GRADIAN_SERVICE_URL", "http://localhost:8001")
+GRADIAN_FRONTEND_URL = os.environ.get("GRADIAN_FRONTEND_URL", "http://localhost:5173")
+GRADIAN_COOKIE_AUTH = True
+GRADIAN_PUBLIC_PATHS = ("/health", "/auth")
+
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Each team owns its own database.
-DATABASES = {
-    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
-}
+DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 
 USE_TZ = True
 TIME_ZONE = "Asia/Tehran"

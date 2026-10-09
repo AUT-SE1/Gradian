@@ -5,8 +5,12 @@ backend that implements it. The OpenAPI schema is the source of truth for every 
 (`http://localhost:8000/api/docs/`, raw at `/api/schema/`); this guide explains how to use it. If
 the two disagree, the schema wins: tell the backend team.
 
-**Status.** Everything below exists and is tested, except the section "Not available yet". The
-current `frontend/` code does not match it yet: see [What to change](#what-to-change-in-the-current-frontend).
+**Status.** Every endpoint below exists, and so does the way into a group's service (section 6).
+Sign-in, registration,
+renewal and the calls in section 5 were checked in headless Chrome against a real Keycloak 26.0.8 and
+Core, using `oidc-client-ts` 3.5.0, through `backend/dev-frontend` (`make dev-frontend`), which you can
+use as a working example. The current `frontend/` code does not match it yet: see
+[What to change](#what-to-change-in-the-current-frontend).
 
 ## 1. The picture
 
@@ -14,8 +18,8 @@ current `frontend/` code does not match it yet: see [What to change](#what-to-ch
   tokens. Your app never sees a password and has no login endpoint to call.
 - **Core Service** (`http://localhost:8000`) is the API. Every endpoint is under `/api/v1/`, speaks
   UTF-8 JSON, and takes `Authorization: Bearer <access token>`.
-- **Group services** (ports 8001 to 8010) validate the same token themselves. When a panel embeds
-  or calls one, send the same header.
+- **Group services** (ports 8001 to 8010) are opened by redirect and sign the person in themselves
+  (section 6). If your app calls one's API, send the same `Authorization` header.
 
 ```
 browser --PKCE--> Keycloak --code--> browser --token--> Core /api/v1/me --> {panel, home_path, ...}
@@ -182,11 +186,20 @@ export function errorBody(error: unknown): ApiErrorBody | null {
 }
 ```
 
-Tokens last **10 minutes**. `automaticSilentRenew` renews them in the background; the Keycloak session
-lasts up to 30 days if the person ticked *remember me* on the login page. I could not test renewal in
-a real browser: check once that a session survives past 10 minutes and a reload. `userStore` above
-uses `localStorage` so a reload keeps the session; that is readable by any script on the page, so
-keep the app free of untrusted scripts.
+Tokens last **10 minutes**. `automaticSilentRenew` renews them in the background with the refresh
+token, about a minute before they expire; the Keycloak session lasts up to 30 days if the person ticked
+*remember me* on the login page. This was verified: with the lifetime lowered to 70 seconds, the page
+renewed every 10 seconds for minutes and every call kept working. `userStore` above uses
+`localStorage` so a reload keeps the session; that is readable by any script on the page, so keep the
+app free of untrusted scripts.
+
+**Do not call `getUser()` on a timer or in a render loop** (for example to show a countdown). Each call
+re-arms the library's expiry timers from the time remaining, and inside the last minute that means
+"fire in one second" every time, so the renewal keeps being postponed and never happens: the session
+silently dies although the app still believes it is signed in. This happened in the first version of
+the tester page. Call `getUser()` once per API request (as `authedClient.ts` does), and for a
+countdown keep the user object in memory and read its `expires_at`. Use the library's events
+(`addUserLoaded`, `addSilentRenewError`, `addUserUnloaded`) to keep your state in step.
 
 ## 3. Roles and routing
 
@@ -308,17 +321,137 @@ An administrator cannot change their own `role`, `consultant_type` or `is_active
 `self_modification_forbidden`). **A role change reaches a token that was already issued only when it
 expires, at most 10 minutes later;** the person sees the new panel after the next renewal or sign-in.
 
+### Landing page and panel content
+
+These return the display content of the designed pages. The values are Persian demo content that the
+backend team can change without a release, so render what you receive and do not hard-code it.
+
+```ts
+export type Link = { label: string; href: string };
+
+export type Landing = {
+  navbar: { brand: string; links: Link[]; login_label: string; register_label: string } | null;
+  hero: {
+    eyebrow: string; title: string; subtitle: string;
+    primary_cta_label: string; secondary_cta_label: string; image_url: string;
+  } | null;
+  statistics: { key: string; value: string; label: string }[] | null;
+  missions: { title: string; description: string; icon: string }[] | null;
+  teachers: { name: string; title: string; bio: string; avatar_url: string }[] | null;
+  rankers: { name: string; rank: string; field: string; quote: string; avatar_url: string }[] | null;
+  testimonials: { name: string; role: string; text: string; avatar_url: string }[] | null;
+  footer: { description: string; links: Link[]; copyright: string } | null;
+};
+
+export type Countdown = {
+  date: string;                       // the Konkur day, YYYY-MM-DD
+  state: 'upcoming' | 'today' | 'past';
+  days_remaining: number;             // 0 on the day and after it
+  label: string;                      // Persian text, e.g. "۱۲۰ روز تا کنکور"
+};
+
+export type PanelHeader = {
+  full_name: string;
+  avatar_url: string;
+  consultant_type: 'consultant' | 'top_ranker' | null;
+  field_of_study: string | null;      // students only; "" until chosen; null in other panels
+  field_of_study_label: string | null; // Persian, e.g. "ریاضی و فیزیک"
+};
+
+export type PanelInfo = { panel: PanelRole; home_path: string; header: PanelHeader; countdown: Countdown };
+
+export type ServiceEntry = {
+  key: string;                         // stable id, e.g. "student.simulated-exam"
+  title_fa: string; title_en: string; description: string; button_label: string;
+  icon: string; order: number;
+  status: 'available' | 'unavailable';
+  mode: 'embed' | 'redirect';
+  url: string | null;                  // null while unavailable
+};
+
+export type Dashboard = {
+  welcome: { message: string; tip: string } | null;
+  countdown: Countdown;
+  study_streak: {
+    current_days: number; best_days: number; message: string; week: { day: string; done: boolean }[];
+  } | null;
+  experience_feed: {
+    id: number; author: string; author_title: string; title: string; excerpt: string;
+    likes: number; comments: number;
+  }[] | null;
+};
+
+export type NotificationList = {
+  unread_count: number; count: number; next: string | null; previous: string | null;
+  results: { id: number; title: string; body: string; created_at: string; is_read: boolean }[];
+};
+```
+
+A section that someone removed on the backend arrives as `null`: show nothing for it, do not fail.
+
+**`GET /landing`**: public, rate-limited like `/auth/config` (cache it). Returns a `Landing`. Use
+`navbar.login_label` and `register_label` for the two buttons that call `login()` and `register()`.
+
+**`GET /panel`**: any signed-in person. Returns a `PanelInfo`: the full name for the panel header, the
+field of study (students only), and the countdown for the sidebar.
+
+**`GET /panel/services`**: any signed-in person. The services of the caller's own panel, in display
+order, in the usual list envelope (`count`, `next`, `previous`, `results`). The student panel has 10
+entries, consultant 6, professor 6 and admin 3.
+
+```json
+{"count": 10, "next": null, "previous": null, "results": [
+  {"key": "student.simulated-exam", "title_fa": "آزمون شبیه‌ساز کنکور", "title_en": "Simulated Konkur exam",
+   "description": "شرکت در آزمون‌های جامع شبیه‌ساز کنکور با شرایط و زمان‌بندی واقعی و دریافت کارنامه.",
+   "button_label": "ورود به سرویس", "icon": "exam", "order": 1,
+   "status": "unavailable", "mode": "embed", "url": null}
+]}
+```
+
+An entry whose group has not connected its service yet has `status: "unavailable"` and `url: null`:
+draw it greyed out with no link; the panel must still load. For an `available` entry, `mode: "redirect"`
+means go to `url` (see section 6; this is the mode groups use) and `mode: "embed"` is not in use.
+Use `order` as given.
+
+**`GET /student/dashboard`**: students only (403 for every other panel). Returns a `Dashboard`: the
+welcome message already filled in with the student's first name, the countdown, the study streak and
+a preview of the experience feed. The streak and the feed are demo content for now.
+
+**`GET /notifications`**: any signed-in person. The bell. `unread_count` is the number of unread
+notifications across all pages; `results` is paginated with `limit` and `offset`, newest first. It is
+empty until someone creates notifications on the backend, and there is no call to mark one read yet:
+the bell is display-only.
+
 ### Not for the browser
 
 `/api/v1/internal/*` is for group services only and answers 403 to a person. `/health/live`,
 `/health/ready` and `/admin/` (Django's own admin) are operations, not API.
 
-## 6. Not available yet
+## 6. Opening a group's service
 
-Planned for the next backend step (see `02-design.md`, section 6.2), so **do not build against them
-yet**: `GET /landing`, `GET /panel`, `GET /panel/services` (the service entries and how to open each:
-embed or redirect), `GET /student/dashboard`, `GET /notifications`. Until then the landing page and the
-panel menus are static in the frontend. When they land, this guide gets their section.
+Each entry in `GET /panel/services` points at a service built by a project group. **Groups use
+`redirect`**: to open an `available` entry, navigate the browser to its `url`:
+
+```ts
+function openService(entry: ServiceEntry) {
+  if (entry.status === 'available' && entry.url) window.location.assign(entry.url);
+}
+```
+
+That is all. **Do not put the access token in the URL or hand it to the page.** The person is already
+signed in at Keycloak, so the group's page signs them in itself by single sign-on and shows them
+straight away, with no second login. The group's page links back to the person's panel
+(`/student`, `/professor`, ...) and has its own sign-out, so your app needs no extra route for it.
+
+If the person's Keycloak session has ended (for example they signed out elsewhere), the group's page
+sends them to the Keycloak login page like any other visit, and they come back to the group's page
+after signing in.
+
+Treat `embed` as not in use: an iframe cannot be given the person's identity this way. Show an `embed`
+entry like a `redirect` one until the TA decides otherwise.
+
+Calling a group service's **API** from your own pages also works: send the same
+`Authorization: Bearer` header and the service validates the token itself.
 
 ## 7. Trying it without writing code
 
@@ -334,6 +467,27 @@ panel menus are static in the frontend. When they land, this guide gets their se
         http://localhost:8080/realms/gradian/protocol/openid-connect/token
 
   then `curl -H "Authorization: Bearer <access_token>" http://localhost:8000/api/v1/me`.
+- **A working example**: `make dev-frontend` serves `backend/dev-frontend/` on `localhost:5173`: sign
+  in, register, renew, call each endpoint and watch the token events. Its `public/app.js` is short
+  enough to read in one sitting.
 - **Run the stack**: `make start` in `backend/`. After changing `FRONTEND_URL` run `make reset`,
   because Keycloak reads it only when it first imports the realm.
 
+## What to change in the current frontend
+
+1. Remove `authApi.login` and the form that posts `{mobile, password}` to `/auth/login/`: that
+   endpoint does not exist and will not. `LoginPage` becomes the landing buttons calling `login()` and
+   `register()`.
+2. Add the `/auth/callback` route (section 2), and `AuthProvider` holding the `Me` object from
+   `GET /me`, loaded after sign-in and again on a page reload when `signIn.getUser()` returns a user.
+3. Set `VITE_API_BASE_URL=/api/v1` in `.env.example` (it says `http://localhost:8000/api`), and
+   drop trailing slashes from paths.
+4. Route by `panel` and `home_path`; rename the `/instructor` and `/counsellor` routes to `/professor`
+   and `/consultant`, or redirect them.
+5. Build the 401 and 403 states of section 4 into the route guard and `httpClient`.
+6. Replace `AuthSession`, `AuthUser` and `LoginPayload` in `shared/types/auth.ts` with `Me`.
+7. Replace the static landing page and panel menus with `GET /landing`, `GET /panel` and
+   `GET /panel/services`, and the dashboard widgets with `GET /student/dashboard` (section 5).
+8. Production: decide between an absolute `VITE_API_BASE_URL` and an `/api` proxy in `nginx.conf`.
+
+I did not change any frontend file.

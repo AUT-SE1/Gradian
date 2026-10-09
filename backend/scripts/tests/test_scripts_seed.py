@@ -171,16 +171,51 @@ class RealmTests(unittest.TestCase):
                 self.assertFalse(client["publicClient"])
                 self.assertTrue(client["serviceAccountsEnabled"])
                 self.assertFalse(client["directAccessGrantsEnabled"])
-                self.assertFalse(client["standardFlowEnabled"])
                 secrets.add(client["secret"])
                 audiences = [
-                    m["config"]["included.client.audience"] for m in client["protocolMappers"]
+                    m["config"]["included.client.audience"]
+                    for m in client["protocolMappers"]
+                    if m["protocolMapper"] == "oidc-audience-mapper"
                 ]
-                self.assertEqual(audiences, ["gradian-core"])
+                self.assertEqual(audiences, ["gradian-core", group.client_id])
                 account = self.users[f"service-account-{group.client_id}"]
                 self.assertEqual(account["serviceAccountClientId"], group.client_id)
                 self.assertEqual(account["realmRoles"], ["service"])
         self.assertEqual(len(secrets), len(self.seed.groups))
+
+    def test_a_group_can_sign_people_in_on_its_own_pages_with_single_sign_on(self) -> None:
+        for group in self.seed.groups:
+            with self.subTest(group=group.slug):
+                client = self.clients[group.client_id]
+                self.assertTrue(client["standardFlowEnabled"])
+                self.assertFalse(client["implicitFlowEnabled"])
+                self.assertEqual(
+                    client["redirectUris"], [f"http://localhost:{8000 + group.number}/*"]
+                )
+                self.assertEqual(client["webOrigins"], [])
+                self.assertEqual(
+                    client["attributes"]["post.logout.redirect.uris"], "${FRONTEND_URL}/"
+                )
+                claims = {
+                    m["config"]["claim.name"]
+                    for m in client["protocolMappers"]
+                    if m["protocolMapper"] == "oidc-usermodel-attribute-mapper"
+                }
+                self.assertEqual(claims, {"consultant_type"})
+
+    def test_a_service_that_runs_elsewhere_is_set_in_one_place(self) -> None:
+        people, names = sources()
+        people["group_services"] = {"origin": "https://svc{port}.example", "port_base": 9100}
+        built = seed_generate.build_seed(people, names)
+        self.assertEqual(built.groups[2].origin, "https://svc9103.example")
+
+    def test_a_group_service_address_without_a_port_placeholder_is_refused(self) -> None:
+        for origin in ("http://localhost:8001", "localhost:{port}"):
+            with self.subTest(origin=origin):
+                people, names = sources()
+                people["group_services"] = {"origin": origin, "port_base": 8000}
+                with self.assertRaises(seed_generate.SeedError):
+                    seed_generate.build_seed(people, names)
 
     def test_user_tokens_carry_every_group_service_as_audience(self) -> None:
         wanted = {group.client_id for group in self.seed.groups} | {"gradian-core"}
@@ -267,3 +302,115 @@ class CredentialsProductionGuardTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 1)
             self.assertEqual(list(Path(tmp).iterdir()), [])
+
+
+def requirement_services() -> dict[str, list[tuple[str, str, str]]]:
+    """AC-SERVICES from the requirements document: (key, English title, Persian title) per panel."""
+    text = (ROOT / "docs" / "01-requirements.md").read_text(encoding="utf-8")
+    table = text.split("### AC-SERVICES", 1)[1].split("###", 1)[0]
+    found: dict[str, list[tuple[str, str, str]]] = {}
+    for line in table.splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) == 4 and cells[0].startswith("`"):
+            key = cells[0].strip("`")
+            found.setdefault(key.split(".")[0], []).append((key, cells[2], cells[3]))
+    return found
+
+
+Documents = tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
+
+
+def content_sources() -> Documents:
+    def read(name: str) -> dict[str, Any]:
+        return copy.deepcopy(dict(seed_generate._load(ROOT / "seed" / "content" / f"{name}.yaml")))
+
+    return read("services"), read("landing"), read("widgets")
+
+
+@covers("SYS-DATA-06", "SYS-PNL-01", "SYS-PNL-02")
+class ServiceContentTests(unittest.TestCase):
+    def test_the_entries_are_exactly_those_of_ac_services_in_their_order(self) -> None:
+        expected = requirement_services()
+        self.assertEqual(
+            {p: len(rows) for p, rows in expected.items()},
+            {"student": 10, "admin": 3, "consultant": 6, "professor": 6},
+        )
+        content = seed_generate.load_content(ROOT)
+        built: dict[str, list[tuple[str, str, str]]] = {}
+        for entry in content.services:
+            built.setdefault(entry["panel"], []).append(
+                (entry["key"], entry["title_en"], entry["title_fa"])
+            )
+        self.assertEqual(built, expected)
+
+    def test_display_order_counts_from_one_within_each_panel(self) -> None:
+        orders: dict[str, list[int]] = {}
+        for entry in seed_generate.load_content(ROOT).services:
+            orders.setdefault(entry["panel"], []).append(entry["order"])
+        for panel, values in orders.items():
+            self.assertEqual(values, list(range(1, len(values) + 1)), panel)
+
+    def test_nothing_is_connected_yet_and_every_entry_names_a_group(self) -> None:
+        for entry in seed_generate.load_content(ROOT).services:
+            self.assertEqual(entry["target_url"], "")
+            self.assertEqual(entry["mode"], "redirect")
+            self.assertIsInstance(entry["owner_group"], int)
+
+    def test_the_fixtures_hold_the_services_and_every_content_block(self) -> None:
+        files = seed_generate.fixture_files(seed_of(10))
+        services = json.loads(files[seed_generate.SERVICES_FIXTURE])
+        self.assertEqual(len(services), 25)
+        self.assertEqual({row["model"] for row in services}, {"registry.serviceentry"})
+        blocks = json.loads(files[seed_generate.LANDING_FIXTURE]) + json.loads(
+            files[seed_generate.WIDGETS_FIXTURE]
+        )
+        self.assertEqual(len(blocks), 11)
+        self.assertEqual({row["model"] for row in blocks}, {"panels.contentblock"})
+
+    def test_the_content_does_not_depend_on_the_number_of_groups(self) -> None:
+        three = seed_generate.fixture_files(seed_of(3))
+        ten = seed_generate.fixture_files(seed_of(10))
+        for path in (seed_generate.SERVICES_FIXTURE, seed_generate.LANDING_FIXTURE):
+            self.assertEqual(three[path], ten[path])
+
+
+@covers("SYS-DATA-06")
+class ContentValidationTests(unittest.TestCase):
+    def build(self) -> seed_generate.Content:
+        return seed_generate.build_content(*content_sources())
+
+    def refuses(self, change: Callable[..., object]) -> None:
+        services, landing, widgets = content_sources()
+        change(services, landing, widgets)
+        with self.assertRaises(seed_generate.SeedError):
+            seed_generate.build_content(services, landing, widgets)
+
+    def test_the_committed_content_is_valid(self) -> None:
+        self.assertEqual(len(self.build().services), 25)
+
+    def test_content_that_breaks_a_rule_is_refused(self) -> None:
+        breakers: dict[str, Callable[..., object]] = {
+            "a repeated key": lambda s, *_: s["services"].append(dict(s["services"][0])),
+            "a key that is not <panel>.<name>": lambda s, *_: s["services"][0].update(key="exam"),
+            "an unknown panel": lambda s, *_: s["services"][0].update(key="teacher.exam"),
+            "an unknown mode": lambda s, *_: s["services"][0].update(mode="popup"),
+            "a target that is not a web address": lambda s, *_: s["services"][0].update(
+                target_url="ftp://x"
+            ),
+            "an owner group of zero": lambda s, *_: s["services"][0].update(owner_group=0),
+            "a missing title": lambda s, *_: s["services"][0].pop("title_fa"),
+            "no services": lambda s, *_: s.update(services=[]),
+            "a missing landing section": lambda s, landing, w: landing.pop("hero"),
+            "an unknown landing section": lambda s, landing, w: landing.update(extra={}),
+            "a missing widget": lambda s, landing, widgets: widgets.pop("welcome"),
+        }
+        for label, breaker in breakers.items():
+            with self.subTest(label):
+                self.refuses(breaker)
+
+    def test_a_connected_entry_keeps_its_target_and_mode_in_the_fixture(self) -> None:
+        services, landing, widgets = content_sources()
+        services["services"][0].update(target_url="https://g1.example/app", mode="redirect")
+        content = seed_generate.build_content(services, landing, widgets)
+        row = seed_generate.service_fixture(content)[0]["fields"]
+        self.assertEqual((row["target_url"], row["mode"]), ("https://g1.example/app", "redirect"))

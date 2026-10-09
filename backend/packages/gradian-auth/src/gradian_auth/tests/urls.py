@@ -3,14 +3,19 @@
 from typing import Any
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.urls import path
+from django.urls import include, path
 from rest_framework import serializers
 from rest_framework.exceptions import Throttled
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from gradian_auth.decorators import current_principal, require_service, require_user
+from gradian_auth.decorators import (
+    current_principal,
+    require_page_user,
+    require_service,
+    require_user,
+)
 from gradian_auth.drf import (
     HasPanelRole,
     IsPanelUser,
@@ -46,6 +51,11 @@ def students_and_professors(request: HttpRequest, number: int) -> JsonResponse:
 
 @require_service
 def services_only(request: HttpRequest) -> JsonResponse:
+    return JsonResponse(who(request))
+
+
+@require_page_user("student")
+def student_page(request: HttpRequest) -> JsonResponse:
     return JsonResponse(who(request))
 
 
@@ -111,6 +121,8 @@ urlpatterns = [
     path("any", any_user),
     path("classes/<int:number>", students_and_professors),
     path("service", services_only),
+    path("page", student_page),
+    path("auth/", include("gradian_auth.oidc_urls")),
     path("health", health),
     path("health/deep", health),
     path("drf/who", DrfWho.as_view()),

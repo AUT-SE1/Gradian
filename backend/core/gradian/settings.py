@@ -1,5 +1,6 @@
 """Django settings. Everything configurable comes from the environment (see .env.example)."""
 
+from datetime import date
 from pathlib import Path
 
 import django_stubs_ext
@@ -37,6 +38,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "common",
     "accounts",
+    "registry",
+    "panels",
 ]
 
 MIDDLEWARE = [
@@ -108,6 +111,11 @@ KEYCLOAK_TIMEOUT_SECONDS = float(env.get("KEYCLOAK_TIMEOUT_SECONDS", "5"))
 FRONTEND_URL = env.require("FRONTEND_URL").rstrip("/")
 CORS_ALLOWED_ORIGINS = env.csv("CORS_ALLOWED_ORIGINS", FRONTEND_URL)
 PUBLIC_RATE_LIMIT = env.get("PUBLIC_RATE_LIMIT", "60/min")
+
+try:
+    KONKUR_DATE = date.fromisoformat(env.get("KONKUR_DATE", "2027-06-25"))
+except ValueError as exc:
+    raise ImproperlyConfigured("KONKUR_DATE must be a date written YYYY-MM-DD.") from exc
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["gradian_auth.drf.KeycloakBearerAuthentication"],

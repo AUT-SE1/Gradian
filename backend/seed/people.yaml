@@ -28,6 +28,12 @@ email_labels:
 
 group_name: "گروه {number}"
 
+# Where each group's service runs, as the browser reaches it. Group N is on port_base + N. Keycloak
+# lets a group's pages sign people in only at this address, so change it if a service runs elsewhere.
+group_services:
+  origin: "http://localhost:{port}"
+  port_base: 8000
+
 fields_of_study: [experimental, mathematics, humanities]
 
 fixture_timestamp: "2026-01-01T00:00:00Z"

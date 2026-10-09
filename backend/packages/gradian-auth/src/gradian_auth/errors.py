@@ -12,6 +12,7 @@ MESSAGES: dict[str, str] = {
     "not_authenticated": "برای ادامه باید وارد سامانه شوید.",
     "authentication_failed": "احراز هویت ناموفق بود.",
     "invalid_token": "نشانه ورود نامعتبر یا منقضی است. دوباره وارد شوید.",
+    "invalid_login": "ورود کامل نشد. دوباره تلاش کنید.",
     "permission_denied": "شما اجازه دسترسی به این بخش را ندارید.",
     "ambiguous_role": "برای حساب شما بیش از یک نقش تعریف شده است.",
     "incomplete_identity": "اطلاعات هویتی حساب شما کامل نیست.",
@@ -74,6 +75,13 @@ class NotAuthenticatedError(ApiError):
 class InvalidTokenError(ApiError):
     status_code = 401
     default_code = "invalid_token"
+
+
+class InvalidLoginError(ApiError):
+    """The browser sign-in on a group's pages could not be completed."""
+
+    status_code = 400
+    default_code = "invalid_login"
 
 
 class PermissionDeniedError(ApiError):

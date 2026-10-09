@@ -1,13 +1,14 @@
 # Gradian: Konkur preparation platform (Core Service)
 
-The Core Service signs people in through Keycloak, resolves their role-based panel, and (in later
-steps) serves the landing content and the 25 panel service entries. The student project groups build
+The Core Service signs people in through Keycloak, resolves their role-based panel, and serves the
+landing content, the panel headers, the student dashboard and the 25 panel service entries. The student project groups build
 their features as separate Django services that sign people in through the same Keycloak and call
 the Core Service by API.
 
-Documentation lives in [`docs/backend/`](docs/backend/): [requirements](docs/backend/01-requirements.md),
-[design and API](docs/backend/02-design.md), [decisions](docs/backend/03-decisions.md),
-[test plan](docs/backend/04-test-plan.md), and the [guide for the frontend team](docs/05-frontend-guide.md). Working on the code? Read [CONTRIBUTING.md](CONTRIBUTING.md).
+Documentation lives in [`docs/`](docs/): [requirements](docs/01-requirements.md),
+[design and API](docs/02-design.md), [decisions](docs/03-decisions.md),
+[test plan](docs/04-test-plan.md), the [guide for the frontend team](docs/05-frontend-guide.md) and the
+[integration guide for project groups](docs/06-integration-guide.md). Working on the code? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Status
 
@@ -15,10 +16,11 @@ Documentation lives in [`docs/backend/`](docs/backend/): [requirements](docs/bac
 | --- | --- | --- |
 | 1 | Tooling, project skeleton, Keycloak realm template, identity and authentication (`/me`, `/auth/config`, profile cache and sync), health checks, OpenAPI | **Done** |
 | 2 | Seed generator (users for every group, fixture, credentials), service clients and the internal user API, registration page, account administration | **Done** (frontend contract still open) |
-| 3 | Panels: landing content, service registry (25 entries), dashboard widgets, notifications | Planned |
-| 4 | Group-service template and `check-service`, integration tests, load test, integration guide | Planned |
+| 3 | Panels: landing content, service registry (25 entries), dashboard widgets, notifications | **Done** |
+| 4 | Group-service reference and `check-service`, integration tests, OpenAPI stability check, load test, integration guide | **Done**, except that the load target (SYS-NFR-02) still has to be measured with `make perf` on a real machine |
 
-`make lint` prints which requirements already have a test.
+`make lint` prints which requirements already have a test, and fails when one has neither a test nor an
+`EXT` mark in the test plan.
 
 ## Ports
 
@@ -47,6 +49,10 @@ shows them and the steps they are made of):
 | `make check` | Lint, strict types, fast tests and the OpenAPI check: run before every push |
 | `make itest` | Start the system if needed, then the tests that use it |
 | `make users` | Write the sign-in details of the seeded users to `build/credentials/` |
+| `make check-service URL=...` | Check that a group service follows the integration rules (`docs/06-integration-guide.md`) |
+| `make perf` | Load test: 50 concurrent users, p95 must stay within 300 ms (needs the stack) |
+| `make baseline` | Freeze the current OpenAPI schema; `make schema` then fails on anything removed or renamed |
+| `make dev-frontend` | Serve a throwaway page on http://localhost:5173 to try the sign-in flow (`dev-frontend/README.md`) |
 | `make packages` | Build wheels of `packages/` into `build/wheels/`, for services in another repository |
 
 `make start TEAMS="1 6 5"` also starts the services of teams 1, 6 and 5 (`all` for every team).
@@ -85,6 +91,26 @@ Django admin: http://localhost:8000/admin/ (create an operator with
    Call `GET /api/v1/internal/users?role=student` and `/api/v1/internal/users/{sub}` with it. The
    same token is refused on `/me`, and a person's token is refused on `/internal/users`.
 6. `make reset` returns everything to the seeded state.
+
+## Panels, services and content
+
+| Endpoint | Who | What |
+| --- | --- | --- |
+| `GET /api/v1/landing` | anyone | navbar, hero, statistics, mission cards, teachers, top-rankers, testimonials, footer |
+| `GET /api/v1/panel` | any panel | full name (and field of study for a student) for the header, and the Konkur countdown |
+| `GET /api/v1/panel/services` | any panel | the entries of your own panel in order: 10 student, 6 consultant, 6 professor, 3 admin |
+| `GET /api/v1/student/dashboard` | student | welcome message, countdown, study streak, experience-feed preview |
+| `GET /api/v1/notifications` | any panel | the bell: unread count and items, empty until someone creates some in the Django admin |
+
+An entry whose service is not connected (no address) or is disabled is still listed, with
+`status: unavailable`. To connect one, set its address and mode in the Django admin (*Service
+entries*; quick, but replaced when the demo data is loaded again) or in `seed/content/services.yaml`
+(permanent), see the [integration guide](docs/06-integration-guide.md).
+
+The demo content is in `seed/content/` (`services.yaml`, `landing.yaml`, `widgets.yaml`, Persian) and
+is loaded as fixtures by `make seed` and `make bootstrap`; it can also be edited in the Django admin
+(*Content blocks*; the shape is checked when you save). The countdown counts down to `KONKUR_DATE` in
+`.env`.
 
 ## Seeded users
 
@@ -154,12 +180,13 @@ expires (at most 10 minutes). Administrators cannot change their own role or sta
 
 ## Layout
 
-    core/            Django project: gradian/ (settings), accounts/ (identity, admin and service APIs), common/ (errors, logging, health)
+    core/            Django project: gradian/ (settings), accounts/ (identity, admin and service APIs), registry/ (service entries and panel menus), panels/ (landing, header, dashboard, notifications), common/ (errors, logging, health)
     keycloak/        realm-template.json, user-profile.json, themes/gradian/ (login and registration pages)
-    seed/            people.yaml, names.yaml: the seeded users
+    seed/            people.yaml, names.yaml: the seeded users; content/: services, landing and widgets
+    dev-frontend/    the sign-in tester page behind `make dev-frontend`
     packages/        gradian-keycloak, gradian-auth, gradian-testing: shared code, installed by Core and by every group service (see packages/README.md)
     scripts/         seed_generate.py, seed_credentials.py, render_realm.py, check_env_example.py, req_coverage.py, wait_for.sh, ...
-    docs/backend/    requirements, design, decisions, test plan
+    docs/            requirements, design, decisions, test plan, guides for the frontend team and for groups
     teams/           the ten team service skeletons (see below)
 
 ## Test
@@ -167,6 +194,14 @@ expires (at most 10 minutes). Administrators cannot change their own role or sta
     make test     # fast tests; no system needed
     make itest    # starts the system if needed, then the integration tests
     make check    # lint, strict types, fast tests, OpenAPI check
+    make perf     # the load test; run it on the machine that will host the system
+
+Continuous integration should run `make check` on every push, and a second job `make itest`
+(it starts the stack). The CI platform is not chosen yet; both are single commands.
+
+**After adding or changing a model** run `make migrations` and commit the files. The `registry` and
+`panels` apps are new, so run it once before `make start`; `make lint` fails while a migration is
+missing.
 
 ## Team services (`teams/`)
 
@@ -177,3 +212,9 @@ headers. The skeletons in `teams/` do this with the shared [`packages/`](package
 sets `KEYCLOAK_CLIENT_ID=group-N` in its `.env` (copy the other Keycloak lines from `.env.example`;
 an existing `.env` is never overwritten, so add them by hand) and reads the caller with
 `current_principal(request)`. Start with the [gradian-auth guide](packages/gradian-auth/README.md).
+
+People reach a group's pages by **redirect** from the panel and are signed in there by single sign-on
+(they are already signed in at Keycloak): with the skeletons, sign in at the panel, then open
+`http://localhost:800N/app` and you land on the page without a login form. Each group's client needs
+its secret from `services.csv` in `KEYCLOAK_CLIENT_SECRET`; see the
+[integration guide](docs/06-integration-guide.md).

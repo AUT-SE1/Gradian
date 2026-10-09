@@ -14,7 +14,8 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 
 from gradian_auth import context
 from gradian_auth.authenticate import AUTHENTICATE_HEADER, authenticate_token, parse_bearer
-from gradian_auth.errors import ApiError
+from gradian_auth.cookies import cookie_token
+from gradian_auth.errors import ApiError, InvalidTokenError
 from gradian_auth.principals import Principal
 
 DEFAULT_PUBLIC_PATHS = ("/health",)
@@ -53,10 +54,17 @@ class KeycloakAuthMiddleware:
         try:
             if not _is_public(request.path):
                 header = request.META.get("HTTP_AUTHORIZATION", "").encode("latin-1", "replace")
+                from_cookie = False
                 try:
                     token = parse_bearer(header)
+                    if token is None and not header:
+                        token = cookie_token(request)
+                        from_cookie = token is not None
                     if token is not None:
                         authenticated.principal, authenticated.claims = authenticate_token(token)
+                except InvalidTokenError as exc:
+                    if not from_cookie:  # a stale cookie only means "not signed in"
+                        return error_response(exc)
                 except ApiError as exc:
                     return error_response(exc)
             return self.get_response(request)

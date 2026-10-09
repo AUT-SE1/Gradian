@@ -3,10 +3,11 @@
 
 The same input always gives byte-identical output. A user's id is `uuid5(namespace, mobile)`, so
 the Django fixture and the Keycloak realm file agree without a lookup and `loaddata` can be
-repeated. The fixture, `core/accounts/fixtures/profiles.json`, is a build artifact: it is
-git-ignored and written again by `make seed`. The seeded users are one pool shared by every group.
-A project group only has its own Keycloak service client. This module is also the library that
-`render_realm.py` and `seed_credentials.py` use.
+repeated. The fixtures are build artifacts: git-ignored and written again by `make seed`. They
+are `core/accounts/fixtures/profiles.json` (the users) and, from `seed/content/`, the service
+entries, the landing page and the dashboard widgets (DES-DATA-04). The seeded users are one pool
+shared by every group. A project group only has its own Keycloak service client. This module is
+also the library that `render_realm.py` and `seed_credentials.py` use.
 """
 
 import argparse
@@ -16,6 +17,7 @@ import hashlib
 import hmac
 import io
 import json
+import re
 import sys
 import uuid
 from collections.abc import Mapping, Sequence
@@ -41,6 +43,25 @@ CONSULTANT_TYPE_OF_KIND = {"consultant": "consultant", "top_ranker": "top_ranker
 MOBILE_LENGTH = 11
 
 PROFILES_FIXTURE = "core/accounts/fixtures/profiles.json"
+SERVICES_FIXTURE = "core/registry/fixtures/services.json"
+LANDING_FIXTURE = "core/panels/fixtures/landing.json"
+WIDGETS_FIXTURE = "core/panels/fixtures/widgets.json"
+
+PANELS = ("student", "consultant", "professor", "admin")
+MODES = ("embed", "redirect")
+LANDING_SECTIONS = (
+    "navbar",
+    "hero",
+    "statistics",
+    "missions",
+    "teachers",
+    "rankers",
+    "testimonials",
+    "footer",
+)
+WIDGETS = ("welcome", "study_streak", "experience_feed")
+SERVICE_KEY = re.compile(r"^(student|consultant|professor|admin)\.[a-z0-9]+(-[a-z0-9]+)*$")
+DEFAULT_BUTTON_LABEL = "ورود به سرویس"
 
 
 class SeedError(ValueError):
@@ -52,6 +73,7 @@ class Group:
     number: int
     slug: str
     name: str
+    origin: str = ""
 
     @property
     def client_id(self) -> str:
@@ -149,6 +171,9 @@ def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
     labels_source = _section(people, "email_labels", "")
     labels = {kind: _get(labels_source, kind, str, "email_labels.") for kind in KINDS}
     group_name = _get(people, "group_name", str, "")
+    services = _section(people, "group_services", "")
+    origin_pattern = _get(services, "origin", str, "group_services.")
+    port_base = _get(services, "port_base", int, "group_services.")
     fields_of_study = _strings(people, "fields_of_study", "")
     timestamp = _get(people, "fixture_timestamp", str, "")
     try:
@@ -160,6 +185,10 @@ def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
         raise SeedError(f"the mobile scheme must add up to {MOBILE_LENGTH} digits")
     if group_count < 1:
         raise SeedError("groups must be at least 1")
+    if "{port}" not in origin_pattern or not origin_pattern.startswith(("http://", "https://")):
+        raise SeedError("group_services.origin must be an http(s) address containing {port}")
+    if port_base < 1:
+        raise SeedError("group_services.port_base must be a positive number")
     all_codes = [*codes.values(), temporary_code]
     if len(set(all_codes)) != len(all_codes) or not all(0 <= c <= 9 for c in all_codes):
         raise SeedError("kind_codes and temporary_kind_code must be distinct single digits")
@@ -210,7 +239,13 @@ def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
         if len(values) != len(set(values)):
             raise SeedError(f"the scheme produces duplicate {attribute} values")
     groups = tuple(
-        Group(n, f"group-{n}", group_name.format(number=n)) for n in range(1, group_count + 1)
+        Group(
+            n,
+            f"group-{n}",
+            group_name.format(number=n),
+            origin_pattern.format(port=port_base + n),
+        )
+        for n in range(1, group_count + 1)
     )
     return Seed(groups=groups, people=tuple(members), timestamp=timestamp)
 
@@ -259,9 +294,130 @@ def profile_fixture(seed: Seed) -> list[dict[str, Any]]:
     ]
 
 
-def fixture_files(seed: Seed) -> dict[str, str]:
+@dataclass(frozen=True)
+class Content:
+    services: tuple[Mapping[str, Any], ...]
+    landing: Mapping[str, Any]
+    widgets: Mapping[str, Any]
+
+
+def _text(entry: Mapping[str, Any], key: str, where: str) -> str:
+    value = entry.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise SeedError(f"{where}: {key} must be a non-empty string")
+    return value
+
+
+def _service(entry: object, number: int, position: dict[str, int]) -> tuple[str, Mapping[str, Any]]:
+    if not isinstance(entry, Mapping):
+        raise SeedError(f"services.yaml: entry {number} must be a mapping")
+    key = _text(entry, "key", f"services.yaml entry {number}")
+    where = f"services.yaml {key}"
+    if not SERVICE_KEY.match(key):
+        raise SeedError(f"{where}: the key must look like <panel>.<name-with-dashes>")
+    panel = key.split(".", 1)[0]
+    position[panel] = position.get(panel, 0) + 1
+    mode = entry.get("mode", "redirect")
+    if mode not in MODES:
+        raise SeedError(f"{where}: mode must be one of {', '.join(MODES)}")
+    url = entry.get("target_url", "")
+    if not isinstance(url, str) or (url and not url.startswith(("http://", "https://"))):
+        raise SeedError(f"{where}: target_url must be empty or an http(s) address")
+    owner = entry.get("owner_group")
+    if owner is not None and (not isinstance(owner, int) or isinstance(owner, bool) or owner < 1):
+        raise SeedError(f"{where}: owner_group must be a group number, 1 or more")
+    enabled = entry.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise SeedError(f"{where}: enabled must be true or false")
+    return key, {
+        "panel": panel,
+        "title_fa": _text(entry, "title_fa", where),
+        "title_en": _text(entry, "title_en", where),
+        "description": _text(entry, "description", where),
+        "button_label": str(entry.get("button_label", DEFAULT_BUTTON_LABEL)),
+        "icon": str(entry.get("icon", "")),
+        "order": position[panel],
+        "target_url": url,
+        "mode": mode,
+        "enabled": enabled,
+        "owner_group": owner,
+    }
+
+
+def _blocks(document: Mapping[str, Any], names: Sequence[str], file: str) -> Mapping[str, Any]:
+    missing = [name for name in names if name not in document]
+    unknown = [str(name) for name in document if name not in names]
+    if missing or unknown:
+        raise SeedError(
+            f"{file}: sections must be exactly {', '.join(names)}"
+            + (f"; missing {', '.join(missing)}" if missing else "")
+            + (f"; unknown {', '.join(unknown)}" if unknown else "")
+        )
+    return {name: document[name] for name in names}
+
+
+def build_content(
+    services: Mapping[str, Any], landing: Mapping[str, Any], widgets: Mapping[str, Any]
+) -> Content:
+    entries = services.get("services")
+    if not isinstance(entries, list) or not entries:
+        raise SeedError("services.yaml: services must be a non-empty list")
+    position: dict[str, int] = {}
+    built: list[Mapping[str, Any]] = []
+    seen: set[str] = set()
+    for number, entry in enumerate(entries, start=1):
+        key, fields = _service(entry, number, position)
+        if key in seen:
+            raise SeedError(f"services.yaml: duplicate key {key}")
+        seen.add(key)
+        built.append({"key": key, **fields})
+    return Content(
+        services=tuple(built),
+        landing=_blocks(landing, LANDING_SECTIONS, "landing.yaml"),
+        widgets=_blocks(widgets, WIDGETS, "widgets.yaml"),
+    )
+
+
+def load_content(root: Path = ROOT) -> Content:
+    folder = root / "seed" / "content"
+    return build_content(
+        _load(folder / "services.yaml"),
+        _load(folder / "landing.yaml"),
+        _load(folder / "widgets.yaml"),
+    )
+
+
+def service_fixture(content: Content) -> list[dict[str, Any]]:
+    return [
+        {
+            "model": "registry.serviceentry",
+            "pk": entry["key"],
+            "fields": {name: value for name, value in entry.items() if name != "key"},
+        }
+        for entry in content.services
+    ]
+
+
+def block_fixture(prefix: str, blocks: Mapping[str, Any], timestamp: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "model": "panels.contentblock",
+            "pk": f"{prefix}.{name}",
+            "fields": {"data": data, "updated_at": timestamp},
+        }
+        for name, data in blocks.items()
+    ]
+
+
+def fixture_files(seed: Seed, content: Content | None = None) -> dict[str, str]:
     """Fixture text by path relative to the backend folder."""
-    return {PROFILES_FIXTURE: dumps(profile_fixture(seed))}
+    content = content or load_content()
+    return {
+        PROFILES_FIXTURE: dumps(profile_fixture(seed)),
+        SERVICES_FIXTURE: dumps(service_fixture(content)),
+        LANDING_FIXTURE: dumps(block_fixture("landing", content.landing, seed.timestamp)),
+        WIDGETS_FIXTURE: dumps(block_fixture("widget", content.widgets, seed.timestamp)),
+    }
 
 
 def client_secret(password: str, client_id: str) -> str:
@@ -319,9 +475,33 @@ def realm_users(seed: Seed, password: str) -> list[dict[str, Any]]:
     return users
 
 
+def _consultant_type_mapper() -> dict[str, Any]:
+    return {
+        "name": "consultant_type",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-usermodel-attribute-mapper",
+        "consentRequired": False,
+        "config": {
+            "user.attribute": "consultant_type",
+            "claim.name": "consultant_type",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true",
+        },
+    }
+
+
 def service_clients(seed: Seed, password: str) -> list[dict[str, Any]]:
-    """One confidential client per group (DEC-20). Its service account holds the `service` role
-    and its tokens carry the audience `gradian-core`, so it can call the Core Service."""
+    """One confidential client per group (DEC-20, DEC-26).
+
+    As a machine, through its service account (the `service` role, audience `gradian-core`), it
+    calls the Core Service. As a web application, it signs people in on the group's own pages
+    through the Authorization Code flow with the person's Keycloak session, so a person who is
+    already signed in arrives without a second login. The tokens made that way name the group's
+    own client in `aud` and carry the same identity claims as the frontend's.
+    """
     return [
         {
             "clientId": group.client_id,
@@ -329,11 +509,18 @@ def service_clients(seed: Seed, password: str) -> list[dict[str, Any]]:
             "enabled": True,
             "publicClient": False,
             "secret": client_secret(password, group.client_id),
-            "standardFlowEnabled": False,
+            "standardFlowEnabled": True,
             "implicitFlowEnabled": False,
             "directAccessGrantsEnabled": False,
             "serviceAccountsEnabled": True,
-            "protocolMappers": [_audience_mapper("gradian-core-audience", "gradian-core")],
+            "redirectUris": [f"{group.origin}/*"],
+            "webOrigins": [],
+            "attributes": {"post.logout.redirect.uris": "${FRONTEND_URL}/"},
+            "protocolMappers": [
+                _audience_mapper("gradian-core-audience", "gradian-core"),
+                _audience_mapper(f"{group.client_id}-audience", group.client_id),
+                _consultant_type_mapper(),
+            ],
         }
         for group in seed.groups
     ]

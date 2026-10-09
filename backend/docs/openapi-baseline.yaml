@@ -1,0 +1,1641 @@
+openapi: 3.0.3
+info:
+  title: Gradian Core Service
+  version: 1.0.0
+  description: |-
+    Identity, panels and group-service registry. Source of truth for the API.
+
+    **Trying it out.** Click *Authorize*. Under `keycloakPassword` enter a mobile number and its password; the token is then sent with every request. Choose *Logout* to sign in as another user. Under `keycloakBearer` you can paste an access token instead. Errors always have the shape `{code, message, details}`.
+paths:
+  /api/v1/admin/users:
+    get:
+      operationId: admin_users_list
+      description: Admin panel only. Paginated with `limit` and `offset`.
+      summary: List accounts
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+          nullable: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+          minLength: 1
+        description: Part of the mobile number, email or name.
+      - in: query
+        name: role
+        schema:
+          enum:
+          - student
+          - consultant
+          - professor
+          - admin
+          type: string
+          minLength: 1
+        description: |-
+          * `student` - Student
+          * `consultant` - Consultant
+          * `professor` - Professor
+          * `admin` - Admin
+      tags:
+      - Admin users
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`validation_error`: `details` maps each invalid field to its
+            problems.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+    post:
+      operationId: admin_users_create
+      description: Admin panel only. The account is created in Keycloak with its role
+        and password and can sign in at once. A consultant needs `consultant_type`.
+      summary: Create an account of any role
+      tags:
+      - Admin users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`validation_error`: `details` maps each invalid field to its
+            problems.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_conflict`: the mobile number or email belongs to
+            another account.'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_provider_unavailable`: Keycloak could not be reached.'
+  /api/v1/admin/users/{sub}:
+    get:
+      operationId: admin_users_retrieve
+      summary: One account
+      parameters:
+      - in: path
+        name: sub
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Admin users
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_found`: no such resource.'
+    patch:
+      operationId: admin_users_partial_update
+      description: 'Admin panel only. Changing `role` makes it the person''s only
+        panel role; a consultant keeps or needs a `consultant_type`. `is_active: false`
+        blocks sign-in. The new role reaches a token that is already issued only when
+        it expires. Administrators cannot change their own role or status.'
+      summary: Change an account, including its role
+      parameters:
+      - in: path
+        name: sub
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Admin users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`validation_error`: `details` maps each invalid field to its
+            problems.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_found`: no such resource.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_conflict`: the mobile number or email belongs to
+            another account.'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_provider_unavailable`: Keycloak could not be reached.'
+  /api/v1/auth/config:
+    get:
+      operationId: auth_config_retrieve
+      description: Public. The issuer, client id and URLs the frontend needs to sign
+        in and out.
+      summary: Sign-in settings for the frontend
+      tags:
+      - Auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthConfig'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`throttled`: too many requests; see `details.retry_after_seconds`.'
+  /api/v1/internal/users:
+    get:
+      operationId: internal_users_list
+      description: 'Every person is valid for every group. Paginated. Only people
+        the Core Service already knows are found: seeded users, people who have signed
+        in or registered, and people added by `sync_keycloak_users`.'
+      summary: List users
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+          nullable: true
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+          minLength: 1
+        description: Part of the mobile number, email or name.
+      - in: query
+        name: role
+        schema:
+          enum:
+          - student
+          - consultant
+          - professor
+          - admin
+          type: string
+          minLength: 1
+        description: |-
+          * `student` - Student
+          * `consultant` - Consultant
+          * `professor` - Professor
+          * `admin` - Admin
+      tags:
+      - Internal
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceUserList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`validation_error`: a filter is not valid.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+  /api/v1/internal/users/{sub}:
+    get:
+      operationId: internal_users_retrieve
+      description: 'Only people the Core Service already knows are found: seeded users,
+        people who have signed in or registered, and people added by `sync_keycloak_users`.'
+      summary: Look up one user
+      parameters:
+      - in: path
+        name: sub
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Internal
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUser'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_found`: no such resource.'
+  /api/v1/landing:
+    get:
+      operationId: landing_retrieve
+      description: Public. Navbar, hero, statistics, mission cards, teacher and top-ranker
+        showcase, testimonials and footer. Demo content that can be changed in the
+        Django admin.
+      summary: Landing page content
+      tags:
+      - Panels
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Landing'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`throttled`: too many requests; see `details.retry_after_seconds`.'
+  /api/v1/me:
+    get:
+      operationId: me_retrieve
+      description: Identity, display name, `panel` and `home_path` of the caller.
+        The profile is created on the first call and refreshed from the token when
+        its claims changed.
+      summary: Who am I
+      tags:
+      - Identity
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_conflict`: the mobile number or email belongs to
+            another account.'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_provider_unavailable`: Keycloak could not be reached.'
+    patch:
+      operationId: me_partial_update
+      description: Email and names are written to Keycloak first and cached only if
+        Keycloak accepts them. Field of study, avatar and bio are stored here. Mobile
+        number and role cannot be changed.
+      summary: Change my profile
+      tags:
+      - Identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdate'
+            examples:
+              ChangeTheNameAndBio:
+                value:
+                  first_name: محمد
+                  bio: دانشجوی سال اول
+                summary: Change the name and bio
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`validation_error`: `details` maps each invalid field to its
+            problems.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_conflict`: the mobile number or email belongs to
+            another account.'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`identity_provider_unavailable`: Keycloak could not be reached.'
+  /api/v1/notifications:
+    get:
+      operationId: notifications_list
+      description: Newest first, with the number of unread ones. Empty by default.
+      summary: Notifications for the bell
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - Panels
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+  /api/v1/panel:
+    get:
+      operationId: panel_retrieve
+      description: The full name for the panel header, the field of study for a student,
+        and the Konkur countdown for the sidebar.
+      summary: Header and countdown of my panel
+      tags:
+      - Panels
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Panel'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+  /api/v1/panel/services:
+    get:
+      operationId: panel_services_list
+      description: 'Every entry of the caller''s panel, in display order. An entry
+        that is disabled or has no target URL is still listed, with `status: unavailable`
+        and `url: null`, so the panel can show it as not connected yet.'
+      summary: Services of my panel
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - Panels
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedServiceEntryList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+  /api/v1/student/dashboard:
+    get:
+      operationId: student_dashboard_retrieve
+      description: Student panel only. The welcome message for this student, the countdown,
+        the study streak and a preview of the experience feed. The streak and the
+        feed are demo content.
+      summary: Student dashboard widgets
+      tags:
+      - Panels
+      security:
+      - keycloakPassword: []
+      - keycloakBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`not_authenticated` (no token) or `invalid_token` (bad, expired
+            or wrong audience).'
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`ambiguous_role`, `account_disabled`, `incomplete_identity`,
+            `self_modification_forbidden` or `permission_denied`.'
+components:
+  schemas:
+    AuthConfig:
+      type: object
+      properties:
+        issuer:
+          type: string
+        registration_endpoint:
+          type: string
+        realm:
+          type: string
+        client_id:
+          type: string
+        end_session_url:
+          type: string
+        landing_url:
+          type: string
+      required:
+      - client_id
+      - end_session_url
+      - issuer
+      - landing_url
+      - realm
+      - registration_endpoint
+    ConsultantTypeEnum:
+      enum:
+      - consultant
+      - top_ranker
+      type: string
+      description: |-
+        * `consultant` - Consultant
+        * `top_ranker` - Top Ranker
+    Countdown:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: The Konkur day.
+        state:
+          $ref: '#/components/schemas/StateEnum'
+        days_remaining:
+          type: integer
+          description: 0 on the day and after it.
+        label:
+          type: string
+          description: Persian text for the countdown widget.
+      required:
+      - date
+      - days_remaining
+      - label
+      - state
+    Dashboard:
+      type: object
+      properties:
+        welcome:
+          allOf:
+          - $ref: '#/components/schemas/Welcome'
+          nullable: true
+        countdown:
+          $ref: '#/components/schemas/Countdown'
+        study_streak:
+          allOf:
+          - $ref: '#/components/schemas/StudyStreak'
+          nullable: true
+        experience_feed:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedItem'
+          nullable: true
+      required:
+      - countdown
+      - experience_feed
+      - study_streak
+      - welcome
+    Error:
+      type: object
+      description: The one error shape of every endpoint (DES-API-01).
+      properties:
+        code:
+          type: string
+          description: Stable English identifier, for example `invalid_token`.
+        message:
+          type: string
+          description: Persian text for the user.
+        details:
+          type: object
+          additionalProperties: {}
+          description: Extra data, such as the invalid fields.
+      required:
+      - code
+      - details
+      - message
+    FeedItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        author:
+          type: string
+          maxLength: 100
+        author_title:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 160
+        excerpt:
+          type: string
+          maxLength: 400
+        likes:
+          type: integer
+          minimum: 0
+        comments:
+          type: integer
+          minimum: 0
+      required:
+      - author
+      - author_title
+      - comments
+      - excerpt
+      - id
+      - likes
+      - title
+    FieldOfStudyEnum:
+      enum:
+      - experimental
+      - mathematics
+      - humanities
+      type: string
+      description: |-
+        * `experimental` - Experimental
+        * `mathematics` - Mathematics
+        * `humanities` - Humanities
+    Footer:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 300
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        copyright:
+          type: string
+          maxLength: 200
+      required:
+      - copyright
+      - description
+      - links
+    Hero:
+      type: object
+      properties:
+        eyebrow:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 160
+        subtitle:
+          type: string
+          maxLength: 400
+        primary_cta_label:
+          type: string
+          maxLength: 40
+        secondary_cta_label:
+          type: string
+          maxLength: 40
+        image_url:
+          type: string
+          maxLength: 300
+      required:
+      - eyebrow
+      - image_url
+      - primary_cta_label
+      - secondary_cta_label
+      - subtitle
+      - title
+    Landing:
+      type: object
+      description: Documents the landing response. A section whose block was deleted
+        is null.
+      properties:
+        navbar:
+          allOf:
+          - $ref: '#/components/schemas/Navbar'
+          nullable: true
+        hero:
+          allOf:
+          - $ref: '#/components/schemas/Hero'
+          nullable: true
+        statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statistic'
+          nullable: true
+        missions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mission'
+          nullable: true
+        teachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Teacher'
+          nullable: true
+        rankers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ranker'
+          nullable: true
+        testimonials:
+          type: array
+          items:
+            $ref: '#/components/schemas/Testimonial'
+          nullable: true
+        footer:
+          allOf:
+          - $ref: '#/components/schemas/Footer'
+          nullable: true
+      required:
+      - footer
+      - hero
+      - missions
+      - navbar
+      - rankers
+      - statistics
+      - teachers
+      - testimonials
+    Link:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 60
+        href:
+          type: string
+          maxLength: 200
+      required:
+      - href
+      - label
+    Me:
+      type: object
+      description: Identity, display name, panel and home path. Identity fields are
+        read-only (DES-ID-01).
+      properties:
+        sub:
+          type: string
+          format: uuid
+          readOnly: true
+        mobile:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        consultant_type:
+          allOf:
+          - $ref: '#/components/schemas/ConsultantTypeEnum'
+          readOnly: true
+        panel:
+          type: string
+          readOnly: true
+        home_path:
+          type: string
+          readOnly: true
+        field_of_study:
+          allOf:
+          - $ref: '#/components/schemas/FieldOfStudyEnum'
+          readOnly: true
+        avatar_url:
+          type: string
+          format: uri
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+      required:
+      - avatar_url
+      - bio
+      - consultant_type
+      - email
+      - field_of_study
+      - first_name
+      - full_name
+      - home_path
+      - last_name
+      - mobile
+      - panel
+      - role
+      - sub
+    Mission:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 300
+        icon:
+          type: string
+          maxLength: 40
+      required:
+      - description
+      - icon
+      - title
+    ModeEnum:
+      enum:
+      - embed
+      - redirect
+      type: string
+      description: |-
+        * `embed` - Embed
+        * `redirect` - Redirect
+    Navbar:
+      type: object
+      properties:
+        brand:
+          type: string
+          maxLength: 60
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        login_label:
+          type: string
+          maxLength: 40
+        register_label:
+          type: string
+          maxLength: 40
+      required:
+      - brand
+      - links
+      - login_label
+      - register_label
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_read:
+          type: boolean
+          readOnly: true
+      required:
+      - body
+      - created_at
+      - id
+      - is_read
+      - title
+    PaginatedNotificationList:
+      type: object
+      required:
+      - unread_count
+      - count
+      - results
+      properties:
+        unread_count:
+          type: integer
+          example: 0
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedServiceEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceEntry'
+    PaginatedServiceUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceUser'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    Panel:
+      type: object
+      properties:
+        panel:
+          type: string
+        home_path:
+          type: string
+        header:
+          $ref: '#/components/schemas/PanelHeader'
+        countdown:
+          $ref: '#/components/schemas/Countdown'
+      required:
+      - countdown
+      - header
+      - home_path
+      - panel
+    PanelHeader:
+      type: object
+      properties:
+        full_name:
+          type: string
+        avatar_url:
+          type: string
+        consultant_type:
+          type: string
+          nullable: true
+          description: '`consultant` or `top_ranker` for a consultant, otherwise null.'
+        field_of_study:
+          type: string
+          nullable: true
+          description: 'Students only: the value, empty until set. Null in every other
+            panel.'
+        field_of_study_label:
+          type: string
+          nullable: true
+          description: Persian text for the field of study, null when there is none.
+      required:
+      - avatar_url
+      - consultant_type
+      - field_of_study
+      - field_of_study_label
+      - full_name
+    PatchedMeUpdate:
+      type: object
+      description: |-
+        Fields a person may change through PATCH /me. Role and mobile number cannot be changed
+        here: the role is assigned by an administrator, and the mobile number is the login.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        field_of_study:
+          $ref: '#/components/schemas/FieldOfStudyEnum'
+        avatar_url:
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
+        bio:
+          type: string
+          maxLength: 500
+    PatchedUserUpdate:
+      type: object
+      description: The mobile number is the login and cannot be changed.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        consultant_type:
+          $ref: '#/components/schemas/ConsultantTypeEnum'
+        is_active:
+          type: boolean
+        field_of_study:
+          $ref: '#/components/schemas/FieldOfStudyEnum'
+    Ranker:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        rank:
+          type: string
+          description: Display text, e.g. رتبه ۱۲.
+          maxLength: 40
+        field:
+          type: string
+          maxLength: 60
+        quote:
+          type: string
+          maxLength: 300
+        avatar_url:
+          type: string
+          maxLength: 300
+      required:
+      - avatar_url
+      - field
+      - name
+      - quote
+      - rank
+    RoleEnum:
+      enum:
+      - student
+      - consultant
+      - professor
+      - admin
+      type: string
+      description: |-
+        * `student` - Student
+        * `consultant` - Consultant
+        * `professor` - Professor
+        * `admin` - Admin
+    ServiceEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          readOnly: true
+          description: Stable identifier, <panel>.<name>. Never change it once groups
+            use it.
+        title_fa:
+          type: string
+          readOnly: true
+          title: Title (Persian)
+        title_en:
+          type: string
+          readOnly: true
+          title: Title (English)
+        description:
+          type: string
+          readOnly: true
+        button_label:
+          type: string
+          readOnly: true
+        icon:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          readOnly: true
+          description: Position in the panel, smallest first.
+        status:
+          type: string
+          readOnly: true
+          description: '`available`, or `unavailable` when the entry is disabled or
+            has no target URL.'
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          description: |-
+            `embed`: load it in the content area. `redirect`: go there.
+
+            * `embed` - Embed
+            * `redirect` - Redirect
+        url:
+          readOnly: true
+          description: Where to open the service. Null while it is unavailable.
+      required:
+      - button_label
+      - description
+      - icon
+      - key
+      - mode
+      - order
+      - status
+      - title_en
+      - title_fa
+      - url
+    ServiceUser:
+      type: object
+      description: A person's identity as a group service sees it.
+      properties:
+        sub:
+          type: string
+          format: uuid
+          readOnly: true
+        mobile:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        consultant_type:
+          allOf:
+          - $ref: '#/components/schemas/ConsultantTypeEnum'
+          readOnly: true
+        field_of_study:
+          allOf:
+          - $ref: '#/components/schemas/FieldOfStudyEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        avatar_url:
+          type: string
+          format: uri
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+      required:
+      - avatar_url
+      - bio
+      - consultant_type
+      - email
+      - field_of_study
+      - first_name
+      - full_name
+      - is_active
+      - last_name
+      - mobile
+      - role
+      - sub
+    StateEnum:
+      enum:
+      - upcoming
+      - today
+      - past
+      type: string
+      description: |-
+        * `upcoming` - upcoming
+        * `today` - today
+        * `past` - past
+    Statistic:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        value:
+          type: string
+          description: Display text, e.g. ۱۲٬۰۰۰+.
+          maxLength: 30
+        label:
+          type: string
+          maxLength: 80
+      required:
+      - key
+      - label
+      - value
+    StreakDay:
+      type: object
+      properties:
+        day:
+          type: string
+          maxLength: 20
+        done:
+          type: boolean
+      required:
+      - day
+      - done
+    StudyStreak:
+      type: object
+      properties:
+        current_days:
+          type: integer
+          minimum: 0
+        best_days:
+          type: integer
+          minimum: 0
+        message:
+          type: string
+          maxLength: 200
+        week:
+          type: array
+          items:
+            $ref: '#/components/schemas/StreakDay'
+      required:
+      - best_days
+      - current_days
+      - message
+      - week
+    Teacher:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 120
+        bio:
+          type: string
+          maxLength: 300
+        avatar_url:
+          type: string
+          maxLength: 300
+      required:
+      - avatar_url
+      - bio
+      - name
+      - title
+    Testimonial:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        role:
+          type: string
+          maxLength: 80
+        text:
+          type: string
+          maxLength: 400
+        avatar_url:
+          type: string
+          maxLength: 300
+      required:
+      - avatar_url
+      - name
+      - role
+      - text
+    User:
+      type: object
+      description: An account as an administrator sees it.
+      properties:
+        sub:
+          type: string
+          format: uuid
+          readOnly: true
+        mobile:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        consultant_type:
+          allOf:
+          - $ref: '#/components/schemas/ConsultantTypeEnum'
+          readOnly: true
+        panel:
+          type: string
+          readOnly: true
+        home_path:
+          type: string
+          readOnly: true
+        field_of_study:
+          allOf:
+          - $ref: '#/components/schemas/FieldOfStudyEnum'
+          readOnly: true
+        avatar_url:
+          type: string
+          format: uri
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - avatar_url
+      - bio
+      - consultant_type
+      - email
+      - field_of_study
+      - first_name
+      - full_name
+      - home_path
+      - is_active
+      - last_name
+      - mobile
+      - panel
+      - role
+      - sub
+    UserCreate:
+      type: object
+      properties:
+        mobile:
+          type: string
+          description: 09123456789; Persian digits and +98 are accepted.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+          minLength: 8
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        consultant_type:
+          allOf:
+          - $ref: '#/components/schemas/ConsultantTypeEnum'
+          description: |-
+            Required for consultants.
+
+            * `consultant` - Consultant
+            * `top_ranker` - Top Ranker
+        field_of_study:
+          $ref: '#/components/schemas/FieldOfStudyEnum'
+      required:
+      - email
+      - first_name
+      - last_name
+      - mobile
+      - password
+      - role
+    Welcome:
+      type: object
+      properties:
+        message:
+          type: string
+          description: '`{first_name}` and `{full_name}` are replaced per student.'
+          maxLength: 300
+        tip:
+          type: string
+          maxLength: 300
+      required:
+      - message
+      - tip
+  securitySchemes:
+    keycloakBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: An access token issued by Keycloak for the audience `gradian-core`.
+    keycloakPassword:
+      type: oauth2
+      description: Development only. Enter a mobile number as the username, its password,
+        and leave the client id as it is.
+      flows:
+        password:
+          tokenUrl: http://keycloak.test/realms/gradian/protocol/openid-connect/token
+          scopes: {}
