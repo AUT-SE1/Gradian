@@ -1,14 +1,22 @@
 # Gradian Frontend
 
-فرانت‌اند پروژه‌ی Gradian با **React 19، TypeScript، Vite و React Router** ساخته شده است. این پوشه در کنار بک‌اند Django قرار دارد و اجرای توسعه‌ی هر دو سرویس به‌وسیله‌ی Compose ریشه انجام می‌شود.
+فرانت‌اند پروژه‌ی Gradian با **React 19، TypeScript، Vite و React Router** ساخته شده است. این پوشه Compose مستقل خودش را دارد و از طریق شبکه‌ی مشترک `gradian` به سرویس `core` در بک‌اند متصل می‌شود.
 
 ## شروع سریع
 
-از پوشه‌ی ریشه‌ی پروژه (`Gradian/`) اجرا کنید:
+بک‌اند و فرانت‌اند Compose جدا دارند. ابتدا بک‌اند را اجرا کنید:
 
 ```powershell
+cd backend
 Copy-Item .env.example .env
-# مقادیر رمز و پورت‌ها را در .env بررسی کنید
+# در صورت نیاز مقادیر secret و پورت را تنظیم کنید
+docker compose up -d --build
+```
+
+سپس در ترمینال دوم فرانت‌اند را اجرا کنید:
+
+```powershell
+cd frontend
 docker compose up --build
 ```
 
@@ -17,27 +25,21 @@ docker compose up --build
 | سرویس | آدرس |
 |---|---|
 | Frontend/Vite | http://localhost:5173 |
-| Django backend | http://localhost:8000 |
+| Django core | http://localhost:8000 |
 | Keycloak | http://localhost:8080 |
 
-برای اجرای پس‌زمینه:
+در Compose فرانت، Vite درخواست‌های `/api` را به `http://core:8000` روی شبکه‌ی مشترک Docker می‌فرستد. `core` نام سرویس بک‌اند در `backend/docker-compose.yml` است.
 
-```powershell
-docker compose up -d --build
-```
-
-برای توقف:
+برای توقف فرانت:
 
 ```powershell
 docker compose down
 ```
 
-Compose ریشه شبکه‌ی پروژه را خودش می‌سازد؛ اجرای دستی `docker network create gradian` لازم نیست. اگر شبکه‌ی قدیمی را قبلاً دستی ساخته‌اید و پیام label گرفتید، یک‌بار این کار را انجام دهید:
+Compose بک‌اند شبکه‌ی `gradian` را به‌صورت external استفاده می‌کند. اگر بک‌اند هنوز اجرا نشده است، ابتدا آن را بالا بیاورید. در صورت نبود شبکه، یک‌بار اجرا کنید:
 
 ```powershell
-docker compose down --remove-orphans
-docker network rm gradian
-docker compose up --build
+docker network create gradian
 ```
 
 ## اجرای بدون Docker
@@ -54,7 +56,7 @@ npm run dev
 Copy-Item .env.example .env
 ```
 
-در توسعه، کلاینت از مسیر `/api` استفاده می‌کند و Vite آن را به `backend:8000` داخل شبکه‌ی Compose proxy می‌کند. بنابراین URL بک‌اند را در Featureها hard-code نکنید.
+در توسعه، کلاینت از مسیر `/api` استفاده می‌کند و Vite آن را به `core:8000` داخل شبکه‌ی مشترک Compose proxy می‌کند. بنابراین URL بک‌اند را در Featureها hard-code نکنید.
 
 ## اسکریپت‌ها
 
@@ -167,7 +169,7 @@ Copy-Item .env.example .env
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-برای کار روزمره‌ی تیم، Compose ریشه مرجع اصلی است.
+برای کار روزمره، `frontend/docker-compose.yml` مرجع اجرای فرانت‌اند است و `backend/docker-compose.yml` مرجع اجرای بک‌اند. این دو از طریق شبکه‌ی مشترک `gradian` با هم ارتباط دارند.
 
 ## چک‌لیست تحویل Feature
 

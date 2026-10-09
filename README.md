@@ -56,15 +56,19 @@ Run one team alone: `cd teams/teamN && docker compose up --build` (needs `docker
 
 ## Frontend
 
-فرانت‌اند React/TypeScript در پوشه‌ی `frontend/` قرار دارد و با Compose ریشه همراه Keycloak و بک‌اند اجرا می‌شود:
+فرانت‌اند React/TypeScript در پوشه‌ی `frontend/` قرار دارد و Compose مستقل خودش را دارد. ابتدا بک‌اند و سپس فرانت‌اند را اجرا کنید:
 
 ```powershell
+cd backend
 Copy-Item .env.example .env
+docker compose up -d --build
+
+cd ../frontend
 docker compose up --build
 ```
 
 - Frontend: http://localhost:5173
-- Backend: http://localhost:8000
+- Backend core: http://localhost:8000
 - Keycloak: http://localhost:8080
 
 راهنمای اجرای فرانت‌اند: [`frontend/README.md`](frontend/README.md)  
