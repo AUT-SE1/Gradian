@@ -167,7 +167,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 
 - **Status:** Proposed.
 - **Realizes:** DES-API-01, DES-API-03 to DES-API-07, DES-XC-01 to DES-XC-03.
-- **Decision:** Versioned base path `/api/v1/`; one error shape with English codes and Persian messages; OpenAPI 3 generated from code; structured JSON logs; Persian locale and Tehran time zone; configurable CORS and rate limits.
+- **Decision:** Versioned base path `/api/v1/`; one error shape with English codes and messages; OpenAPI 3 generated from code; structured JSON logs; Persian locale and Tehran time zone; configurable CORS and rate limits.
 - **Alternatives:** Unversioned paths (breaking changes would hit every group at once); English-only messages (the product is Persian).
 - **Consequences:** Removing or renaming anything under `/api/v1/` after groups integrate needs a new version.
 

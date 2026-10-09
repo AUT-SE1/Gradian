@@ -264,7 +264,7 @@ Make is not installed by default on Windows. Because of DES-OPS-05, Windows user
 | --- | --- | --- | --- |
 | DES-XC-01 | Logs are structured JSON with a request ID, the user's `sub` and the HTTP status. Tokens, passwords and Keycloak admin credentials are never logged. Profile creation, role-resolution failures and sync changes are logged. | SYS-NFR-01, SYS-NFR-06 | DEC-15 |
 | DES-XC-02 | Production settings enable HTTPS only, `DEBUG` off, secure cookies, HSTS and standard security headers. | SYS-NFR-01 | DEC-15 |
-| DES-XC-03 | Language code `fa`, time zone `Asia/Tehran`; error messages are translated, error codes are not. | SYS-NFR-05 | DEC-15 |
+| DES-XC-03 | Language code `en`, time zone `Asia/Tehran`; API language can remain English | SYS-NFR-05 | DEC-15 |
 | DES-XC-04 | The repository documents: a README with one-command setup, the realm description, the seed scheme, and an integration guide for groups. | SYS-NFR-07 | DEC-04 |
 
 ## 10. Requirement coverage

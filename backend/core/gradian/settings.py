@@ -82,7 +82,7 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # DES-XC-03: Persian, Tehran time. Error codes stay English, messages are Persian.
-LANGUAGE_CODE = "fa"
+LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Tehran"
 USE_I18N = True
 USE_TZ = True

@@ -53,8 +53,8 @@ help: ## Show this help
 start: up bootstrap ## Start everything with demo data [seed realm up bootstrap]
 
 stop: $(ALL_ENVS) ## Stop and remove the containers, keep the data
-	$(call team_each,$(ALL_TEAMS),down)
-	$(COMPOSE) down
+	$(call team_each,$(ALL_TEAMS),stop)
+	$(COMPOSE) stop
 
 reset: $(ALL_ENVS) ## Wipe all data, then start clean [stop, then start]
 	$(call team_each,$(ALL_TEAMS),down)
@@ -77,8 +77,12 @@ format: $(TOOLS_DEPS) ## Apply ruff formatting and fixes (changes files)
 logs: ## Follow the core logs
 	$(COMPOSE) logs -f
 
-shell: up ## Open a Django shell in the core container
+django-shell: up ## Open a Django shell in the core container
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py shell
+
+shell: up ## Open a bash shell in the core container
+	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) bash
+
 
 manage: up ## Run manage.py in the core container: make manage CMD="sync_keycloak_users"
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py $(CMD)

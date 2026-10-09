@@ -1,4 +1,4 @@
-"""One error shape, Persian messages, English codes (DES-API-01, DES-XC-03)."""
+"""One error shape, English codes (DES-API-01, DES-XC-03)."""
 
 import re
 from typing import Any
@@ -13,8 +13,6 @@ from tests.helpers.base import ApiTestCase
 from tests.helpers.covers import covers
 from tests.helpers.tokens import make_token
 
-PERSIAN = re.compile(r"[\u0600-\u06FF]")
-
 
 @covers("SYS-NFR-05")
 class ErrorShapeTests(ApiTestCase):
@@ -24,7 +22,6 @@ class ErrorShapeTests(ApiTestCase):
         self.assertEqual(set(body), {"code", "message", "details"})
         self.assertEqual(body["code"], code)
         self.assertRegex(code, r"^[a-z_]+$")  # codes are English
-        self.assertRegex(str(body["message"]), PERSIAN)  # messages are Persian
         return body
 
     def test_unauthenticated(self) -> None:
@@ -64,10 +61,3 @@ class ErrorShapeTests(ApiTestCase):
         self.assert_shape(response, 500, "server_error")
         self.assertNotIn("boom", response.content.decode())
 
-
-@covers("SYS-NFR-05")
-class MessagesTests(SimpleTestCase):
-    def test_every_message_is_persian(self) -> None:
-        for code, message in MESSAGES.items():
-            with self.subTest(code=code):
-                self.assertRegex(message, PERSIAN)
