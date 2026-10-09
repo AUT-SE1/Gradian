@@ -6,8 +6,13 @@ __pycache__/
 
 # Environment files
 build/
+# Written by `make seed`
+backend/core/accounts/fixtures/
+backend/core/registry/fixtures/
+backend/core/panels/fixtures/
 staticfiles/
 .mypy_cache/
+*.egg-info/
 .ruff_cache/
 
 .env

@@ -24,12 +24,13 @@ def _database() -> Literal["ok", "error"]:
 
 
 def _keycloak() -> Literal["ok", "error"]:
-    from accounts import keycloak
+    from gradian_keycloak import realm
+    from gradian_keycloak.errors import KeycloakError
 
     try:
-        keycloak.check_reachable()
+        realm.check_reachable()
         return "ok"
-    except keycloak.KeycloakError:
+    except KeycloakError:
         logger.warning("readiness: Keycloak is not reachable")
         return "error"
 

@@ -1,76 +1,38 @@
-"""DRF authentication for Keycloak bearer tokens (DES-AUTH-01 to DES-AUTH-04)."""
+"""The Core Service's principal builder, plugged into `gradian_auth` through
+`GRADIAN_PRINCIPAL_BUILDER`. Token validation itself lives in the package (DES-AUTH-01 to 04)."""
 
 import logging
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.request import Request
-
-from accounts.claims import extract_roles, identity_from_claims
-from accounts.errors import (
-    AccountDisabledError,
-    AmbiguousRoleError,
-    RoleNotAssignedError,
-)
-from accounts.principals import Principal, ServicePrincipal, UserPrincipal
-from accounts.profiles import sync_profile
-from accounts.roles import PANEL_ROLES, SERVICE_ROLE, resolve_panel
-from accounts.tokens import validate_token
-from common import context
+from accounts.errors import AccountDisabledError
+from accounts.models import Profile
+from accounts.principals import CoreUserPrincipal
+from accounts.profiles import grant_default_role, sync_profile
+from gradian_auth.claims import extract_roles
+from gradian_auth.principals import Principal, UserPrincipal
+from gradian_auth.principals import build_principal as build_token_principal
+from gradian_auth.roles import PANEL_ROLES
 
 logger = logging.getLogger("gradian.accounts")
 
 
-def build_principal(claims: dict[str, Any]) -> Principal:
-    roles = extract_roles(claims)
-    if SERVICE_ROLE in roles:
-        if any(role in PANEL_ROLES for role in roles):
-            logger.warning(
-                "role resolution failed",
-                extra={"event": "role_failure", "reason": "service_and_panel"},
-            )
-            raise AmbiguousRoleError(
-                details={"roles": sorted(set(roles) & {SERVICE_ROLE, *PANEL_ROLES})}
-            )
-        return ServicePrincipal(sub=str(claims["sub"]), client_id=str(claims.get("azp", "")))
+def build_principal(claims: Mapping[str, Any]) -> Principal:
+    principal = build_token_principal(claims)
+    if not isinstance(principal, UserPrincipal):
+        return principal
 
-    try:
-        panel = resolve_panel(roles)
-    except (RoleNotAssignedError, AmbiguousRoleError) as exc:
-        logger.warning(
-            "role resolution failed", extra={"event": "role_failure", "reason": exc.default_code}
-        )
-        raise
-    identity = identity_from_claims(claims, panel)
+    identity = principal.identity
+    registered_just_now = not any(role in PANEL_ROLES for role in extract_roles(claims)) and not (
+        Profile.objects.filter(sub=identity.sub).exists()
+    )
     iat = claims.get("iat")
     issued_at = datetime.fromtimestamp(iat, UTC) if isinstance(iat, int | float) else None
     profile = sync_profile(identity, issued_at)
+    if registered_just_now:
+        grant_default_role(str(identity.sub))
     if not profile.is_active:
         logger.info("disabled account refused", extra={"event": "account_disabled"})
         raise AccountDisabledError
-    return UserPrincipal(profile=profile, panel=panel)
-
-
-class KeycloakBearerAuthentication(BaseAuthentication):
-    """`Authorization: Bearer <access token>`. No header means anonymous (the permission
-    class then answers 401); a bad token is refused here with 401."""
-
-    def authenticate(self, request: Request) -> tuple[Principal, dict[str, Any]] | None:
-        parts = get_authorization_header(request).split()
-        if not parts or parts[0].lower() != b"bearer":
-            return None
-        if len(parts) != 2:
-            raise AuthenticationFailed(code="invalid_token")
-        try:
-            token = parts[1].decode("ascii")
-        except UnicodeDecodeError:
-            raise AuthenticationFailed(code="invalid_token") from None
-        claims = validate_token(token)
-        principal = build_principal(claims)
-        context.user_sub.set(principal.sub)
-        return principal, claims
-
-    def authenticate_header(self, request: Request) -> str:
-        return 'Bearer realm="gradian"'
+    return CoreUserPrincipal(identity=identity, panel=principal.panel, profile=profile)

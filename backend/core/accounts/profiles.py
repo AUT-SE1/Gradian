@@ -6,9 +6,12 @@ from datetime import datetime
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from accounts.claims import Identity
 from accounts.errors import IdentityConflictError
 from accounts.models import Profile
+from gradian_auth.claims import Identity
+from gradian_auth.roles import DEFAULT_PANEL
+from gradian_keycloak import admin_client
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
@@ -63,3 +66,16 @@ def sync_profile(identity: Identity, issued_at: datetime | None = None) -> Profi
         # The mobile number or email already belongs to a different Keycloak user.
         logger.warning("identity conflict", extra={"event": "identity_conflict"})
         raise IdentityConflictError from None
+
+
+def grant_default_role(sub: str) -> None:
+    """Give a newly registered person the `student` role in Keycloak, so that group services,
+    which read the role from the token, see it too. Core treats such a person as a student
+    already, so a failure here is logged and not fatal."""
+    try:
+        admin_client.get_admin_client().grant_role(sub, DEFAULT_PANEL)
+    except KeycloakError as exc:
+        logger.warning(
+            "default role grant failed",
+            extra={"event": "default_role_failed", "status": exc.status},
+        )

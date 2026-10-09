@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gradian-keycloak"
+version = "0.1.0"
+description = "Gradian: everything that talks to Keycloak over HTTP (signing keys, service tokens, Admin API)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "Django>=6.1",
+    "requests>=2.32",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["*.tests", "*.tests.*"]
+
+[tool.setuptools.package-data]
+gradian_keycloak = ["py.typed"]

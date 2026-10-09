@@ -2,7 +2,7 @@
 
 from django.http import HttpRequest, JsonResponse
 
-from common.exceptions import error_body
+from gradian_auth.errors import error_body
 
 
 def not_found(request: HttpRequest, exception: Exception | None = None) -> JsonResponse:

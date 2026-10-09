@@ -17,8 +17,8 @@ ASSIGNED = re.compile(r"^#?\s*([A-Z][A-Z0-9_]*)=", re.MULTILINE)
 
 # Read by docker-compose.yml, Keycloak or the Makefile rather than by Django.
 EXTERNAL = {
-    "KEYCLOAK_PUBLIC_URL",
     "KEYCLOAK_PORT",
+    "POSTGRES_HOST_PORT",
     "KEYCLOAK_ADMIN_USER",
     "KEYCLOAK_ADMIN_PASSWORD",
     "CORE_PORT",

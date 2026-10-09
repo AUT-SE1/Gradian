@@ -8,7 +8,7 @@ from django.test import RequestFactory, TestCase
 from accounts.admin import ProfileAdmin
 from accounts.models import Profile
 from accounts.serializers import MeSerializer
-from tests.helpers.covers import covers
+from gradian_testing.covers import covers
 
 
 @covers("SYS-ID-03")

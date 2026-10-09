@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gradian-testing"
+version = "0.1.0"
+description = "Gradian: fake Keycloak keys, token factory and test base classes for services using gradian-auth"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gradian-auth>=0.1,<0.2",
+    "gradian-keycloak>=0.1,<0.2",
+    "Django>=6.1",
+    "PyJWT[crypto]>=2.10",
+]
+
+[project.optional-dependencies]
+drf = ["djangorestframework>=3.16"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["*.tests", "*.tests.*"]
+
+[tool.setuptools.package-data]
+gradian_testing = ["py.typed"]

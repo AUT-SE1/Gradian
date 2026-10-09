@@ -1,17 +1,16 @@
-"""One error shape, Persian messages, English codes (DES-API-01, DES-XC-03)."""
+"""One error shape, English codes (DES-API-01, DES-XC-03)."""
 
-import re
 from typing import Any
 from unittest.mock import patch
 
-from django.test import Client, SimpleTestCase
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404
+from django.test import Client
 
-from common.exceptions import MESSAGES
+from gradian_auth.drf import exception_handler
+from gradian_testing.covers import covers
+from gradian_testing.tokens import make_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import make_token
-
-PERSIAN = re.compile(r"[\u0600-\u06FF]")
 
 
 @covers("SYS-NFR-05")
@@ -22,19 +21,25 @@ class ErrorShapeTests(ApiTestCase):
         self.assertEqual(set(body), {"code", "message", "details"})
         self.assertEqual(body["code"], code)
         self.assertRegex(code, r"^[a-z_]+$")  # codes are English
-        self.assertRegex(str(body["message"]), PERSIAN)  # messages are Persian
         return body
 
     def test_unauthenticated(self) -> None:
         self.assert_shape(self.client.get("/api/v1/me"), 401, "not_authenticated")
 
     def test_forbidden(self) -> None:
-        self.get_as("/api/v1/me", roles=())
-        response = self.get_as("/api/v1/me", roles=())
-        self.assert_shape(response, 403, "role_not_assigned")
+        response = self.get_as("/api/v1/me", roles=("student", "admin"))
+        self.assert_shape(response, 403, "ambiguous_role")
 
     def test_unknown_url_is_json_404(self) -> None:
         self.assert_shape(self.client.get("/api/v1/nothing-here"), 404, "not_found")
+
+    def test_django_404_and_permission_errors_keep_their_own_code(self) -> None:
+        """Raised by `get_object_or_404` or Django code inside a view, not by DRF."""
+        missing = exception_handler(Http404(), {})
+        denied = exception_handler(DjangoPermissionDenied(), {})
+        assert missing is not None and denied is not None
+        self.assertEqual((missing.status_code, missing.data["code"]), (404, "not_found"))
+        self.assertEqual((denied.status_code, denied.data["code"]), (403, "permission_denied"))
 
     def test_method_not_allowed(self) -> None:
         self.assert_shape(self.client.post("/api/v1/auth/config"), 405, "method_not_allowed")
@@ -54,11 +59,3 @@ class ErrorShapeTests(ApiTestCase):
             response = client.get("/api/v1/auth/config")
         self.assert_shape(response, 500, "server_error")
         self.assertNotIn("boom", response.content.decode())
-
-
-@covers("SYS-NFR-05")
-class MessagesTests(SimpleTestCase):
-    def test_every_message_is_persian(self) -> None:
-        for code, message in MESSAGES.items():
-            with self.subTest(code=code):
-                self.assertRegex(message, PERSIAN)

@@ -1,7 +1,8 @@
 # Contributing
 
-Rules for working on the Core Service (`core/`) and the repository scripts (`scripts/`).
-Requirements, design and decisions live in [`docs/backend/`](docs/backend/); this file is only
+Rules for working on the Core Service (`core/`) and the repository scripts (`scripts/`), both in the
+`backend/` folder of the monorepo. Run `make` from `backend/`.
+Requirements, design and decisions live in [`docs/`](docs/); this file is only
 about how we write and check code.
 
 ## Setup
@@ -23,16 +24,18 @@ with Python 3.13 and install `core/requirements-dev.txt` into it; `make` never u
 
 | Command | What it does | Changes files |
 | --- | --- | --- |
-| `make lint` | `ruff check`, `ruff format --check`, `makemigrations --check`, `.env.example` check, requirement-coverage report | No |
+| `make check` | `lint`, `typecheck`, `test` and `schema` | No |
 | `make format` | `ruff format`, then `ruff check --fix` | **Yes** |
-| `make typecheck` | `mypy` in strict mode over `core/` and `scripts/` | No |
-| `make test` | Fast tests (no stack needed) and the script tests | No |
-| `make check` | `lint`, `typecheck` and `test` | No |
 | `make migrations` | `makemigrations` after a model change | **Yes** |
-| `make test-integration` | Tests tagged `integration`, against the running stack | No |
+| `make itest` | Starts the system if needed, then the tests tagged `integration` | No |
 
-`make check` is the one command CI should run on every push. Lint, typecheck and test must all
-pass before a change is merged. A typical loop is: write code, `make format`, then `make check`.
+`make check` is made of steps you can run alone: `lint` (`ruff check`, `ruff format --check`,
+`.env.example` check, `makemigrations --check`, requirement-coverage report), `typecheck` (`mypy` in
+strict mode over `core/` and `scripts/`), `test` (fast tests and the script tests) and `schema`
+(OpenAPI export and validation).
+
+`make check` is the one command CI should run on every push, and it must pass before a change is
+merged. A typical loop is: write code, `make format`, then `make check`.
 
 Everything is configured in [`core/pyproject.toml`](core/pyproject.toml). Do not add per-developer
 settings elsewhere, and do not loosen a rule to make a check pass without agreeing it in review.
@@ -69,19 +72,30 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 
 ### Tests
 
-- Fast tests extend `tests.helpers.base.ApiTestCase` (fake Keycloak keys, stubbed Admin API) or
+- Fast tests extend `tests.helpers.base.ApiTestCase` (fake Keycloak keys from `gradian_testing`, stubbed Admin API) or
   Django's `TestCase`/`SimpleTestCase`. They need no stack and never touch the network.
 - Tests that need the running stack extend `IntegrationTestCase` (tag `integration`) and live in a
   `tests/integration/` folder.
 - Tie every test to the requirement it checks with `@covers("SYS-AUTH-02")` from
-  `tests.helpers.covers`. This also adds a tag, so one requirement's tests run with
+  `gradian_testing.covers`. This also adds a tag, so one requirement's tests run with
   `--tag=req-SYS-AUTH-02`.
-- `make req-coverage` lists requirements without a test. `make lint REQ_STRICT=1` fails while any
-  remain; we turn that on once the system is complete.
+- `make lint` lists requirements without a test. Making that report fail (`--strict` in
+  `scripts/req_coverage.py`) is for once the system is complete.
 - Only tag a test with a requirement it really verifies. A test that exercises part of a
-  requirement belongs to the test-plan level it matches (see `docs/backend/04-test-plan.md`).
-- A test must not depend on the contents of your `.env`. Tests that start a subprocess point
-  `DOTENV_FILE` at a file that does not exist.
+  requirement belongs to the test-plan level it matches (see `docs/04-test-plan.md`).
+- A test must not depend on the contents of your `.env`.
+- Do not write a test that only restates a setting or the realm file: it duplicates the decision it
+  checks and breaks whenever that decision changes. Behaviour that Keycloak or Django implements is
+  marked `EXT` in the test plan instead (DEC-17). Test the code we write on top of it.
+
+## Shared packages
+
+Code that Core and the group services both need lives in `packages/` (see
+[`packages/README.md`](packages/README.md)), not in `core/`. `make check` lints, type-checks and tests it
+with Core; its tests live in `packages/<package>/src/<module>/tests/`. Import from the package
+(`gradian_auth`, `gradian_keycloak`, `gradian_testing`), never copy a module back into `core/`. A change to
+something a package's README documents is a change for every service that installs it: keep it
+compatible, or say so in the pull request and bump the version.
 
 ## Conventions
 
@@ -91,7 +105,7 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
   blank lines and good names instead. A Makefile target gets its one-line `##` help text and
   nothing more. This applies to every file type, including Makefiles, YAML, TOML, shell and
   `.env.example`.
-- **Layout.** Follow `docs/backend/02-design.md`: Django project in `core/`, apps beside
+- **Layout.** Follow `docs/02-design.md`: Django project in `core/`, apps beside
   `gradian/`, scripts in `scripts/`. Business logic lives in plain modules (`accounts/mobile.py`,
   `accounts/roles.py`, ...) so it can be unit-tested without a database; views stay thin.
 - **Docker only.** Nothing in the Makefile may need Python or any other language runtime on the
@@ -100,8 +114,8 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
   (`require`, `get`, `flag`, `csv`) with a literal name, and list every new variable in
   `.env.example` (an optional one can be listed commented out). `make lint` fails if the two
   disagree. Never commit a secret.
-- **Errors.** Raise a subclass of `common.exceptions.ApiError` with a stable English
-  `default_code`, and add its Persian message to `common/exceptions.py`. Every response has the
+- **Errors.** Raise a subclass of `gradian_auth.errors.ApiError` with a stable English
+  `default_code`, and add its Persian message with `register_messages` next to the class. Every response has the
   shape `{"code", "message", "details"}`.
 - **Logging.** Use the `gradian.*` loggers with an `event` key in `extra`. Log field names, never
   values, and never tokens or passwords. Do not use `created`, `name`, `message` or other
@@ -113,5 +127,5 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 - **Makefile.** It only orders steps. Logic belongs in `scripts/` or a `manage.py` command so it
   also runs without `make` (DES-OPS-05).
 - **Commits and reviews.** Small, focused changes. Say which requirement or design item a change
-  serves (for example `SYS-ID-05`). Update the decision log (`docs/backend/03-decisions.md`) when a
+  serves (for example `SYS-ID-05`). Update the decision log (`docs/03-decisions.md`) when a
   decision changes; requirements and design change only with the TA's agreement.

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gradian sign-in tester</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 0; background: #f4f5f7; color: #1d2330; }
+    main { max-width: 960px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 20px; margin: 8px 0 0; }
+    .note { color: #8a4b00; background: #fff4e0; border: 1px solid #f0d6a8; padding: 8px 12px; border-radius: 6px; margin: 8px 0 16px; }
+    section { background: #fff; border: 1px solid #dde1e8; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }
+    h2 { font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: #566; }
+    button { font: inherit; padding: 6px 12px; margin: 0 6px 6px 0; border: 1px solid #99a; border-radius: 6px; background: #fff; cursor: pointer; }
+    button.primary { background: #2456d8; color: #fff; border-color: #2456d8; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    pre { background: #10141c; color: #d9e1f2; padding: 10px; border-radius: 6px; overflow: auto; max-height: 280px; margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; }
+    dl { display: grid; grid-template-columns: 11em 1fr; gap: 2px 12px; margin: 0; }
+    dt { color: #566; } dd { margin: 0; font-family: ui-monospace, monospace; }
+    .ok { color: #0a7a35; } .bad { color: #b3261e; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Gradian sign-in tester</h1>
+  <div class="note">Development only. Not the real frontend: it exists to try the sign-in flow and the API contract in <code>docs/05-frontend-guide.md</code>.</div>
+
+  <section>
+    <h2>1. Settings from the API</h2>
+    <button id="btn-config">GET /api/v1/auth/config</button>
+    <pre id="config">not loaded</pre>
+  </section>
+
+  <section>
+    <h2>2. Session</h2>
+    <button id="btn-login" class="primary">Sign in (ورود)</button>
+    <button id="btn-register">Register (ثبت‌نام)</button>
+    <button id="btn-logout">Sign out</button>
+    <button id="btn-renew">Renew token now</button>
+    <dl>
+      <dt>Signed in</dt><dd id="s-signed">no</dd>
+      <dt>Access token expires in</dt><dd id="s-expires">-</dd>
+      <dt>Refresh token present</dt><dd id="s-refresh">-</dd>
+      <dt>Audience (aud)</dt><dd id="s-aud">-</dd>
+      <dt>Realm roles</dt><dd id="s-roles">-</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>3. Who am I (GET /api/v1/me)</h2>
+    <button id="btn-me">GET /me</button>
+    <button id="btn-patch">PATCH /me (set bio)</button>
+    <dl>
+      <dt>Name</dt><dd id="m-name">-</dd>
+      <dt>panel</dt><dd id="m-panel">-</dd>
+      <dt>home_path</dt><dd id="m-home">-</dd>
+      <dt>The app would route to</dt><dd id="m-route">-</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>4. Other endpoints</h2>
+    <button id="btn-admin">GET /admin/users?limit=3 (admin only)</button>
+    <button id="btn-internal">GET /internal/users (services only, expect 403)</button>
+    <button id="btn-anon">GET /me without a token (expect 401)</button>
+  </section>
+
+  <section>
+    <h2>5. Panel content</h2>
+    <button id="btn-landing">GET /landing (no token)</button>
+    <button id="btn-panel">GET /panel</button>
+    <button id="btn-services">GET /panel/services</button>
+    <button id="btn-dashboard">GET /student/dashboard (students only)</button>
+    <button id="btn-notifications">GET /notifications</button>
+  </section>
+
+  <section>
+    <h2>Log</h2>
+    <button id="btn-clear">Clear</button>
+    <pre id="log"></pre>
+  </section>
+</main>
+<script src="/oidc-client-ts.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -3,11 +3,11 @@
 import uuid
 from typing import Any
 
-from accounts.keycloak import KeycloakError
 from accounts.models import Profile
+from gradian_keycloak.errors import KeycloakError
+from gradian_testing.covers import covers
+from gradian_testing.tokens import make_token, service_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import make_token, service_token
 
 ME = "/api/v1/me"
 SUB = uuid.UUID("00000000-0000-4000-8000-000000000001")
@@ -77,6 +77,9 @@ class AuthConfigTests(ApiTestCase):
             body,
             {
                 "issuer": "http://keycloak.test/realms/gradian",
+                "registration_endpoint": (
+                    "http://keycloak.test/realms/gradian/protocol/openid-connect/registrations"
+                ),
                 "realm": "gradian",
                 "client_id": "gradian-web",
                 "end_session_url": "http://keycloak.test/realms/gradian/protocol/openid-connect/logout",

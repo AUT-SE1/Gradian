@@ -6,7 +6,7 @@
       "validations": {
         "pattern": {"pattern": "^09\\d{9}$", "error-message": "شماره موبایل باید به شکل 09123456789 باشد."}
       },
-      "permissions": {"view": ["admin", "user"], "edit": ["admin"]}
+      "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
     },
     {
       "name": "email",

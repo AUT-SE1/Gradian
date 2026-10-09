@@ -1,5 +1,6 @@
 """Django settings. Everything configurable comes from the environment (see .env.example)."""
 
+from datetime import date
 from pathlib import Path
 
 import django_stubs_ext
@@ -37,6 +38,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "common",
     "accounts",
+    "registry",
+    "panels",
 ]
 
 MIDDLEWARE = [
@@ -75,14 +78,14 @@ DATABASES = {
         "NAME": env.require("POSTGRES_DB"),
         "USER": env.require("POSTGRES_USER"),
         "PASSWORD": env.require("POSTGRES_PASSWORD"),
-        "HOST": env.get("POSTGRES_HOST", "localhost"),
-        "PORT": env.get("POSTGRES_PORT", "5432"),
+        "HOST": env.require("POSTGRES_HOST"),
+        "PORT": env.require("POSTGRES_PORT"),
     }
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # DES-XC-03: Persian, Tehran time. Error codes stay English, messages are Persian.
-LANGUAGE_CODE = "fa"
+LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Tehran"
 USE_I18N = True
 USE_TZ = True
@@ -90,49 +93,65 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# ISSUER must equal the `iss` claim, i.e. the URL clients sign in through.
-# INTERNAL_URL is how this server reaches Keycloak (inside docker: http://keycloak:8080).
-KEYCLOAK_ISSUER = env.require("KEYCLOAK_ISSUER").rstrip("/")
+# PUBLIC_URL is what browsers use. Compose gives it to Keycloak as its hostname, so it is also the
+# `iss` claim of every token; gradian_keycloak derives the issuer from it. KEYCLOAK_URL is how
+# this server reaches Keycloak (inside Compose: http://keycloak:8080). The two differ and both
+# are correct.
 KEYCLOAK_REALM = env.get("KEYCLOAK_REALM", "gradian")
-if not KEYCLOAK_ISSUER.endswith(f"/realms/{KEYCLOAK_REALM}"):
-    raise ImproperlyConfigured(
-        f"KEYCLOAK_ISSUER must end with /realms/{KEYCLOAK_REALM}, got {KEYCLOAK_ISSUER!r}"
-    )
-KEYCLOAK_INTERNAL_URL = env.get(
-    "KEYCLOAK_INTERNAL_URL", KEYCLOAK_ISSUER.removesuffix(f"/realms/{KEYCLOAK_REALM}")
-).rstrip("/")
-KEYCLOAK_JWKS_URL = f"{KEYCLOAK_INTERNAL_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
+KEYCLOAK_PUBLIC_URL = env.require("KEYCLOAK_PUBLIC_URL").rstrip("/")
+KEYCLOAK_URL = env.require("KEYCLOAK_URL").rstrip("/")
 KEYCLOAK_WEB_CLIENT_ID = env.get("KEYCLOAK_WEB_CLIENT_ID", "gradian-web")
-# The audience every token must carry, and the client whose service account calls the Admin API.
-KEYCLOAK_CORE_CLIENT_ID = env.get("KEYCLOAK_CORE_CLIENT_ID", "gradian-core")
-KEYCLOAK_CORE_CLIENT_SECRET = env.require("KEYCLOAK_CORE_CLIENT_SECRET")
+# This service's own client: the audience every token must carry, and the client whose service
+# account calls the Admin API. Read by gradian_keycloak and gradian_auth.
+KEYCLOAK_CLIENT_ID = env.get("KEYCLOAK_CORE_CLIENT_ID", "gradian-core")
+KEYCLOAK_CLIENT_SECRET = env.require("KEYCLOAK_CORE_CLIENT_SECRET")
+GRADIAN_PRINCIPAL_BUILDER = "accounts.authentication.build_principal"
 KEYCLOAK_TIMEOUT_SECONDS = float(env.get("KEYCLOAK_TIMEOUT_SECONDS", "5"))
 
 FRONTEND_URL = env.require("FRONTEND_URL").rstrip("/")
 CORS_ALLOWED_ORIGINS = env.csv("CORS_ALLOWED_ORIGINS", FRONTEND_URL)
 PUBLIC_RATE_LIMIT = env.get("PUBLIC_RATE_LIMIT", "60/min")
 
+try:
+    KONKUR_DATE = date.fromisoformat(env.get("KONKUR_DATE", "2027-06-25"))
+except ValueError as exc:
+    raise ImproperlyConfigured("KONKUR_DATE must be a date written YYYY-MM-DD.") from exc
+
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.KeycloakBearerAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["gradian_auth.drf.KeycloakBearerAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_PAGINATION_CLASS": "common.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
+    "EXCEPTION_HANDLER": "gradian_auth.drf.exception_handler",
     "UNAUTHENTICATED_USER": None,
     "UNAUTHENTICATED_TOKEN": None,
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Gradian Core Service",
-    "DESCRIPTION": "Identity, panels and group-service registry. Source of truth for the API.",
+    "DESCRIPTION": (
+        "Identity, panels and group-service registry. Source of truth for the API.\n\n"
+        "**Trying it out.** Click *Authorize*. Under `keycloakPassword` enter a mobile number and "
+        "its password; the token is then sent with every request. Choose *Logout* to sign in as "
+        "another user. Under `keycloakBearer` you can paste an access token instead. Errors always "
+        "have the shape `{code, message, details}`."
+    ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "SERVE_AUTHENTICATION": [],
     "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+        "tryItOutEnabled": True,
+        "filter": True,
+    },
+    "SWAGGER_UI_OAUTH2_CONFIG": {} if IS_PRODUCTION else {"clientId": "gradian-test"},
 }
 
 # DES-XC-01: JSON lines with request id and user `sub`.

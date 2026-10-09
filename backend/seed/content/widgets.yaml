@@ -1,0 +1,41 @@
+# Demo content of the student dashboard. `{first_name}` and `{full_name}` in the welcome message
+# are replaced for each student. The shapes are in core/panels/content.py.
+welcome:
+  message: "سلام {first_name}، به گرادیان خوش آمدی!"
+  tip: امروز یک آزمون مبحثی بزن و نتیجه‌اش را با هفته قبل مقایسه کن.
+
+study_streak:
+  current_days: 5
+  best_days: 12
+  message: پنج روز پشت‌سرهم مطالعه کرده‌ای. ادامه بده!
+  week:
+    - {day: شنبه, done: true}
+    - {day: یکشنبه, done: true}
+    - {day: دوشنبه, done: true}
+    - {day: سه‌شنبه, done: true}
+    - {day: چهارشنبه, done: true}
+    - {day: پنجشنبه, done: false}
+    - {day: جمعه, done: false}
+
+experience_feed:
+  - id: 1
+    author: نیما رحیمی
+    author_title: رتبه ۱۲ ریاضی
+    title: چطور در سه ماه آخر درصد ریاضی‌ام را بالا بردم
+    excerpt: هر روز یک مجموعه تست زمان‌دار حل می‌کردم و شب همان روز اشتباهاتم را دسته‌بندی می‌کردم.
+    likes: 128
+    comments: 14
+  - id: 2
+    author: مریم احمدی
+    author_title: رتبه ۳۸ تجربی
+    title: برنامه مرور زیست‌شناسی من
+    excerpt: فصل‌ها را در سه دور خواندم؛ دور اول مفهومی، دور دوم تست، دور سوم فقط اشتباهات.
+    likes: 96
+    comments: 9
+  - id: 3
+    author: پارسا قنبری
+    author_title: رتبه ۵۴ ریاضی
+    title: مدیریت استرس روز آزمون
+    excerpt: دو هفته مانده به آزمون، ساعت بیدارشدن و خوابم را مثل روز کنکور تنظیم کردم.
+    likes: 74
+    comments: 6

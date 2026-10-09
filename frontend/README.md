@@ -94,6 +94,8 @@ frontend/
 
 ## API و احراز هویت
 
+> قرارداد فعلی ورود (Authorization Code با PKCE)، مسیرهای `/api/v1/...` و خطاها در [`backend/docs/05-frontend-guide.md`](../backend/docs/05-frontend-guide.md) است. فهرست مسیرهای زیر قدیمی است و با آن تفاوت دارد.
+
 بک‌اند فعلی از Keycloak استفاده می‌کند. مسیرهای مهم فعلی:
 
 ```text

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Create a demo user in Keycloak through the Admin API, for manual testing before the seed exists.
 
-Run through `make dev-user MOBILE=09120000001 ROLES=student`. Refuses ENVIRONMENT=production.
+Not behind a make target any more (accounts are seeded, registered or created by an admin). Run it
+for a one-off user: `python scripts/dev_user.py --mobile 09120000001 --roles student`. Refuses
+ENVIRONMENT=production.
 An existing user with the same mobile number is left untouched.
 
 ROLES is a comma-separated list of realm roles. Use `none` for a user without any role, or
@@ -10,30 +12,19 @@ CONSULTANT_TYPE=consultant or top_ranker.
 """
 
 import argparse
-import os
 import re
 import sys
 from pathlib import Path
 from typing import Any
 
 import requests
+from envfile import is_production
+from envfile import setting as env_setting
 
 ROOT = Path(__file__).resolve().parent.parent
 MOBILE = re.compile(r"^09\d{9}$")
 KNOWN_ROLES = {"student", "consultant", "professor", "admin", "service"}
 TIMEOUT_SECONDS = 10
-
-
-def parse_dotenv(path: Path) -> dict[str, str]:
-    values: dict[str, str] = {}
-    if not path.is_file():
-        return values
-    for line in path.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            key, value = stripped.split("=", 1)
-            values[key.strip()] = value.strip()
-    return values
 
 
 def parse_roles(raw: str) -> list[str]:
@@ -114,10 +105,8 @@ class Admin:
 
 
 def main() -> int:
-    dotenv = parse_dotenv(ROOT / ".env")
-
     def setting(name: str, default: str = "") -> str:
-        return os.environ.get(name) or dotenv.get(name, default)
+        return env_setting(ROOT, name, default)
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mobile", required=True)
@@ -129,7 +118,7 @@ def main() -> int:
     parser.add_argument("--password", default="")
     args = parser.parse_args()
 
-    if setting("ENVIRONMENT", "development") == "production":
+    if is_production(ROOT):
         print("error: refusing to create demo users with ENVIRONMENT=production", file=sys.stderr)
         return 1
     password = args.password or setting("SEED_DEFAULT_PASSWORD")
@@ -148,8 +137,8 @@ def main() -> int:
             consultant_type=args.consultant_type,
         )
         admin = Admin(
-            setting("KEYCLOAK_INTERNAL_URL", "http://keycloak:8080"),
-            setting("KEYCLOAK_REALM", "gradian"),
+            setting("KEYCLOAK_URL"),
+            setting("KEYCLOAK_REALM"),
             setting("KEYCLOAK_ADMIN_USER"),
             setting("KEYCLOAK_ADMIN_PASSWORD"),
         )
@@ -162,7 +151,7 @@ def main() -> int:
         return 1
     except requests.RequestException as exc:
         print(
-            f"error: Keycloak request failed ({exc}). Is the stack up? make up bootstrap",
+            f"error: Keycloak request failed ({exc}). Is the system up? make start",
             file=sys.stderr,
         )
         return 1

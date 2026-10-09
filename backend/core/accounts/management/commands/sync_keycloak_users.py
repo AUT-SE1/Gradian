@@ -13,25 +13,27 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 from django.utils import timezone
 
-from accounts import keycloak
-from accounts.claims import Identity, is_valid_name
-from accounts.mobile import InvalidMobileError, normalize_mobile
 from accounts.models import ConsultantType, Profile, Role
 from accounts.profiles import apply_identity, differences
+from gradian_auth.claims import Identity, is_valid_name
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
+from gradian_auth.roles import DEFAULT_PANEL
+from gradian_keycloak import admin_client as keycloak
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
 
 def _identity(user: keycloak.KeycloakUser) -> Identity | None:
     """The identity for a Keycloak user, or None if it is not usable (reported, not synced)."""
-    if len(user.roles) != 1:
+    if len(user.roles) > 1:
         return None
     try:
         mobile = normalize_mobile(user.username)
         sub = uuid.UUID(user.sub)
     except (InvalidMobileError, ValueError):
         return None
-    role = user.roles[0]
+    role = user.roles[0] if user.roles else DEFAULT_PANEL
     if (
         "@" not in user.email
         or not is_valid_name(user.first_name)
@@ -63,7 +65,7 @@ class Command(BaseCommand):
         dry_run: bool = options["dry_run"]
         try:
             users = keycloak.get_admin_client().list_panel_users()
-        except keycloak.KeycloakError as exc:
+        except KeycloakError as exc:
             raise CommandError(f"Keycloak Admin API failed: {exc}") from exc
 
         profiles = {profile.sub: profile for profile in Profile.objects.all()}

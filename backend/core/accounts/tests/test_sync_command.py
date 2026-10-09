@@ -8,10 +8,11 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from accounts.keycloak import KeycloakError, KeycloakUser
 from accounts.models import Profile
-from tests.helpers.base import FakeIdentityAdmin
-from tests.helpers.covers import covers
+from gradian_keycloak.admin_client import KeycloakUser
+from gradian_keycloak.errors import KeycloakError
+from gradian_testing.covers import covers
+from gradian_testing.fakes import FakeIdentityAdmin
 
 A = "00000000-0000-4000-8000-00000000000a"
 B = "00000000-0000-4000-8000-00000000000b"
@@ -49,7 +50,7 @@ def profile(sub: str = A, **overrides: object) -> Profile:
 class SyncKeycloakUsersTests(TestCase):
     def setUp(self) -> None:
         self.idp = FakeIdentityAdmin()
-        patcher = patch("accounts.keycloak.get_admin_client", return_value=self.idp)
+        patcher = patch("gradian_keycloak.admin_client.get_admin_client", return_value=self.idp)
         patcher.start()
         self.addCleanup(patcher.stop)
 

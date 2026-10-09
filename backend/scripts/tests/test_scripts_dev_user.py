@@ -1,12 +1,8 @@
-import tempfile
 import unittest
-from pathlib import Path
 
 import dev_user
-from covers import covers
 
 
-@covers("SYS-DATA-01")
 class DevUserTests(unittest.TestCase):
     def test_roles(self) -> None:
         self.assertEqual(dev_user.parse_roles("student"), ["student"])
@@ -52,10 +48,3 @@ class DevUserTests(unittest.TestCase):
                 password="pw",
                 consultant_type="",
             )
-
-    def test_dotenv_parsing_ignores_comments_and_blank_lines(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / ".env"
-            path.write_text("# note\n\nA=1\nB = two\nbroken\n", encoding="utf-8")
-            self.assertEqual(dev_user.parse_dotenv(path), {"A": "1", "B": "two"})
-        self.assertEqual(dev_user.parse_dotenv(Path(tmp) / "missing"), {})

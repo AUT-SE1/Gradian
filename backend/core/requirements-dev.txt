@@ -6,3 +6,7 @@ mypy==2.3.1
 django-stubs[compatible-mypy]==6.1.1
 djangorestframework-stubs==3.18.1
 types-requests==2.33.0.20260906
+
+# Seed generator (scripts/)
+PyYAML==6.0.3
+types-PyYAML==6.0.12.20260906

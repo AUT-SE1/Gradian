@@ -1,0 +1,41 @@
+groups: 10
+
+users:
+  student: 40
+  consultant: 10
+  top_ranker: 10
+  professor: 10
+  admin: 10
+
+mobile:
+  prefix: "0900"
+  index_digits: 6
+  temporary_kind_code: 9
+  kind_codes:
+    student: 1
+    consultant: 2
+    top_ranker: 3
+    professor: 4
+    admin: 5
+
+email_domain: gradian.test
+email_labels:
+  student: student
+  consultant: consultant
+  top_ranker: top-ranker
+  professor: professor
+  admin: admin
+
+group_name: "گروه {number}"
+
+# Where each group's service runs, as the browser reaches it. Group N is on port_base + N. Keycloak
+# lets a group's pages sign people in only at this address, so change it if a service runs elsewhere.
+group_services:
+  origin: "http://localhost:{port}"
+  port_base: 8000
+
+fields_of_study: [experimental, mathematics, humanities]
+
+fixture_timestamp: "2026-01-01T00:00:00Z"
+
+id_namespace: 1b0b276e-a961-412f-983b-12a57a02f8ec

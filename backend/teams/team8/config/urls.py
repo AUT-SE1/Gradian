@@ -1,8 +1,10 @@
-from django.urls import path
-
 from core import views
+from django.urls import include, path
 
-# Reached through the core gateway: /api/teams/<n>/<path> arrives here as /<path>.
 urlpatterns = [
+    path("health", views.health),
+    path("auth/", include("gradian_auth.oidc_urls")),
+    path("app", views.app),
+    path("staff", views.staff),
     path("", views.index),
 ]

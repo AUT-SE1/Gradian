@@ -1,0 +1,107 @@
+# Demo content of the landing page. Every section is required; the shapes are in
+# core/panels/content.py. The people and numbers are invented.
+navbar:
+  brand: گرادیان
+  links:
+    - {label: خانه, href: "#home"}
+    - {label: ماموریت ما, href: "#mission"}
+    - {label: آمار, href: "#statistics"}
+    - {label: اساتید, href: "#teachers"}
+    - {label: رتبه‌های برتر, href: "#rankers"}
+    - {label: نظرات, href: "#testimonials"}
+  login_label: ورود
+  register_label: ثبت‌نام
+
+hero:
+  eyebrow: زیست‌بوم آموزشی کنکور
+  title: مسیر قبولی در کنکور از اینجا شروع می‌شود
+  subtitle: آزمون‌های شبیه‌ساز، مشاوره تخصصی و برنامه‌ریزی هوشمند؛ همه در یک پلتفرم و با یک ورود.
+  primary_cta_label: شروع رایگان
+  secondary_cta_label: ورود به سامانه
+  image_url: ""
+
+statistics:
+  - {key: students, value: "۱۲٬۰۰۰+", label: داوطلب فعال}
+  - {key: exams, value: "۴٬۵۰۰+", label: آزمون برگزارشده}
+  - {key: consultants, value: "۳۰۰+", label: مشاور و رتبه برتر}
+  - {key: professors, value: "۱۵۰+", label: استاد همکار}
+
+missions:
+  - title: آموزش هدفمند
+    description: هر داوطلب مسیر یادگیری خودش را دارد؛ از نقطه قوت و ضعف او شروع می‌کنیم.
+    icon: target
+  - title: مشاوره همراه
+    description: مشاوران باتجربه و رتبه‌های برتر از برنامه‌ریزی تا روز آزمون کنار شما هستند.
+    icon: support
+  - title: آزمون واقعی
+    description: آزمون‌های شبیه‌ساز با شرایط واقعی کنکور و تحلیل دقیق نتیجه.
+    icon: exam
+  - title: جامعه یادگیری
+    description: تبادل تجربه با هزاران داوطلب هم‌مسیر، انگیزه و انرژی می‌دهد.
+    icon: community
+
+teachers:
+  - name: دکتر مهدی کاظمی
+    title: استاد ریاضی و فیزیک
+    bio: بیش از پانزده سال تدریس در دوره‌های کنکور با تمرکز بر حل مسئله.
+    avatar_url: ""
+  - name: دکتر سارا نیک‌پور
+    title: استاد زیست‌شناسی
+    bio: مؤلف چند کتاب کمک‌آموزشی و مدرس دوره‌های جمع‌بندی.
+    avatar_url: ""
+  - name: دکتر امیر شریفی
+    title: استاد شیمی
+    bio: روش‌های ساده برای یادگیری مفاهیم سخت شیمی آلی و محاسبات.
+    avatar_url: ""
+  - name: دکتر لیلا مرادی
+    title: استاد ادبیات و زبان فارسی
+    bio: مدرس نکته و تست ادبیات با تحلیل ریشه‌ای اشتباهات رایج.
+    avatar_url: ""
+
+rankers:
+  - name: نیما رحیمی
+    rank: رتبه ۱۲
+    field: علوم ریاضی
+    quote: برنامه‌ریزی روزانه و آزمون‌های شبیه‌ساز مهم‌ترین کمک من بود.
+    avatar_url: ""
+  - name: مریم احمدی
+    rank: رتبه ۳۸
+    field: علوم تجربی
+    quote: با مرور اشتباهات هر آزمون، درصدهایم هر هفته بهتر شد.
+    avatar_url: ""
+  - name: پارسا قنبری
+    rank: رتبه ۵۴
+    field: علوم ریاضی
+    quote: مشاوره منظم کمک کرد زیر فشار آزمون آرام بمانم.
+    avatar_url: ""
+  - name: الهام صادقی
+    rank: رتبه ۷۱
+    field: علوم انسانی
+    quote: تجربه‌های رتبه‌های برتر مسیر مطالعه‌ام را روشن کرد.
+    avatar_url: ""
+
+testimonials:
+  - name: آیدا موسوی
+    role: داوطلب کنکور تجربی
+    text: بعد از چند آزمون شبیه‌ساز، دقیقاً فهمیدم کدام مبحث‌ها را باید دوباره بخوانم.
+    avatar_url: ""
+  - name: محمدرضا حسینی
+    role: داوطلب کنکور ریاضی
+    text: یک ورود برای همه بخش‌ها واقعاً وقت ما را نجات می‌دهد.
+    avatar_url: ""
+  - name: فاطمه جعفری
+    role: مشاور
+    text: پیگیری پیشرفت دانش‌آموزان در یک داشبورد، کارم را بسیار ساده کرده است.
+    avatar_url: ""
+  - name: رضا انصاری
+    role: استاد
+    text: ساخت آزمون و دوره در این پلتفرم سریع و بدون دردسر است.
+    avatar_url: ""
+
+footer:
+  description: گرادیان؛ زیست‌بوم آموزشی کنکور با آزمون، مشاوره و برنامه‌ریزی هوشمند.
+  links:
+    - {label: درباره ما, href: "#mission"}
+    - {label: تماس با ما, href: "#contact"}
+    - {label: قوانین و مقررات, href: "#terms"}
+  copyright: "© گرادیان؛ همه حقوق محفوظ است."

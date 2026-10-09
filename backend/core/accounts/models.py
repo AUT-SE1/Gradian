@@ -2,8 +2,8 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
 
-from accounts.mobile import MOBILE_PATTERN
-from accounts.roles import HOME_PATHS
+from gradian_auth.mobile import MOBILE_PATTERN
+from gradian_auth.roles import HOME_PATHS
 
 
 class Role(models.TextChoices):

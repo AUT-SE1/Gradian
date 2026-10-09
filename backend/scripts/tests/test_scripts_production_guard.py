@@ -65,7 +65,6 @@ class RenderRealmTests(unittest.TestCase):
         roles = {role["name"] for role in self.template["roles"]["realm"]}
         self.assertEqual(roles, {"student", "consultant", "professor", "admin", "service"})
         self.assertTrue(self.template["rememberMe"])
-        self.assertFalse(self.template["registrationAllowed"])
         self.assertFalse(self.template["resetPasswordAllowed"])
         self.assertLessEqual(self.template["accessTokenLifespan"], 600)
         self.assertEqual(self.template["failureFactor"], 5)

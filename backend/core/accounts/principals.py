@@ -1,26 +1,11 @@
-"""Who is calling: a signed-in person, or a platform service with its own credential."""
+"""The caller as the Core Service sees it: the token's identity plus the cached profile."""
 
 from dataclasses import dataclass
 
 from accounts.models import Profile
+from gradian_auth.principals import UserPrincipal
 
 
 @dataclass(frozen=True)
-class UserPrincipal:
+class CoreUserPrincipal(UserPrincipal):
     profile: Profile
-    panel: str
-    is_authenticated: bool = True
-
-    @property
-    def sub(self) -> str:
-        return str(self.profile.sub)
-
-
-@dataclass(frozen=True)
-class ServicePrincipal:
-    sub: str
-    client_id: str
-    is_authenticated: bool = True
-
-
-Principal = UserPrincipal | ServicePrincipal
