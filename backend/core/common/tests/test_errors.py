@@ -4,9 +4,11 @@ import re
 from typing import Any
 from unittest.mock import patch
 
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404
 from django.test import Client, SimpleTestCase
 
-from common.exceptions import MESSAGES
+from common.exceptions import MESSAGES, exception_handler
 from tests.helpers.base import ApiTestCase
 from tests.helpers.covers import covers
 from tests.helpers.tokens import make_token
@@ -29,12 +31,19 @@ class ErrorShapeTests(ApiTestCase):
         self.assert_shape(self.client.get("/api/v1/me"), 401, "not_authenticated")
 
     def test_forbidden(self) -> None:
-        self.get_as("/api/v1/me", roles=())
-        response = self.get_as("/api/v1/me", roles=())
-        self.assert_shape(response, 403, "role_not_assigned")
+        response = self.get_as("/api/v1/me", roles=("student", "admin"))
+        self.assert_shape(response, 403, "ambiguous_role")
 
     def test_unknown_url_is_json_404(self) -> None:
         self.assert_shape(self.client.get("/api/v1/nothing-here"), 404, "not_found")
+
+    def test_django_404_and_permission_errors_keep_their_own_code(self) -> None:
+        """Raised by `get_object_or_404` or Django code inside a view, not by DRF."""
+        missing = exception_handler(Http404(), {})
+        denied = exception_handler(DjangoPermissionDenied(), {})
+        assert missing is not None and denied is not None
+        self.assertEqual((missing.status_code, missing.data["code"]), (404, "not_found"))
+        self.assertEqual((denied.status_code, denied.data["code"]), (403, "permission_denied"))
 
     def test_method_not_allowed(self) -> None:
         self.assert_shape(self.client.post("/api/v1/auth/config"), 405, "method_not_allowed")

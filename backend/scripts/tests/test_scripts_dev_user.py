@@ -1,10 +1,8 @@
 import unittest
 
 import dev_user
-from covers import covers
 
 
-@covers("SYS-DATA-01")
 class DevUserTests(unittest.TestCase):
     def test_roles(self) -> None:
         self.assertEqual(dev_user.parse_roles("student"), ["student"])

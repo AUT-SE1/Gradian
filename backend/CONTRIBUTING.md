@@ -24,16 +24,18 @@ with Python 3.13 and install `core/requirements-dev.txt` into it; `make` never u
 
 | Command | What it does | Changes files |
 | --- | --- | --- |
-| `make lint` | `ruff check`, `ruff format --check`, `makemigrations --check`, `.env.example` check, requirement-coverage report | No |
+| `make check` | `lint`, `typecheck`, `test` and `schema` | No |
 | `make format` | `ruff format`, then `ruff check --fix` | **Yes** |
-| `make typecheck` | `mypy` in strict mode over `core/` and `scripts/` | No |
-| `make test` | Fast tests (no stack needed) and the script tests | No |
-| `make check` | `lint`, `typecheck` and `test` | No |
 | `make migrations` | `makemigrations` after a model change | **Yes** |
-| `make test-integration` | Tests tagged `integration`, against the running stack | No |
+| `make itest` | Starts the system if needed, then the tests tagged `integration` | No |
 
-`make check` is the one command CI should run on every push. Lint, typecheck and test must all
-pass before a change is merged. A typical loop is: write code, `make format`, then `make check`.
+`make check` is made of steps you can run alone: `lint` (`ruff check`, `ruff format --check`,
+`.env.example` check, `makemigrations --check`, requirement-coverage report), `typecheck` (`mypy` in
+strict mode over `core/` and `scripts/`), `test` (fast tests and the script tests) and `schema`
+(OpenAPI export and validation).
+
+`make check` is the one command CI should run on every push, and it must pass before a change is
+merged. A typical loop is: write code, `make format`, then `make check`.
 
 Everything is configured in [`core/pyproject.toml`](core/pyproject.toml). Do not add per-developer
 settings elsewhere, and do not loosen a rule to make a check pass without agreeing it in review.
@@ -77,8 +79,8 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 - Tie every test to the requirement it checks with `@covers("SYS-AUTH-02")` from
   `tests.helpers.covers`. This also adds a tag, so one requirement's tests run with
   `--tag=req-SYS-AUTH-02`.
-- `make req-coverage` lists requirements without a test. `make lint REQ_STRICT=1` fails while any
-  remain; we turn that on once the system is complete.
+- `make lint` lists requirements without a test. Making that report fail (`--strict` in
+  `scripts/req_coverage.py`) is for once the system is complete.
 - Only tag a test with a requirement it really verifies. A test that exercises part of a
   requirement belongs to the test-plan level it matches (see `docs/backend/04-test-plan.md`).
 - A test must not depend on the contents of your `.env`.

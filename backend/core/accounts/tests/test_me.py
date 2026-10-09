@@ -77,6 +77,9 @@ class AuthConfigTests(ApiTestCase):
             body,
             {
                 "issuer": "http://keycloak.test/realms/gradian",
+                "registration_endpoint": (
+                    "http://keycloak.test/realms/gradian/protocol/openid-connect/registrations"
+                ),
                 "realm": "gradian",
                 "client_id": "gradian-web",
                 "end_session_url": "http://keycloak.test/realms/gradian/protocol/openid-connect/logout",

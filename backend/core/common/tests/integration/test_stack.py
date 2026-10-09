@@ -1,4 +1,4 @@
-"""Needs the running stack: `make up bootstrap`, then `make test-integration`."""
+"""Needs the running stack: `make itest` starts it and runs these."""
 
 import requests
 from django.conf import settings

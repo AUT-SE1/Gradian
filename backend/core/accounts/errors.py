@@ -5,11 +5,6 @@ from rest_framework import status
 from common.exceptions import ApiError
 
 
-class RoleNotAssignedError(ApiError):
-    status_code = status.HTTP_403_FORBIDDEN
-    default_code = "role_not_assigned"
-
-
 class AmbiguousRoleError(ApiError):
     status_code = status.HTTP_403_FORBIDDEN
     default_code = "ambiguous_role"
@@ -33,3 +28,8 @@ class IdentityConflictError(ApiError):
 class IdentityProviderUnavailableError(ApiError):
     status_code = status.HTTP_502_BAD_GATEWAY
     default_code = "identity_provider_unavailable"
+
+
+class SelfModificationError(ApiError):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_code = "self_modification_forbidden"

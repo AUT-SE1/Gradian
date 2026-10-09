@@ -1,0 +1,79 @@
+:root {
+  --font: "Vazirmatn", Tahoma, "Segoe UI", sans-serif;
+  --bg-from: #1b1f3b;
+  --bg-to: #3d2c8d;
+  --surface: #ffffff;
+  --text: #1c1d2b;
+  --muted: #6b6f85;
+  --primary: #5b3fd6;
+  --primary-hover: #4a30b8;
+  --border: #d9dbea;
+  --danger: #c62f4a;
+  --danger-bg: #fdecef;
+  --success: #1c7c54;
+  --success-bg: #e6f6ee;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(135deg, var(--bg-from), var(--bg-to));
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: 0 24px 60px rgba(10, 8, 40, 0.35);
+}
+
+.brand { font-size: 1.1rem; font-weight: 700; color: var(--primary); letter-spacing: .02em; }
+h1 { margin: 6px 0 20px; font-size: 1.5rem; }
+
+label { display: block; margin: 14px 0 6px; font-size: .9rem; color: var(--muted); }
+
+input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafaff;
+}
+input:focus { outline: 2px solid var(--primary); outline-offset: 1px; background: #fff; }
+input[aria-invalid="true"] { border-color: var(--danger); }
+
+.password-field { position: relative; }
+.password-field .toggle {
+  position: absolute; inset-block: 0; inset-inline-end: 0;
+  padding: 0 14px; border: 0; background: none; color: var(--primary); cursor: pointer; font: inherit;
+}
+
+.check { display: flex; align-items: center; gap: 8px; margin: 16px 0 0; color: var(--text); }
+
+.btn {
+  width: 100%; margin-top: 22px; padding: 13px;
+  font: inherit; font-weight: 700; color: #fff;
+  background: var(--primary); border: 0; border-radius: 10px; cursor: pointer;
+}
+.btn:hover { background: var(--primary-hover); }
+
+.alert { margin-bottom: 16px; padding: 10px 14px; border-radius: 10px; font-size: .92rem; }
+.alert-error { background: var(--danger-bg); color: var(--danger); }
+.alert-success, .alert-info { background: var(--success-bg); color: var(--success); }
+.alert-warning { background: #fff6e0; color: #8a5a00; }
+.field-error { display: block; margin-top: 4px; font-size: .82rem; color: var(--danger); }
+
+.card-footer { margin-top: 22px; text-align: center; color: var(--muted); font-size: .92rem; }
+a { color: var(--primary); text-decoration: none; font-weight: 600; }
+a:hover { text-decoration: underline; }

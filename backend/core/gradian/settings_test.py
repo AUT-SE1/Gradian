@@ -8,6 +8,8 @@ _DEFAULTS = {
     "POSTGRES_DB": "unused",
     "POSTGRES_USER": "unused",
     "POSTGRES_PASSWORD": "unused",
+    "POSTGRES_HOST": "unused",
+    "POSTGRES_PORT": "5432",
     "KEYCLOAK_PUBLIC_URL": "http://keycloak.test",
     "KEYCLOAK_URL": "http://keycloak.internal.test",
     "KEYCLOAK_CORE_CLIENT_SECRET": "test-client-secret",

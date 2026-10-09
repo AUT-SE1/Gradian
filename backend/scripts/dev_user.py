@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Create a demo user in Keycloak through the Admin API, for manual testing before the seed exists.
 
-Run through `make dev-user MOBILE=09120000001 ROLES=student`. Refuses ENVIRONMENT=production.
+Not behind a make target any more (accounts are seeded, registered or created by an admin). Run it
+for a one-off user: `python scripts/dev_user.py --mobile 09120000001 --roles student`. Refuses
+ENVIRONMENT=production.
 An existing user with the same mobile number is left untouched.
 
 ROLES is a comma-separated list of realm roles. Use `none` for a user without any role, or
@@ -149,7 +151,7 @@ def main() -> int:
         return 1
     except requests.RequestException as exc:
         print(
-            f"error: Keycloak request failed ({exc}). Is the stack up? make up bootstrap",
+            f"error: Keycloak request failed ({exc}). Is the system up? make start",
             file=sys.stderr,
         )
         return 1

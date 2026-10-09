@@ -23,7 +23,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-02 | Keycloak with OpenID Connect for identity | Mandated |
 | DEC-03 | PostgreSQL for the Core database | Proposed |
 | DEC-04 | Docker Compose with a Makefile for local operation | Chosen |
-| DEC-05 | Login on a Keycloak-hosted themed page | Assumed (Q1) |
+| DEC-05 | Login and registration on a Keycloak-hosted themed page | Chosen (Q1 answered by the registration decision) |
 | DEC-06 | Stateless bearer-token API validated locally | Proposed |
 | DEC-07 | Local profile cache keyed by `sub`, refreshed from token claims | Proposed |
 | DEC-08 | Identity edits written through to Keycloak first | Proposed |
@@ -32,12 +32,15 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-11 | Seeding by realm import plus Django fixtures, generated from one source | Chosen |
 | DEC-12 | Deterministic IDs derived from the mobile number | Proposed |
 | DEC-13 | Django's test runner with an `integration` tag | Chosen |
-| DEC-14 | Project groups as Core tables with many-to-many membership | Assumed (Q2, Q3) |
+| DEC-14 | Project groups are an allocation of seed users, not Core tables | Chosen (project owner) |
 | DEC-15 | API and platform conventions | Proposed |
 | DEC-16 | ruff and strict mypy for code quality | Chosen |
 | DEC-17 | Rely on external components for behaviour they own | Chosen |
 | DEC-18 | Public and internal addresses for Keycloak | Chosen |
 | DEC-19 | Monorepo with `backend/` and `frontend/` | Chosen |
+| DEC-20 | One Keycloak client per group service | Proposed |
+| DEC-21 | Self-registration, with student as the default role | Chosen (project owner) |
+| DEC-22 | Account administration through the Core API | Chosen (project owner) |
 
 ## Decisions
 
@@ -75,9 +78,10 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Consequences:** Make is not installed by default on Windows, so the underlying commands must stay runnable without it (DES-OPS-05). Targets are documented through `make help`.
 - **Implementation note (step 1):** The host needs only Docker, Compose v2 and make. `make lint`, `format`, `typecheck` and `test` run in the `tools` Compose service (profile `tools`, Python 3.13), not on the host. The design lists `test` as needing no containers; it still needs no running stack, but it does run inside a tools container. Keycloak runs as root in `docker-compose.yml` so that its named data volume is writable; that is for local development only.
 
-### DEC-05 Login on a Keycloak-hosted themed page
+### DEC-05 Login and registration on a Keycloak-hosted themed page
 
-- **Status:** Assumed (open question Q1).
+- **Status:** Chosen. The project owner asked for a registration page hosted with the sign-in page, which settles Q1.
+- **Update:** the theme `gradian` (DES-IDP-08) now carries the registration page too, and a themed page is the only way to offer it.
 - **Realizes:** DES-IDP-04, DES-IDP-08, DES-AUTH-05.
 - **Decision:** Users sign in on a Keycloak page themed to match the Gradian login design, using Authorization Code with PKCE. The Core Service never sees a password.
 - **Alternatives:** A custom login form in the Gradian frontend posting credentials to Django or to Keycloak with a password grant. This matches the PDF mock-up more literally, but password grants are discouraged in current OAuth guidance and put credentials through the frontend.
@@ -115,7 +119,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Realizes:** DES-IDP-03, DES-AUTH-02, DES-AUTH-03, DES-AUTH-06.
 - **Decision:** Each user has exactly one panel role. Consultants and top-rankers share the role `consultant`, told apart by the attribute `consultant_type`. A fifth role, `service`, is for machine clients.
 - **Alternatives:** Separate roles for top-rankers (they share one panel, so a second role adds nothing); letting users hold several roles (needs a "which panel?" rule the PDF does not give).
-- **Consequences:** An account with zero or several panel roles is refused rather than guessed at.
+- **Consequences:** An account with several panel roles is refused rather than guessed at. An account with none is a student (DEC-21).
 
 ### DEC-10 Service registry in the database
 
@@ -128,10 +132,10 @@ A decision records a tool or approach chosen to realise a design requirement. It
 ### DEC-11 Seeding by realm import and fixtures
 
 - **Status:** Chosen (fixtures plus a bootstrap target by the TA; the generator is proposed).
-- **Realizes:** DES-IDP-01, DES-DATA-01, DES-DATA-02, DES-DATA-04 to DES-DATA-06, DES-DATA-08 to DES-DATA-10.
-- **Decision:** Keycloak users are loaded through Keycloak's realm import; Core data is loaded with Django fixtures by `make bootstrap`. Both are generated from `seed/people.yaml` by one deterministic script, and the generated fixtures are committed.
+- **Realizes:** DES-IDP-01, DES-DATA-01 to DES-DATA-06, DES-DATA-08, DES-DATA-10.
+- **Decision:** Keycloak users are loaded through Keycloak's realm import; Core data is loaded with Django fixtures by `make bootstrap`. Both are generated from `seed/people.yaml` by one deterministic script. The fixture is a build artifact, git-ignored and written again by `make seed` (changed from committed fixtures, so no generated file can drift from the source).
 - **Alternatives:** A custom management command that creates users through the Admin API (works against a shared Keycloak, kept as a variant, DES-DATA-10); hand-written fixtures and realm JSON (drift between the two, tedious to scale to many groups).
-- **Consequences:** Passwords never enter committed files, because the realm file is rendered into a git-ignored directory. Realm import runs only on an empty Keycloak, so `make reset` removes the Keycloak volume. A check in CI catches fixtures that fall out of date.
+- **Consequences:** Passwords never enter committed files, because the realm file is rendered into a git-ignored directory. Realm import runs only on an empty Keycloak, so `make reset` removes the Keycloak volume. Because nothing generated is committed, there is no drift to check.
 
 ### DEC-12 Deterministic IDs from the mobile number
 
@@ -140,6 +144,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** A user's ID is a UUIDv5 of the normalized mobile number. It is used as the Keycloak user ID and as the Core profile primary key.
 - **Alternatives:** Random IDs created by Keycloak (the fixtures cannot reference them in advance, so a lookup step is needed).
 - **Consequences:** Fixtures and Keycloak agree without coordination, and `loaddata` can be repeated. This relies on the realm import honouring a supplied user ID; check it against the chosen Keycloak version early.
+- **Verified (step 2):** Keycloak 26.0.8 keeps the supplied `id` of every user in a realm import, and each seeded user signs in with the shared password.
 
 ### DEC-13 Django's test runner with an `integration` tag
 
@@ -150,13 +155,13 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Consequences:** Fast tests replace Keycloak with a fake key set. Integration tests use a test-only client, so DES-IDP-09 exists only outside production.
 - **Implementation note (step 1):** Fast tests run on in-memory SQLite through `gradian.settings_test`, so `make test` needs no containers and no `.env`. Integration tests run inside the `core` container against PostgreSQL and the real Keycloak.
 
-### DEC-14 Project groups as Core tables
+### DEC-14 Project groups are an allocation, not Core tables
 
-- **Status:** Assumed (open questions Q2 and Q3).
+- **Status:** Chosen (project owner). Replaces the earlier assumption that groups are rows with a membership table (Q2 is confirmed: groups are the student teams that build the group services; Q3 is moot).
 - **Realizes:** DES-DATA-07, DES-REG-07.
-- **Decision:** A project group is a row in the Core database, linked to users through a membership table. Membership is not stored in Keycloak.
-- **Alternatives:** Keycloak groups (would put course administration into the identity provider and into every token).
-- **Consequences:** Group services read membership through the Core API. If "groups" means something else, this decision and sections 5 and 7 of the design change.
+- **Decision:** Every user is valid for every group's service, so the Core Service does not record who belongs to which group. A group exists only as an allocation made by the seed: its own users of every role to develop with, listed in `build/credentials/group-N.csv`, and its own Keycloak client `group-N` (DEC-20). Group services find people through `GET /api/v1/internal/users` and `/internal/users/{sub}`.
+- **Alternatives:** `ProjectGroup` and `GroupMembership` tables with endpoints and an admin (built first and then removed: nothing used membership for access, and keeping it would suggest a restriction the system does not apply); Keycloak groups (would put course administration into the identity provider and into every token).
+- **Consequences:** No membership to change after seeding (SYS-DATA-08 is withdrawn). If a group service needs to limit what a team sees, it keeps its own data keyed by `sub`. If the system ever needs real groups, they belong in the feature that uses them.
 
 ### DEC-15 API and platform conventions
 
@@ -195,3 +200,27 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Status:** Chosen (made by the project owner).
 - **Decision:** The repository root holds `backend/` (everything in this document set, with its own Makefile, Compose file and `.env`) and `frontend/` (React and TypeScript). Commands are run from `backend/`. The repository layout drawing in 02 Design describes the contents of `backend/`.
 - **Consequences:** Backend tooling and the Docker `tools` service see only `backend/`. A root README should point to both parts. Contracts between the two (sign-in flow, role names, API base path) are decided in the backend documents and recorded in the handoff.
+
+### DEC-20 One Keycloak client per group service
+
+- **Status:** Proposed (the handoff's default; open for the project owner).
+- **Realizes:** DES-IDP-04, DES-REG-07.
+- **Decision:** The seed generates one confidential client `group-N` per group, with a service account holding the realm role `service` and an audience mapper adding `gradian-core`, so a client-credentials token is accepted by the Core Service. Each client id is also added to the audience of the signed-in user's token (mappers on `gradian-web`), so a group service can check that a token was meant for it (DES-REG-05). Client secrets are derived from `SEED_DEFAULT_PASSWORD` and the client id, and appear only in the git-ignored realm file and `build/credentials/group-N-service.csv`.
+- **Alternatives:** One shared client for all groups (fewer entries, but one leaked secret exposes every group and no token says which group called).
+- **Consequences:** User tokens carry one audience entry per group (11 at 10 groups). The realm grows by ten clients and ten service accounts. The Core Service does not yet limit a group to its own members: `azp` identifies the caller if that is wanted later. A deployed environment needs its own secrets; seeding is refused in production.
+
+### DEC-21 Self-registration, with student as the default role
+
+- **Status:** Chosen (project owner). Replaces the earlier rule that accounts exist only by seeding or by an administrator, and that an account with no panel role is refused.
+- **Realizes:** DES-IDP-02, DES-IDP-08, DES-IDP-10, DES-AUTH-02, DES-AUTH-07.
+- **Decision:** Keycloak's registration is on, on the themed page. A registrant becomes a student. The default is applied in the Core Service: a person whose token has no panel role is a student, and the first time Core sees such a person it grants the realm role `student` in Keycloak, so that group services reading `realm_access.roles` see it from the next token.
+- **Alternatives:** Keycloak's default role or a default group holding `student` (rejected after checking how Keycloak builds tokens: a default role is a composite that every user's token carries, so every consultant would also be a student and Core would refuse them as ambiguous); a custom Keycloak extension that assigns the role at registration (heavy: Java code to build and maintain).
+- **Consequences:** Registration is open to anyone, and mobile numbers are not verified (Q8): someone can register a number that is not theirs, and brute-force or sign-up abuse protection is Keycloak's default only. An SMS code or a CAPTCHA would be a later feature. The first token of a new person lacks the `student` role, so a group service that insists on seeing it must wait for a token refresh. In Keycloak 26.0.8 the `prompt=create` parameter does not open the registration page; the frontend uses the `registrations` endpoint (returned by `/auth/config`). Verified against Keycloak 26.0.8: the whole flow from the form to a token.
+
+### DEC-22 Account administration through the Core API
+
+- **Status:** Chosen (project owner).
+- **Realizes:** DES-ADM-01 to DES-ADM-04.
+- **Decision:** Administrators create accounts and change roles through `/api/v1/admin/users`. The Core Service writes to Keycloak through its service account, first, and updates its cache after Keycloak accepts the change (as in DEC-08).
+- **Alternatives:** Only the Keycloak console (works today, but the Gradian admin panel cannot offer it, and the cache would learn of changes only at the next sign-in); a Keycloak plugin (heavy).
+- **Consequences:** The admin panel can manage people without Keycloak access. A role change reaches a token already issued only when it expires, at most ten minutes (DEC-06). A change spans several Keycloak calls: creating an account that cannot be given its role is rolled back, but a role change that fails halfway can leave a person with a changed attribute and the old role, which is harmless and can be repeated. Administrators cannot change their own role or status, so the system cannot be left without an administrator by accident.

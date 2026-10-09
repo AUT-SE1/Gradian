@@ -99,11 +99,14 @@ class TokenValidationTests(ApiTestCase):
 
 @covers("SYS-AUTH-07")
 class RoleResolutionTests(ApiTestCase):
-    def test_no_panel_role(self) -> None:
+    def test_no_panel_role_means_student_and_the_role_is_granted_in_keycloak(self) -> None:
         response = self.get_as(ME, roles=())
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json()["code"], "role_not_assigned")
-        self.assertFalse(Profile.objects.exists())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["panel"], "student")
+        self.assertEqual(Profile.objects.get().role, "student")
+        self.assertEqual(self.idp.granted, [("00000000-0000-4000-8000-000000000001", "student")])
+        self.get_as(ME, roles=())
+        self.assertEqual(len(self.idp.granted), 1)  # only on first sight
 
     def test_two_panel_roles(self) -> None:
         response = self.get_as(ME, roles=("student", "admin"))
@@ -113,7 +116,7 @@ class RoleResolutionTests(ApiTestCase):
         self.assertEqual(body["details"], {"roles": ["admin", "student"]})
 
     def test_offline_access_alone_is_not_a_panel_role(self) -> None:
-        self.assertEqual(self.get_as(ME, roles=()).json()["code"], "role_not_assigned")
+        self.assertEqual(self.get_as(ME, roles=()).json()["panel"], "student")
 
     def test_service_role_together_with_a_panel_role_is_refused(self) -> None:
         response = self.get_as(ME, roles=("service", "admin"))

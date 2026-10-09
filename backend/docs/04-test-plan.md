@@ -12,8 +12,8 @@ This plan says how each requirement in 01 is verified and how the tests are set 
 | --- | --- | --- | --- | --- |
 | UNIT | Unit | No | `make test` | Pure logic in isolation: mobile normalizer, role resolver, claim mapper, countdown, seed generator |
 | API | API (fast) | No | `make test` | Endpoints, status codes, permissions, error shape and identity sync, with Keycloak replaced by a fake key set and a stubbed Admin API |
-| INTEG | Integration | Yes | `make test-integration` | The real realm and real tokens work end to end: claims, role mapping, seeded users, lockout, group-service checks |
-| STATIC | Static and drift checks | No | `make lint`, `make seed-check`, CI | Lint, formatting, missing migrations, fixture drift, OpenAPI compatibility, secret scan |
+| INTEG | Integration | Yes | `make itest` | The real realm and real tokens work end to end: claims, role mapping, seeded users, lockout, group-service checks |
+| STATIC | Static checks | No | `make check`, CI | Lint, formatting, missing migrations, OpenAPI validity and compatibility, secret scan |
 | MANUAL | Acceptance checklist | Yes | A person, on a clean machine | Setup from scratch, role walkthroughs, the commands themselves |
 | PERF | Performance | Yes | Occasional manual run | Latency under the load in SYS-NFR-02 |
 | EXT | Relied on | No | Review of the configuration, and the MANUAL checklist | Behaviour that an external component (Keycloak, Django) implements and documents. We own only how it is configured, and we do not write an automated test for it (DEC-17) |
@@ -41,27 +41,26 @@ tests/perf/                    # load-test script (PERF)
 - API tests extend `APITestCase` through a small base class that installs a fake key set: a throwaway RSA key pair is generated when the tests start, and the code that fetches Keycloak's keys is patched to return the public half.
 - `make_token(sub=..., roles=[...], **claims)` signs a token with that key. Tests build exactly the token they need: wrong issuer, wrong audience, expired, `alg: none`, missing claim, extra roles.
 - The Keycloak Admin API client is replaced with a stub that records calls and can be told to fail. This covers write-through (DES-ID-05) and the sync command without a real Keycloak.
-- Fast tests create their own small data. Only the seed tests (section 3, SYS-DATA) load the committed fixtures, because they test those fixtures.
+- Fast tests create their own small data. The seed tests build the seed in memory from `seed/` and test that; no generated file is needed.
 - Django creates and destroys its own test database, so nothing here touches the local development database.
 
 ### 2.3 Integration tests (INTEG)
 
-- Every class is decorated `@tag("integration")` and extends a base class that, in `setUpClass`, checks that Keycloak and the realm are reachable. If not, it fails with an instruction to run `make up bootstrap`; it does not skip silently, because a silent skip hides a broken setup.
+- Every class is decorated `@tag("integration")` and extends a base class that, in `setUpClass`, checks that Keycloak and the realm are reachable. If not, it fails with an instruction to run `make start`; it does not skip silently, because a silent skip hides a broken setup.
 - Tokens come from the test-only client `gradian-test` (DES-IDP-09) using a seeded user's mobile number and `SEED_DEFAULT_PASSWORD`. No browser is involved.
-- The Django test database is separate from the development one, so each class loads the committed fixtures itself (`fixtures = [...]`). Because user IDs are fixed (DEC-12), those profiles match the users already in Keycloak.
+- The Django test database is separate from the development one, so each class loads the generated fixture itself (`fixtures = [...]`, written by `make seed`). Because user IDs are fixed (DEC-12), those profiles match the users already in Keycloak.
 - Keycloak is **shared** between tests and is not reset between them. Tests that change Keycloak state (change an email, trigger a lockout, disable a user) create a temporary user through the Admin API with a unique mobile number and delete it afterwards. They never modify seeded users.
 
 ### 2.4 Commands and CI
 
 | Command | Runs |
 | --- | --- |
-| `make test` | `manage.py test --exclude-tag=integration`, plus `scripts/tests` |
-| `make test-integration` | `manage.py test --tag=integration` against the running stack |
-| `make lint` | Linter, formatter check, `makemigrations --check` |
-| `make seed-check` | Regenerates seed output and fails if committed fixtures differ |
+| `make test` | `manage.py test --exclude-tag=integration`, plus `scripts/tests` (part of `make check`) |
+| `make itest` | Starts the system if needed, then `manage.py test --tag=integration` against it |
+| `make check` | `lint` (linter, formatter check, `.env.example`, `makemigrations --check`, requirement coverage), `typecheck`, `test` and `schema` |
 | `make check-service URL=...` | The group-service conformance check |
 
-CI runs `lint`, `seed-check` and `test` on every push. A second job starts the Compose stack, runs `bootstrap`, then `test-integration`. Running tests for one requirement is possible through its tag: `manage.py test --tag=req-SYS-AUTH-02`.
+CI runs `check` on every push. A second job runs `itest`. Running tests for one requirement is possible through its tag: `manage.py test --tag=req-SYS-AUTH-02`.
 
 ### 2.5 Linking tests to requirements
 
@@ -81,9 +80,14 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | SYS-AUTH-04 | EXT, MANUAL | Keycloak implements remember me and the session lifetimes. Manual: a remembered session survives closing the browser, a normal one does not |
 | SYS-AUTH-05 | EXT, MANUAL | Keycloak's brute-force protection locks an account after repeated failures and gives one error for every kind of failure. Manual: lock a temporary user, and compare the error for an unknown number |
 | SYS-AUTH-06 | API, MANUAL | `/auth/config` returns the end-session and landing URLs; the logout icon ends the session and returns to the landing page |
-| SYS-AUTH-07 | UNIT, API | No panel role gives 403 `role_not_assigned`; two panel roles give 403 `ambiguous_role`; `offline_access` is ignored |
+| SYS-AUTH-07 | UNIT, API | No panel role gives the student panel and a one-time grant of the role in Keycloak; two panel roles give 403 `ambiguous_role`; `offline_access` is ignored |
 | SYS-AUTH-08 | API, INTEG | An inactive profile gets 403 `account_disabled`; a disabled Keycloak user cannot sign in; the sync command deactivates users deleted in Keycloak |
-| SYS-AUTH-09 | EXT, MANUAL | The realm has registration and password reset switched off. Manual: the login page offers neither |
+| SYS-AUTH-09 | EXT, MANUAL | Registration is Keycloak's, password reset is switched off. Manual: the login page offers registration and no password reset |
+| SYS-AUTH-10 | EXT, MANUAL | Keycloak implements the registration form and its validation. Manual: register through the page, land in the student panel; wrong or repeated mobile, email or password are refused on the form |
+| SYS-ADM-01 | API, INTEG | Admin creates each role; the account signs in; a duplicate is 409; a consultant needs `consultant_type`; a failed Keycloak call stores nothing |
+| SYS-ADM-02 | API, INTEG | Changing a role replaces the old one in Keycloak and the cache; the next token carries it |
+| SYS-ADM-03 | API | List filters by role, status and text; disabling blocks sign-in; re-enabling restores it |
+| SYS-ADM-04 | API | Every non-admin column of the access matrix is denied; an administrator changing their own role gets 403 `self_modification_forbidden` |
 | SYS-ACC-01 | API | The anonymous column of the access matrix (section 4) |
 | SYS-ACC-02 | API, INTEG | The whole access matrix; a real-token spot check for one user per role |
 
@@ -110,7 +114,7 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | SYS-PNL-06 | API | Editing one of two shared entries leaves the other unchanged |
 | SYS-INT-01 | API | Setting a target URL through the admin or API makes it appear in `/panel/services` |
 | SYS-INT-02 | INTEG | The reference group service accepts a valid token and refuses a missing token, a wrong audience and a wrong role |
-| SYS-INT-03 | API | `internal/users/{sub}` works with a service token and not with a user token; `groups/{slug}/members` filters by role |
+| SYS-INT-03 | API | `internal/users/{sub}` and `internal/users` work with a service token and not with a user token; the list filters by role |
 | SYS-INT-04 | INTEG | `check_service.py` passes on the reference service and fails on a deliberately broken one |
 | SYS-INT-05 | MANUAL | One entry in `embed` mode and one in `redirect` mode work from the frontend |
 
@@ -120,20 +124,19 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | --- | --- | --- |
 | SYS-DATA-01 | INTEG | After `make reset`, a token can be obtained for a sampled seeded user of each role |
 | SYS-DATA-02 | API | Every seeded profile has a non-empty name and email, a valid normalized mobile number, and an email at the `gradian.test` domain |
-| SYS-DATA-03 | API | Per-group and per-role counts match AC-SEED, for 10 groups and for 3 |
-| SYS-DATA-04 | API, STATIC | `loaddata` run twice gives the same row counts; the generator is deterministic (two runs, identical output); `make seed-check` detects a planted change |
-| SYS-DATA-05 | MANUAL | `make credentials` writes one CSV per group with the expected columns, in a git-ignored directory |
+| SYS-DATA-03 | UNIT | Per-group and per-role counts match AC-SEED, for 10 groups and for 3; every group has every role |
+| SYS-DATA-04 | UNIT | The generator is deterministic (two runs, identical output); realm user ids equal the fixture ids; the password never reaches a fixture. `loaddata` twice is Django's own behaviour with fixed primary keys |
+| SYS-DATA-05 | UNIT, MANUAL | Each group's file lists only its own users with role, name, mobile and password; files are replaced, private and readable in Excel. Manual: `make users` writes them to the git-ignored directory |
 | SYS-DATA-06 | API | After bootstrap there are 25 service entries, landing content and widget data |
-| SYS-DATA-07 | UNIT | `bootstrap` and `seed-render` refuse to run with `ENVIRONMENT=production` |
-| SYS-DATA-08 | API | A membership changed in the admin shows in `groups/{slug}/members` |
+| SYS-DATA-07 | UNIT | `seed`, `realm`, `users` and `bootstrap` refuse to run with `ENVIRONMENT=production` |
 
 ### Local operation
 
 | Requirement | Level | What the tests check |
 | --- | --- | --- |
-| SYS-OPS-01 | MANUAL, INTEG | On a clean clone, `make up bootstrap` reaches a healthy `/health/ready`; checked by someone other than the author |
+| SYS-OPS-01 | MANUAL, INTEG | On a clean clone, `make start` reaches a healthy `/health/ready`; checked by someone other than the author |
 | SYS-OPS-02 | MANUAL | After changing data, `make reset` restores the seeded state |
-| SYS-OPS-03 | MANUAL | `make test` passes with no containers running; `make test-integration` runs only tagged tests |
+| SYS-OPS-03 | MANUAL | `make test` passes with no containers running; `make itest` runs only tagged tests |
 | SYS-OPS-04 | MANUAL | `make help` lists every target; the same sequence works on two different machines |
 | SYS-OPS-05 | STATIC | A script checks that `.env.example` lists every variable the settings read; a secret scan finds nothing in the repository |
 | SYS-OPS-06 | UNIT, EXT | The helper that reads a required variable raises an error naming it; that the settings module fails at startup is Django's behaviour |
@@ -161,10 +164,11 @@ The requirement states capabilities; this table fixes the endpoints and exact re
 | View own identity and panel | `GET /api/v1/me` | 401 | 200 | 200 | 200 | 200 | 403 |
 | List own panel's services | `GET /api/v1/panel/services` | 401 | 200 (10) | 200 (6) | 200 (6) | 200 (3) | 403 |
 | View student dashboard | `GET /api/v1/student/dashboard` | 401 | 200 | 403 | 403 | 403 | 403 |
-| List project groups | `GET /api/v1/groups` | 401 | 403 | 403 | 403 | 200 | 200 |
+| List users | `GET /api/v1/internal/users` (service), `GET /api/v1/admin/users` (admin) | 401 | 403 | 403 | 403 | 200 | 200 |
 | Look up a user by ID | `GET /api/v1/internal/users/{sub}` | 401 | 403 | 403 | 403 | 403 | 200 |
+| List accounts | `GET /api/v1/admin/users` | 401 | 403 | 403 | 403 | 200 | 403 |
 
-The number in brackets is the count of entries returned. Three extra cases sit beside the matrix: a user with no panel role (403 `role_not_assigned`), a user with two panel roles (403 `ambiguous_role`) and an inactive profile (403 `account_disabled`).
+The number in brackets is the count of entries returned. Three extra cases sit beside the matrix: a user with no panel role (200, the student panel), a user with two panel roles (403 `ambiguous_role`) and an inactive profile (403 `account_disabled`).
 
 ## 5. Test data rules
 
@@ -177,21 +181,21 @@ The number in brackets is the count of entries returned. Three extra cases sit b
 
 Run by someone other than the author, on a clean machine, from a fresh clone.
 
-1. `make env`, set `SEED_DEFAULT_PASSWORD`, then `make up` and `make bootstrap`. The system becomes healthy without further steps.
+1. `make env`, set `SEED_DEFAULT_PASSWORD`, then `make start`. The system becomes healthy without further steps.
 2. Sign in as one seeded user of each role, and confirm the landing panel against AC-ROUTE.
 3. In each panel, confirm the service count and that an unconnected entry shows as unavailable.
 4. Use the logout icon in each panel and confirm the return to the landing page.
 5. Change one entry's target URL in the Django admin and see it in the panel.
 6. Change a user's email in Keycloak, sign in again, and see the new email.
-7. Run `make credentials` and check the per-group files.
+7. Run `make users` and check the per-group files.
 8. Run `make reset` and confirm the seeded state returns.
-9. Run `make test` with no containers, then `make test-integration`.
+9. Run `make test` with no containers, then `make itest`.
 10. Run `make check-service` against the reference service.
 
 ## 7. Definition of done
 
 - Every requirement in 01 has at least one test, and `scripts/req_coverage.py` reports no gaps.
-- `make lint`, `make seed-check` and `make test` are green in CI, and `make test-integration` is green on the Compose stack.
+- `make check` is green in CI, and `make itest` is green on the Compose stack.
 - The access matrix test passes for every cell.
 - The manual acceptance checklist passes on a clean machine.
 - The performance run meets SYS-NFR-02 once before groups begin integrating.

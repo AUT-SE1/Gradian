@@ -6,8 +6,8 @@ NET             ?= gradian
 COMPOSE         ?= docker compose
 CORE_SERVICE    ?= core
 EXEC_FLAGS      ?=
-REQ_STRICT      ?=
 CMD             ?=
+FIXTURES        ?= profiles
 INTEGRATION_CMD ?= python manage.py test --tag=integration --keepdb -v2
 
 CORE_ENV   := .env
@@ -17,17 +17,10 @@ CORE_TOOLS  = $(RUN_TOOLS) tools
 ROOT_TOOLS  = $(RUN_TOOLS) -w /repo tools
 PY_PATHS   := . ../scripts
 
-COMPOSE_FILE := docker-compose.yml
-TOOLS_INPUTS := $(COMPOSE_FILE) core/Dockerfile \
-                $(wildcard core/requirements*.txt) \
-                $(wildcard core/pyproject.toml) \
-                $(wildcard core/poetry.lock) \
-                $(wildcard core/setup.py) $(wildcard core/setup.cfg)
-
-TOOLS_STAMP := build/.tools-image
-
-BASE_DEPS  := $(CORE_ENV) network
-TOOLS_DEPS := $(BASE_DEPS) tools-image
+TOOLS_INPUTS := docker-compose.yml core/Dockerfile $(wildcard core/requirements*.txt) \
+                $(wildcard core/pyproject.toml)
+TOOLS_STAMP  := build/.tools-image
+TOOLS_DEPS   := $(CORE_ENV) network tools-image
 
 ifeq ($(TEAMS),all)
   SELECTED := $(ALL_TEAMS)
@@ -38,135 +31,108 @@ else
   endif
 endif
 
-TARGET_TEAMS  := $(if $(TEAMS),$(SELECTED),$(ALL_TEAMS))
-ALL_ENVS      := $(CORE_ENV) $(foreach n,$(ALL_TEAMS),teams/team$(n)/.env)
-SELECTED_ENVS := $(CORE_ENV) $(foreach n,$(SELECTED),teams/team$(n)/.env)
-
+ALL_ENVS := $(CORE_ENV) $(foreach n,$(ALL_TEAMS),teams/team$(n)/.env)
 team_cmd  = $(COMPOSE) -f teams/team$(1)/docker-compose.yml
 team_each = @set -e; for n in $(1); do echo "==> team $$n: $(2)"; $(call team_cmd,$$n) $(2); done
 
-.PHONY: help env network tools-image lint format typecheck test check check-env-example \
-        req-coverage schema migrations seed-render dev-user up-core build up rebuild bootstrap \
-        stop down reset ps logs shell manage test-integration
+.PHONY: help start stop reset check itest users format logs shell manage \
+        env network tools-image seed realm up bootstrap lint typecheck test schema migrations
 
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target> [VAR=value]\n\nTargets:\n"} \
-		/^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo "Usage: make <target> [VAR=value]"
 	@echo ""
-	@echo "Variables:"
-	@echo "  TEAMS=\"1 6 5\"|all   Teams for build/up (default none) or stop/down (default all)"
-	@echo "  REQ_STRICT=1        Make 'lint' fail while a requirement has no test"
-	@echo "  CMD=\"...\"           Arguments for 'manage'"
-	@echo "  COMPOSE             Compose command (default: $(COMPOSE))"
-	@echo "  EXEC_FLAGS          Extra flags for 'compose exec', e.g. -T in CI"
+	@echo "Main targets, the ones you normally run:"
+	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## [^(]/ {printf "  %-11s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
+	@echo "Steps they are made of, to run one on its own:"
+	@awk 'BEGIN {FS = ":.*## \\(step\\) "} /^[a-z-]+:.*## \(step\) / {printf "  %-11s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "Variables: TEAMS=\"1 6 5\"|all (teams to start), CMD=\"...\" (for manage), COMPOSE, EXEC_FLAGS"
 	@echo "Only Docker, Docker Compose v2 and make are needed on the host."
 
-env: $(CORE_ENV) ## Create .env from .env.example if missing (never overwrites)
+start: up bootstrap ## Start everything with demo data [seed realm up bootstrap]
 
-tools-image: $(TOOLS_STAMP) ## Build the tools image (rebuilds only when its inputs change)
+stop: $(ALL_ENVS) ## Stop and remove the containers, keep the data
+	$(call team_each,$(ALL_TEAMS),down)
+	$(COMPOSE) down
+
+reset: $(ALL_ENVS) ## Wipe all data, then start clean [stop, then start]
+	$(call team_each,$(ALL_TEAMS),down)
+	$(COMPOSE) down -v
+	$(MAKE) start
+
+check: lint typecheck test schema ## All static checks and fast tests, before every push [lint typecheck test schema]
+
+itest: start ## Tests that need the running system [start, then the integration tests]
+	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) $(INTEGRATION_CMD)
+
+users: $(TOOLS_DEPS) ## Write the per-group sign-in files to build/credentials/
+	@./scripts/refuse_production.sh users
+	$(ROOT_TOOLS) python scripts/seed_credentials.py
+
+format: $(TOOLS_DEPS) ## Apply ruff formatting and fixes (changes files)
+	$(CORE_TOOLS) ruff format $(PY_PATHS)
+	$(CORE_TOOLS) ruff check --fix $(PY_PATHS)
+
+logs: ## Follow the core logs
+	$(COMPOSE) logs -f
+
+shell: up ## Open a Django shell in the core container
+	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py shell
+
+manage: up ## Run manage.py in the core container: make manage CMD="sync_keycloak_users"
+	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py $(CMD)
+
+env: $(ALL_ENVS) ## (step) Create every missing .env from its .env.example, with fresh secrets
+
+network: ## (step) Create the shared Docker network
+	@docker network inspect $(NET) >/dev/null 2>&1 || docker network create $(NET)
+
+tools-image: $(TOOLS_STAMP) ## (step) Build the tools image, only when its inputs changed
 
 $(TOOLS_STAMP): $(TOOLS_INPUTS)
 	@mkdir -p build
 	$(COMPOSE) build tools
 	@touch $@
 
-lint: check-env-example $(TOOLS_DEPS) ## Lint, format check, missing migrations, requirement coverage
-	$(CORE_TOOLS) ruff check $(PY_PATHS)
-	$(CORE_TOOLS) ruff format --check $(PY_PATHS)
-	$(CORE_TOOLS) python manage.py makemigrations --check --dry-run
-	$(ROOT_TOOLS) python scripts/req_coverage.py $(if $(REQ_STRICT),--strict)
+seed: $(TOOLS_DEPS) ## (step) Generate the user fixture from seed/
+	@./scripts/refuse_production.sh seed
+	$(ROOT_TOOLS) python scripts/seed_generate.py
 
-format: $(TOOLS_DEPS) ## Apply ruff formatting and fixes (changes files)
-	$(CORE_TOOLS) ruff format $(PY_PATHS)
-	$(CORE_TOOLS) ruff check --fix $(PY_PATHS)
-
-typecheck: $(TOOLS_DEPS) ## Type-check everything with mypy in strict mode
-	$(CORE_TOOLS) mypy $(PY_PATHS)
-
-test: $(TOOLS_DEPS) ## Fast tests, no stack needed
-	$(CORE_TOOLS) python manage.py test --exclude-tag=integration
-	$(RUN_TOOLS) -w /repo -e PYTHONPATH=scripts tools python -m unittest discover -s scripts/tests
-
-check: lint typecheck test ## Lint, typecheck and test: what CI runs on every push
-
-check-env-example: $(TOOLS_DEPS) ## Fail if .env.example misses a variable the settings read
-	$(ROOT_TOOLS) python scripts/check_env_example.py
-
-req-coverage: $(TOOLS_DEPS) ## List requirements that no test claims
-	$(ROOT_TOOLS) python scripts/req_coverage.py $(if $(REQ_STRICT),--strict)
-
-schema: $(TOOLS_DEPS) ## Export and validate the OpenAPI schema to build/openapi.yaml
-	@mkdir -p build
-	$(CORE_TOOLS) python manage.py spectacular --validate --fail-on-warn --file ../build/openapi.yaml
-
-migrations: $(TOOLS_DEPS) ## Create migrations after a model change
-	$(CORE_TOOLS) python manage.py makemigrations
-
-seed-render: $(TOOLS_DEPS) ## Render build/realm-gradian.json, the Keycloak realm import file
-	@./scripts/refuse_production.sh seed-render
+realm: $(TOOLS_DEPS) ## (step) Render build/realm-gradian.json, the Keycloak import file
+	@./scripts/refuse_production.sh realm
 	@mkdir -p build
 	$(ROOT_TOOLS) python scripts/render_realm.py
 
-dev-user: $(TOOLS_DEPS) ## Create a demo user in Keycloak: MOBILE=09120000001 ROLES=student
-	@./scripts/refuse_production.sh dev-user
-	$(ROOT_TOOLS) python scripts/dev_user.py --mobile "$(MOBILE)" \
-		$(if $(ROLES),--roles "$(ROLES)") $(if $(CONSULTANT_TYPE),--consultant-type "$(CONSULTANT_TYPE)") \
-		$(if $(FIRST_NAME),--first-name "$(FIRST_NAME)") $(if $(LAST_NAME),--last-name "$(LAST_NAME)") \
-		$(if $(EMAIL),--email "$(EMAIL)") $(if $(PASSWORD),--password "$(PASSWORD)")
-
-network:
-	@docker network inspect $(NET) >/dev/null 2>&1 || docker network create $(NET)
-
-up-core: $(CORE_ENV) network seed-render
+up: $(ALL_ENVS) realm ## (step) Start core, Keycloak, the database and TEAMS
 	$(COMPOSE) up -d
-
-build: $(SELECTED_ENVS) tools-image ## Build images for core + TEAMS (starts nothing)
-	$(COMPOSE) build
-	$(call team_each,$(SELECTED),build)
-
-up: $(ALL_ENVS) up-core ## Start core + TEAMS, stop the other teams (no rebuild)
 	$(call team_each,$(SELECTED),up -d)
-	$(call team_each,$(filter-out $(SELECTED),$(ALL_TEAMS)),stop)
 
-rebuild: ## Build images, then start core + TEAMS
-	$(MAKE) build
-	$(MAKE) up
-
-bootstrap: ## Wait until healthy, then run migrations
+bootstrap: seed ## (step) Wait until healthy, migrate, load the fixture
 	@./scripts/refuse_production.sh bootstrap
-	COMPOSE="$(COMPOSE)" ./scripts/wait_for.sh
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py migrate --noinput
+	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py loaddata $(FIXTURES)
 
-stop: $(ALL_ENVS) ## Stop containers, keep them (TEAMS=... for specific teams only)
-	$(call team_each,$(TARGET_TEAMS),stop)
-	$(if $(TEAMS),,$(COMPOSE) stop)
+lint: $(TOOLS_DEPS) ## (step) ruff, formatting, .env.example, missing migrations, requirement coverage
+	$(ROOT_TOOLS) python scripts/check_env_example.py
+	$(CORE_TOOLS) ruff check $(PY_PATHS)
+	$(CORE_TOOLS) ruff format --check $(PY_PATHS)
+	$(CORE_TOOLS) python manage.py makemigrations --check --dry-run
+	$(ROOT_TOOLS) python scripts/req_coverage.py
 
-down: $(ALL_ENVS) ## Stop and remove containers (TEAMS=... for specific teams only)
-	$(call team_each,$(TARGET_TEAMS),down)
-	$(if $(TEAMS),,$(COMPOSE) down)
+typecheck: $(TOOLS_DEPS) ## (step) mypy in strict mode
+	$(CORE_TOOLS) mypy $(PY_PATHS)
 
-reset: ## Wipe database and Keycloak data, then start clean and bootstrap
-	$(call team_each,$(ALL_TEAMS),down)
-	$(COMPOSE) down -v
-	$(MAKE) up
-	$(MAKE) bootstrap
+test: $(TOOLS_DEPS) ## (step) Fast tests, no system needed
+	$(CORE_TOOLS) python manage.py test --exclude-tag=integration
+	$(RUN_TOOLS) -w /repo -e PYTHONPATH=scripts tools python -m unittest discover -s scripts/tests
 
-ps: $(ALL_ENVS) ## Show containers for core and all teams
-	@echo "==> core"; $(COMPOSE) ps
-	$(call team_each,$(ALL_TEAMS),ps)
+schema: $(TOOLS_DEPS) ## (step) Export and validate the OpenAPI schema to build/openapi.yaml
+	@mkdir -p build
+	$(CORE_TOOLS) python manage.py spectacular --validate --fail-on-warn --file ../build/openapi.yaml
 
-logs: ## Follow core logs
-	$(COMPOSE) logs -f
-
-shell: up-core ## Open a Django shell in the core container
-	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py shell
-
-manage: up-core ## Run manage.py in the core container: make manage CMD="sync_keycloak_users --dry-run"
-	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) python manage.py $(CMD)
-
-test-integration: up-core ## Tests tagged "integration", against the running stack
-	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) $(INTEGRATION_CMD)
+migrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
+	$(CORE_TOOLS) python manage.py makemigrations
 
 $(ALL_ENVS): %.env: | %.env.example
 	@sed -e "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=$$(head -c 48 /dev/urandom | base64 | tr -d '=+/\n')|" \

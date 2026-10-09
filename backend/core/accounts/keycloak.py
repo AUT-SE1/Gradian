@@ -1,6 +1,7 @@
 """Everything that talks to Keycloak over HTTP. Tests replace `fetch_jwks` and
 `get_admin_client`; nothing else in the code base makes a network call to Keycloak."""
 
+import contextlib
 import logging
 import threading
 import time
@@ -36,12 +37,31 @@ class KeycloakUser:
     consultant_type: str
 
 
+@dataclass(frozen=True)
+class NewUser:
+    mobile: str
+    email: str
+    first_name: str
+    last_name: str
+    password: str
+    role: str
+    consultant_type: str
+
+
 class IdentityAdmin(Protocol):
-    """The part of the Keycloak Admin API Core uses (DES-ID-04, DES-ID-05)."""
+    """The part of the Keycloak Admin API Core uses (DES-ID-04, DES-ID-05, DES-ADM-01)."""
 
     def update_user(self, sub: str, changes: Mapping[str, str]) -> None: ...
 
     def list_panel_users(self) -> list[KeycloakUser]: ...
+
+    def create_user(self, user: NewUser) -> str: ...
+
+    def set_panel_role(self, sub: str, role: str, consultant_type: str) -> None: ...
+
+    def set_enabled(self, sub: str, enabled: bool) -> None: ...
+
+    def grant_role(self, sub: str, role: str) -> None: ...
 
 
 def fetch_jwks() -> dict[str, Any]:
@@ -102,6 +122,10 @@ class KeycloakAdminClient:
             return self._token
 
     def _call(self, method: str, path: str, **kwargs: Any) -> Any:
+        response = self._request(method, path, **kwargs)
+        return response.json() if response.content else None
+
+    def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
         headers = {"Authorization": f"Bearer {self._access_token()}"}
         try:
             response = requests.request(
@@ -117,7 +141,7 @@ class KeycloakAdminClient:
             raise KeycloakError(
                 f"{method} {path} returned {response.status_code}", response.status_code
             )
-        return response.json() if response.content else None
+        return response
 
     def update_user(self, sub: str, changes: Mapping[str, str]) -> None:
         """Apply `email`, `first_name`, `last_name` changes (read, merge, write back)."""
@@ -125,6 +149,63 @@ class KeycloakAdminClient:
         names = {"email": "email", "first_name": "firstName", "last_name": "lastName"}
         for field, value in changes.items():
             representation[names[field]] = value
+        self._call("PUT", f"/users/{sub}", json=representation)
+
+    def grant_role(self, sub: str, role: str) -> None:
+        representation = self._call("GET", f"/roles/{role}")
+        self._call("POST", f"/users/{sub}/role-mappings/realm", json=[representation])
+
+    def create_user(self, user: NewUser) -> str:
+        """Create the account with its role. If the role cannot be assigned the account is
+        removed again, so a failure leaves nothing behind (DES-ID-05)."""
+        attributes = {"mobile": [user.mobile]}
+        if user.consultant_type:
+            attributes["consultant_type"] = [user.consultant_type]
+        response = self._request(
+            "POST",
+            "/users",
+            json={
+                "username": user.mobile,
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+                "enabled": True,
+                "emailVerified": True,
+                "attributes": attributes,
+                "credentials": [{"type": "password", "value": user.password, "temporary": False}],
+            },
+        )
+        sub = response.headers["Location"].rstrip("/").rsplit("/", 1)[-1]
+        try:
+            self.grant_role(sub, user.role)
+        except KeycloakError:
+            with contextlib.suppress(KeycloakError):
+                self._request("DELETE", f"/users/{sub}")
+            raise
+        return sub
+
+    def set_panel_role(self, sub: str, role: str, consultant_type: str) -> None:
+        """Make `role` the user's only panel role. The attribute goes first: it is only read for
+        consultants, so it is harmless if the role change then fails."""
+        representation: dict[str, Any] = self._call("GET", f"/users/{sub}")
+        attributes: dict[str, Any] = representation.get("attributes") or {}
+        if consultant_type:
+            attributes["consultant_type"] = [consultant_type]
+        else:
+            attributes.pop("consultant_type", None)
+        representation["attributes"] = attributes
+        self._call("PUT", f"/users/{sub}", json=representation)
+
+        current: list[dict[str, Any]] = self._call("GET", f"/users/{sub}/role-mappings/realm")
+        stale = [r for r in current if r["name"] in PANEL_ROLES and r["name"] != role]
+        if stale:
+            self._call("DELETE", f"/users/{sub}/role-mappings/realm", json=stale)
+        if not any(r["name"] == role for r in current):
+            self.grant_role(sub, role)
+
+    def set_enabled(self, sub: str, enabled: bool) -> None:
+        representation: dict[str, Any] = self._call("GET", f"/users/{sub}")
+        representation["enabled"] = enabled
         self._call("PUT", f"/users/{sub}", json=representation)
 
     def list_panel_users(self) -> list[KeycloakUser]:
@@ -145,6 +226,18 @@ class KeycloakAdminClient:
                 if len(page) < 200:
                     break
                 first += 200
+        first = 0
+        while True:  # people who have not been given a role yet are students
+            page = self._call(
+                "GET", "/users", params={"first": first, "max": 200, "briefRepresentation": "false"}
+            )
+            for user in page:
+                if user["id"] not in found and not user.get("serviceAccountClientId"):
+                    found[user["id"]] = user
+                    roles[user["id"]] = set()
+            if len(page) < 200:
+                break
+            first += 200
         return [
             KeycloakUser(
                 sub=sub,

@@ -73,6 +73,7 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | N-6 | The TA and the groups can run and manage the system locally with little effort | Source (TA: Makefile, centralized local management) |
 | N-7 | The delivered Core Service can be shown to be correct, repeatably | Source (brief: tests to verify requirements) |
 | N-8 | The landing page and panels show the designed content, with display-only parts filled by demo data | Source (PDF: all pages) |
+| N-9 | A visitor can create an account on their own, and administrators can create accounts of any kind and change people's roles | Source (project owner) |
 
 ## 3. Constraints
 
@@ -95,9 +96,10 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | SYS-AUTH-04 | A "remember me" option keeps the user signed in for longer than a normal session. | N-2 | Source (PDF: checkbox); durations Proposed |
 | SYS-AUTH-05 | Wrong credentials are refused without revealing whether the mobile number exists, and repeated failures are temporarily blocked. | N-1 | Proposed |
 | SYS-AUTH-06 | The logout icon in every panel ends the session and returns the user to the landing page. | N-2 | Source (PDF: panels) |
-| SYS-AUTH-07 | An account that does not have exactly one panel role cannot enter any panel. | N-2 | Inferred |
+| SYS-AUTH-07 | An account with more than one panel role cannot enter any panel. An account with no panel role is a student. | N-2, N-9 | Inferred; student default decided by the project owner |
 | SYS-AUTH-08 | A disabled account cannot sign in or use the platform. | N-2 | Inferred |
-| SYS-AUTH-09 | Accounts are created only by seeding or by an administrator. There is no self-registration and no password recovery. | N-2 | Inferred (PDF shows neither) |
+| SYS-AUTH-09 | Accounts are created by self-registration, by an administrator or by seeding. There is no password recovery. | N-2, N-9 | Inferred (PDF shows no recovery); self-registration decided by the project owner |
+| SYS-AUTH-10 | A visitor can register with first name, last name, mobile number, email and password. The new account is a student and is signed in at once. | N-9 | Source (project owner) |
 
 ### 4.2 Access control
 
@@ -134,7 +136,7 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | --- | --- | --- | --- |
 | SYS-INT-01 | A group connects its service to a panel entry by configuration only, without changing Core code. | N-3 | Source (brief) |
 | SYS-INT-02 | A group service can tell who the signed-in user is and what their role is from the credential the platform provides, and can refuse anyone else. | N-1, N-3 | Source (brief) |
-| SYS-INT-03 | A group service can look up a user's identity and the members of its project group through the Core Service. | N-3, N-5 | Inferred |
+| SYS-INT-03 | A group service can look up a user's identity by id, and list users by role, through the Core Service. Every user is valid for every group's service. | N-3, N-5 | Inferred; scope decided by the project owner |
 | SYS-INT-04 | A group can check that its service follows the platform's integration rules. | N-3 | Proposed |
 | SYS-INT-05 | A connected service is reachable from the panel either embedded in the content area or by redirect. | N-3 | Source (PDF: content area); redirect Inferred |
 
@@ -144,18 +146,17 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | --- | --- | --- | --- |
 | SYS-DATA-01 | After setup, the system holds users of every role who can sign in. | N-5 | Source (PDF: seed note) |
 | SYS-DATA-02 | Seeded users have complete identity data and realistic Persian names, and use mobile numbers and emails that cannot belong to real people. | N-5 | Proposed |
-| SYS-DATA-03 | Seeded users are divided among project groups so that each group has its own users of every role (AC-SEED). | N-5 | Source (PDF: "give them to groups"); quantities Proposed |
+| SYS-DATA-03 | Seeded users are allocated to project groups, so that each group has its own users of every role (AC-SEED) to develop with. The allocation exists only in the seed and the credential files: the system does not record groups, and every user is valid for every group's service. | N-5 | Source (PDF: "give them to groups"); quantities Proposed |
 | SYS-DATA-04 | Loading the demo data can be repeated without creating duplicates or changing the result. | N-5, N-6 | Proposed |
 | SYS-DATA-05 | The TA can obtain, per group, the list of its users with their sign-in details. | N-5 | Inferred |
 | SYS-DATA-06 | The demo data covers everything the panels display: the 25 service entries, the landing content and the widget data. | N-8 | Inferred |
 | SYS-DATA-07 | Demo accounts and their shared password cannot be created in a production environment. | N-5 | Proposed |
-| SYS-DATA-08 | A user's group membership can be changed after seeding. | N-5 | Inferred |
 
 ### 4.7 Local operation
 
 | ID | Requirement | Derived from | Kind |
 | --- | --- | --- | --- |
-| SYS-OPS-01 | From a clean clone, one command starts the whole system and one command loads the demo data. | N-6 | Proposed (from the TA's Makefile intent) |
+| SYS-OPS-01 | From a clean clone, one command starts the whole system with the demo data loaded. | N-6 | Proposed (from the TA's Makefile intent) |
 | SYS-OPS-02 | One command returns the system to a clean state with demo data. | N-6 | Proposed |
 | SYS-OPS-03 | One command runs the fast tests, and one runs the tests that need the full system. | N-6, N-7 | Proposed |
 | SYS-OPS-04 | The available commands are discoverable and behave the same on every team member's machine. | N-6 | Proposed |
@@ -175,13 +176,22 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | SYS-NFR-07 | Documentation: a README gets a newcomer to a running system, and an integration guide tells a group how to connect a service. | N-3, N-6 | Proposed |
 | SYS-NFR-08 | Verifiability: every requirement in this document is covered by at least one automated or scripted check, or is marked in the test plan as relying on an external implementation, and a report lists any that are neither. | N-7 | Proposed |
 
+### 4.9 Account administration
+
+| ID | Requirement | Derived from | Kind |
+| --- | --- | --- | --- |
+| SYS-ADM-01 | An administrator can create an account of any role, with its password, and the person can sign in at once. | N-9 | Source (project owner) |
+| SYS-ADM-02 | An administrator can change a person's role. The new role is the person's only panel role. | N-9 | Source (project owner) |
+| SYS-ADM-03 | An administrator can list accounts, filtered by role and status, and can disable and re-enable an account. | N-9 | Inferred |
+| SYS-ADM-04 | Only administrators can use these functions, and an administrator cannot change their own role or status. | N-2, N-9 | Inferred |
+
 ## 5. Acceptance criteria
 
 ### AC-ROUTE: role to panel
 
 | Account type | Role | Lands on |
 | --- | --- | --- |
-| Student (داوطلب) | `student` | Student panel |
+| Student (داوطلب), or a person with no role yet | `student` | Student panel |
 | Consultant (مشاور) or top-ranker (رتبه برتر) | `consultant` | Consultant panel |
 | Professor (استاد) | `professor` | Professor panel |
 | Admin | `admin` | Admin panel |
@@ -196,7 +206,8 @@ Denied means the request is refused; the test plan fixes the exact responses.
 | View own identity and panel assignment | Denied | Allowed | Allowed | Allowed | Allowed | Denied |
 | List the services of own panel | Denied | Allowed (10) | Allowed (6) | Allowed (6) | Allowed (3) | Denied |
 | View student dashboard widgets | Denied | Allowed | Denied | Denied | Denied | Denied |
-| List project groups and their members | Denied | Denied | Denied | Denied | Allowed | Allowed |
+| List, create and change accounts and roles | Denied | Denied | Denied | Denied | Allowed | Denied |
+| List users, filtered by role | Denied | Denied | Denied | Denied | Allowed | Allowed |
 | Look up any user's identity by ID | Denied | Denied | Denied | Denied | Denied | Allowed |
 
 A platform service is a machine client, such as a group service, acting with its own credential and no user.
@@ -233,7 +244,7 @@ A platform service is a machine client, such as a group service, acting with its
 
 ### AC-SEED: default seed allocation
 
-The number of project groups is a setting, default 10.
+The number of project groups is a setting, default 10. A group is only an allocation of seeded users and of a service client; the system does not record it.
 
 | Role | Per group | Total at 10 groups |
 | --- | --- | --- |
@@ -254,12 +265,13 @@ Each feeds a decision in the log, which is marked *Assumed* until the question i
 | # | Question | Assumption used | Feeds |
 | --- | --- | --- | --- |
 | Q1 | How does the user sign in: a themed Keycloak page, or a custom form in the Gradian frontend? | Themed Keycloak page | DEC-05 |
-| Q2 | Does "groups" in the PDF's seed note mean student project groups? | Yes | DEC-14 |
-| Q3 | Can a user belong to several groups? | Yes, but the seed gives each group its own users | DEC-14 |
+| Q2 | Does "groups" in the PDF's seed note mean student project groups? | Yes, confirmed: the teams that build the group services | DEC-14 |
+| Q3 | Can a user belong to several groups? | Moot: every user is valid for every group; the seed only gives each group its own users to work with | DEC-14 |
 | Q4 | Are group services embedded in the panel or opened by redirect? | Either, chosen per entry | DEC-10 |
 | Q5 | Does the course use one shared, long-lived Keycloak, or does everyone run their own copy? | Own copy locally; one shared instance for integration | DEC-11 |
 | Q6 | How many seeded users does each group need? | See AC-SEED | DEC-11 |
 | Q7 | How soon must an identity change appear in the Core Service? | Within one access-token lifetime | DEC-07 |
+| Q8 | Must a registrant prove they own the mobile number (SMS code)? | No; accepted for now, ownership is unverified | DEC-21 |
 
 ### 6.2 Proposed values to confirm
 
@@ -273,10 +285,11 @@ These numbers have no source in the PDF or brief.
 | Access-token lifetime | 10 minutes at most | SYS-AUTH-08, SYS-NFR-03 |
 | Load target | 50 concurrent users, 300 ms at the 95th percentile | SYS-NFR-02 |
 | Seed allocation and group count | AC-SEED, 10 groups | SYS-DATA-03 |
+| Minimum password length | 8 characters | SYS-AUTH-10, SYS-ADM-01 |
 
 ## 7. Out of scope
 
 - The behaviour of the 25 group-built services themselves.
 - Page layouts, routing and visual design (Frontend Requirements).
 - Table-level schemas (Database Requirements).
-- Self-registration, password recovery, payments and real notifications.
+- Password recovery, verification of mobile numbers or email addresses, payments and real notifications.

@@ -88,9 +88,9 @@ class RequestLoggingTests(ApiTestCase):
     @covers("SYS-NFR-06")
     def test_role_failure_is_logged(self) -> None:
         with self.assertLogs("gradian.accounts", level="WARNING") as logs:
-            self.get_as("/api/v1/me", roles=())
+            self.get_as("/api/v1/me", roles=("student", "admin"))
         self.assertEqual(getattr(logs.records[0], "event", None), "role_failure")
-        self.assertEqual(getattr(logs.records[0], "reason", None), "role_not_assigned")
+        self.assertEqual(getattr(logs.records[0], "reason", None), "ambiguous_role")
 
     @covers("SYS-NFR-06")
     def test_profile_refresh_is_logged_with_field_names_only(self) -> None:

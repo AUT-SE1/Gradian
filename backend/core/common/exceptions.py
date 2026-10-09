@@ -5,9 +5,11 @@ Codes are stable English strings; messages are Persian (DES-XC-03).
 
 from typing import Any
 
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.http import Http404
 from rest_framework import status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 MESSAGES: dict[str, str] = {
@@ -15,8 +17,8 @@ MESSAGES: dict[str, str] = {
     "authentication_failed": "احراز هویت ناموفق بود.",
     "invalid_token": "نشانه ورود نامعتبر یا منقضی است. دوباره وارد شوید.",
     "permission_denied": "شما اجازه دسترسی به این بخش را ندارید.",
-    "role_not_assigned": "برای حساب شما هیچ نقشی تعریف نشده است.",
     "ambiguous_role": "برای حساب شما بیش از یک نقش تعریف شده است.",
+    "self_modification_forbidden": "مدیر نمی‌تواند نقش یا وضعیت حساب خودش را تغییر دهد.",
     "account_disabled": "حساب کاربری شما غیرفعال است.",
     "incomplete_identity": "اطلاعات هویتی حساب شما کامل نیست.",
     "identity_conflict": "این اطلاعات قبلاً برای حساب دیگری ثبت شده است.",
@@ -55,6 +57,10 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | Non
 
     if isinstance(exc, DjangoValidationError):
         exc = ValidationError(detail=exc.messages)
+    elif isinstance(exc, Http404):
+        exc = NotFound()
+    elif isinstance(exc, DjangoPermissionDenied):
+        exc = PermissionDenied()
     response = drf_exception_handler(exc, context)
     if response is None:
         return None  # unexpected error: handler500 renders the same shape
@@ -70,7 +76,7 @@ def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | Non
         wait = getattr(exc, "wait", None)
         if wait is not None:
             details = {"retry_after_seconds": int(wait)}
-    else:  # pragma: no cover - drf_exception_handler only returns for APIException
+    else:  # pragma: no cover - every exception drf_exception_handler answers is one of the above
         code = "server_error"
     if code not in MESSAGES:
         code = {

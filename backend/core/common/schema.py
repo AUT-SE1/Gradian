@@ -24,8 +24,9 @@ UNAUTHENTICATED = error(
     "`not_authenticated` (no token) or `invalid_token` (bad, expired or wrong audience)."
 )
 FORBIDDEN = error(
-    "`role_not_assigned`, `ambiguous_role`, `account_disabled`, `incomplete_identity` or "
+    "`ambiguous_role`, `account_disabled`, `incomplete_identity`, `self_modification_forbidden` or "
     "`permission_denied`."
 )
+NOT_FOUND = error("`not_found`: no such resource.")
 CONFLICT = error("`identity_conflict`: the mobile number or email belongs to another account.")
 PROVIDER_DOWN = error("`identity_provider_unavailable`: Keycloak could not be reached.")

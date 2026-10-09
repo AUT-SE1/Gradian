@@ -32,6 +32,7 @@ services:
       KEYCLOAK_CORE_CLIENT_SECRET: ${KEYCLOAK_CORE_CLIENT_SECRET}
     volumes:
       - ./build/realm-gradian.json:/opt/keycloak/data/import/realm-gradian.json:ro
+      - ./keycloak/themes/gradian:/opt/keycloak/themes/gradian:ro
       - keycloak_data:/opt/keycloak/data/h2
     ports: ["${KEYCLOAK_PORT}:8080"]
     healthcheck:

@@ -18,20 +18,21 @@ from accounts.claims import Identity, is_valid_name
 from accounts.mobile import InvalidMobileError, normalize_mobile
 from accounts.models import ConsultantType, Profile, Role
 from accounts.profiles import apply_identity, differences
+from accounts.roles import DEFAULT_PANEL
 
 logger = logging.getLogger("gradian.accounts")
 
 
 def _identity(user: keycloak.KeycloakUser) -> Identity | None:
     """The identity for a Keycloak user, or None if it is not usable (reported, not synced)."""
-    if len(user.roles) != 1:
+    if len(user.roles) > 1:
         return None
     try:
         mobile = normalize_mobile(user.username)
         sub = uuid.UUID(user.sub)
     except (InvalidMobileError, ValueError):
         return None
-    role = user.roles[0]
+    role = user.roles[0] if user.roles else DEFAULT_PANEL
     if (
         "@" not in user.email
         or not is_valid_name(user.first_name)

@@ -4,7 +4,7 @@
   "enabled": true,
   "sslRequired": "external",
 
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "registrationEmailAsUsername": false,
   "resetPasswordAllowed": false,
   "loginWithEmailAllowed": false,
@@ -27,6 +27,8 @@
   "minimumQuickLoginWaitSeconds": 60,
   "quickLoginCheckMilliSeconds": 1000,
   "maxDeltaTimeSeconds": 43200,
+
+  "loginTheme": "gradian",
 
   "internationalizationEnabled": true,
   "supportedLocales": ["fa"],

@@ -41,6 +41,9 @@ class AuthConfigView(APIView):
     def get(self, request: Request) -> Response:
         data = {
             "issuer": settings.KEYCLOAK_ISSUER,
+            "registration_endpoint": (
+                f"{settings.KEYCLOAK_ISSUER}/protocol/openid-connect/registrations"
+            ),
             "realm": settings.KEYCLOAK_REALM,
             "client_id": settings.KEYCLOAK_WEB_CLIENT_ID,
             "end_session_url": f"{settings.KEYCLOAK_ISSUER}/protocol/openid-connect/logout",

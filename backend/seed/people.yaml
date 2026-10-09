@@ -1,0 +1,43 @@
+groups: 10
+
+per_group:
+  student: 4
+  consultant: 1
+  top_ranker: 1
+  professor: 1
+  admin: 1
+
+# Group 000 is for accounts that belong to no group (the TA admin). The temporary group number is
+# never given to a seeded group: integration tests create their throwaway users there. 0900 is
+# meant to be a block no operator hands out; confirm that before relying on it.
+mobile:
+  prefix: "0900"
+  group_digits: 3
+  index_digits: 3
+  temporary_group_number: 999
+  kind_codes:
+    student: 1
+    consultant: 2
+    top_ranker: 3
+    professor: 4
+    admin: 5
+
+email_domain: gradian.test
+email_labels:
+  student: student
+  consultant: consultant
+  top_ranker: top-ranker
+  professor: professor
+  admin: admin
+
+ta_admin:
+  first_name: مدیر
+  last_name: آزمایشگاه
+
+group_name: "گروه {number}"
+
+fields_of_study: [experimental, mathematics, humanities]
+
+fixture_timestamp: "2026-01-01T00:00:00Z"
+
+id_namespace: 1b0b276e-a961-412f-983b-12a57a02f8ec

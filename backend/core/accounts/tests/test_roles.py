@@ -3,7 +3,7 @@ from typing import Any
 from django.test import SimpleTestCase
 
 from accounts.claims import extract_roles
-from accounts.errors import AmbiguousRoleError, RoleNotAssignedError
+from accounts.errors import AmbiguousRoleError
 from accounts.roles import resolve_panel
 from tests.helpers.covers import covers
 
@@ -20,9 +20,8 @@ class ResolvePanelTests(SimpleTestCase):
             resolve_panel(["offline_access", "uma_authorization", "student"]), "student"
         )
 
-    def test_no_panel_role_is_refused(self) -> None:
-        with self.assertRaises(RoleNotAssignedError):
-            resolve_panel(["offline_access"])
+    def test_no_panel_role_means_student(self) -> None:
+        self.assertEqual(resolve_panel(["offline_access"]), "student")
 
     def test_two_panel_roles_are_refused(self) -> None:
         with self.assertRaises(AmbiguousRoleError):
