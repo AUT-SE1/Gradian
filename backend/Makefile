@@ -131,7 +131,7 @@ schema: $(TOOLS_DEPS) ## (step) Export and validate the OpenAPI schema to build/
 	@mkdir -p build
 	$(CORE_TOOLS) python manage.py spectacular --validate --fail-on-warn --file ../build/openapi.yaml
 
-migrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
+makemigrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
 	$(CORE_TOOLS) python manage.py makemigrations
 
 $(ALL_ENVS): %.env: | %.env.example
