@@ -1,12 +1,10 @@
 """The demo content of `seed/`, built in memory so fast tests need no generated fixture."""
 
-import sys
-from pathlib import Path
-
 from django.core import serializers
 
-ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "scripts"))
+from tests.helpers.repo import REPO_ROOT, scripts_on_path
+
+scripts_on_path()
 
 import seed_generate  # noqa: E402
 
@@ -14,7 +12,7 @@ __all__ = ["content", "load_blocks", "load_services", "seed_generate"]
 
 
 def content() -> seed_generate.Content:
-    return seed_generate.load_content(ROOT)
+    return seed_generate.load_content(REPO_ROOT)
 
 
 def _save(text: str) -> None:

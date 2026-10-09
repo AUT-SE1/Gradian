@@ -1,14 +1,27 @@
-"""Reaching the repository's scripts and reference services from integration tests.
+"""Reaching the repository's scripts, seed content and reference services from tests.
 
-Inside the `core` container the repository is mounted read-only at /repo; in the `tools`
-container it is /repo too. `REPO_ROOT` overrides it, for running elsewhere.
+The Core code lives at /app in the `core` container and at /repo/core in the `tools` container,
+while the repository itself is mounted read-only at /repo in both. So the repository is found,
+in order, from `REPO_ROOT`, from the folder above `core/` when the tests run inside it, and at
+/repo.
 """
 
 import os
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(os.environ.get("REPO_ROOT", "/repo"))
+
+def find_repo_root() -> Path:
+    explicit = os.environ.get("REPO_ROOT")
+    if explicit:
+        return Path(explicit)
+    above_core = Path(__file__).resolve().parents[3]
+    if (above_core / "scripts").is_dir():
+        return above_core
+    return Path("/repo")
+
+
+REPO_ROOT = find_repo_root()
 
 
 def scripts_on_path() -> None:
