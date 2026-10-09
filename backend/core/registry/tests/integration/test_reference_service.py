@@ -5,12 +5,15 @@ class and given its own client, `group-1`.
 """
 
 import os
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, ClassVar
 
 import requests
@@ -90,9 +93,18 @@ class ReferenceServiceTests(IntegrationTestCase):
             "GRADIAN_SERVICE_URL": cls.url,
             "GRADIAN_FRONTEND_URL": settings.FRONTEND_URL,
         }
+        workdir = Path(tempfile.mkdtemp(prefix="reference-service-"))
+        cls.addClassCleanup(shutil.rmtree, workdir, ignore_errors=True)
+        source = REPO_ROOT / "teams" / f"team{GROUP}"
+        # A copy: the repository is mounted read-only, and runserver opens its SQLite file.
+        shutil.copytree(
+            source,
+            workdir / source.name,
+            ignore=shutil.ignore_patterns(".env", "*.sqlite3", "__pycache__"),
+        )
         cls.process = subprocess.Popen(  # noqa: S603  # fixed arguments
             [sys.executable, "manage.py", "runserver", f"127.0.0.1:{port}", "--noreload"],
-            cwd=REPO_ROOT / "teams" / f"team{GROUP}",
+            cwd=workdir / source.name,
             env=service_env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
