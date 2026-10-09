@@ -66,7 +66,7 @@ check: lint typecheck test schema ## All static checks and fast tests, before ev
 itest: start ## Tests that need the running system [start, then the integration tests]
 	$(COMPOSE) exec $(EXEC_FLAGS) $(CORE_SERVICE) $(INTEGRATION_CMD)
 
-users: $(TOOLS_DEPS) ## Write the per-group sign-in files to build/credentials/
+users: $(TOOLS_DEPS) ## Write the seeded users' sign-in details and the group service credentials to build/credentials/
 	@./scripts/refuse_production.sh users
 	$(ROOT_TOOLS) python scripts/seed_credentials.py
 

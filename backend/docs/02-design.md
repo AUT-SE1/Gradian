@@ -193,19 +193,19 @@ flowchart LR
 
 | ID | Design requirement | Satisfies | Decision |
 | --- | --- | --- | --- |
-| DES-DATA-01 | `seed/people.yaml` is the single source: the number of groups, the per-role counts of AC-SEED, the mobile-number scheme and the TA admin. `seed/names.yaml` holds Persian name pools. `seed/content/` holds the landing, widget and service-entry content. | SYS-DATA-02, SYS-DATA-03, SYS-DATA-06, SYS-PNL-04 | DEC-11 |
+| DES-DATA-01 | `seed/people.yaml` is the single source: the number of groups, the number of seeded users per role (AC-SEED) and the mobile-number scheme. `seed/names.yaml` holds Persian name pools. `seed/content/` holds the landing, widget and service-entry content. | SYS-DATA-02, SYS-DATA-03, SYS-DATA-06, SYS-PNL-04 | DEC-11 |
 | DES-DATA-02 | `scripts/seed_generate.py` is deterministic: the same input always produces byte-identical output. `make seed` writes the fixtures and `make realm` the Keycloak realm file; both are build artifacts and git-ignored. | SYS-DATA-04 | DEC-11 |
 | DES-DATA-03 | Each user's ID is `uuid5(namespace, mobile)`. The same value is the Keycloak user ID and the `Profile` primary key, so fixtures and Keycloak agree without a lookup and `loaddata` is idempotent. | SYS-DATA-04, SYS-ID-03 | DEC-12 |
 | DES-DATA-04 | Fixtures, generated and git-ignored: `accounts/fixtures/profiles.json`, `registry/fixtures/services.json` (25 entries), `panels/fixtures/landing.json` and `panels/fixtures/widgets.json`. The Konkur date comes from configuration. | SYS-DATA-03, SYS-DATA-06, SYS-PNL-04 | DEC-11 |
 | DES-DATA-05 | Keycloak users come from the realm import: the generated `build/realm-gradian.json` (template plus users) is mounted into the container and loaded with the import-on-start option. Keycloak imports only when the realm does not yet exist, so a reset removes the Keycloak volume. | SYS-DATA-01 | DEC-11 |
 | DES-DATA-06 | The initial password is read from `SEED_DEFAULT_PASSWORD` when the realm file is rendered. It is never written to a committed file. `make seed`, `make realm`, `make users` and `make bootstrap` refuse to run when `ENVIRONMENT=production`. | SYS-DATA-07, SYS-NFR-01 | DEC-11 |
-| DES-DATA-07 | Project groups are not tables. A group is the allocation of seeded users and of one Keycloak service client (`group-N`), set in `people.yaml` and visible in the credential files. To change an allocation, edit `people.yaml` and run `make reset`. | SYS-DATA-03 | DEC-14 |
-| DES-DATA-08 | `make users` writes one CSV per group to `build/credentials/` with role, name, mobile number and password. The directory is git-ignored. | SYS-DATA-05 | DEC-11 |
+| DES-DATA-07 | Project groups are not tables. The seeded users are one pool shared by every group. A group has one thing of its own, a Keycloak service client (`group-N`), whose credentials are in the credential files. To change the number of groups or users, edit `people.yaml` and run `make reset`. | SYS-DATA-03 | DEC-14 |
+| DES-DATA-08 | `make users` writes `build/credentials/users.csv` (every seeded user: role, name, mobile number, password) and `services.csv` (each group's client id and secret). The directory is git-ignored. | SYS-DATA-05 | DEC-11 |
 | DES-DATA-10 | *Variant, only if Q5 is answered with a shared long-lived Keycloak:* an Admin API loader script creates the same users in a Keycloak that cannot be re-imported, using the same IDs. | SYS-DATA-01, SYS-DATA-04 | DEC-11 |
 
 ### Details
 
-- **Mobile numbers** follow a documented deterministic scheme from a range reserved for test data, derived from group number, role and index (group 000 is for accounts that belong to no group). Emails are `<role>.<group>.<n>@gradian.test`.
+- **Mobile numbers** follow a documented deterministic scheme from a range reserved for test data, derived from role and index; the role digit 9 is kept for the throwaway users of integration tests. Emails are `<role>.<n>@gradian.test`.
 - **Idempotency.** `loaddata` with fixed primary keys updates rows in place, so running it twice changes nothing. It does not delete rows removed from a fixture; `make reset` is the way to clean.
 - **Verify before relying on it.** Realm import accepting a fixed user `id` is common practice but should be checked against the chosen Keycloak version early.
 
@@ -241,7 +241,7 @@ The main targets are the ones people run. Each is a short name for a sequence of
 | `reset` | Wipes all data, then starts clean | `stop`, volumes removed, `start` | No |
 | `check` | All static checks and fast tests, before every push | `lint`, `typecheck`, `test`, `schema` | No |
 | `itest` | Tests that need the running system | `start`, then the integration tests | No (it starts it) |
-| `users` | Writes per-group sign-in files to `build/credentials/` | | No |
+| `users` | Writes the seeded users' sign-in details and the group service credentials to `build/credentials/` | | No |
 | `format`, `logs`, `shell`, `manage` | Formatting; Compose logs; a Django shell; `manage.py` | | `logs`, `shell`, `manage`: yes |
 | `check-service` | Runs the group-service conformance check against `URL=` (planned) | | Yes |
 

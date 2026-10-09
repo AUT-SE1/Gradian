@@ -146,9 +146,9 @@ Gradian (گرادیان) is a Konkur preparation platform. The **Core Service** 
 | --- | --- | --- | --- |
 | SYS-DATA-01 | After setup, the system holds users of every role who can sign in. | N-5 | Source (PDF: seed note) |
 | SYS-DATA-02 | Seeded users have complete identity data and realistic Persian names, and use mobile numbers and emails that cannot belong to real people. | N-5 | Proposed |
-| SYS-DATA-03 | Seeded users are allocated to project groups, so that each group has its own users of every role (AC-SEED) to develop with. The allocation exists only in the seed and the credential files: the system does not record groups, and every user is valid for every group's service. | N-5 | Source (PDF: "give them to groups"); quantities Proposed |
+| SYS-DATA-03 | The seeded users are one pool, with several users of every role (AC-SEED), shared by every project group. The system does not record groups, and every user is valid for every group's service. | N-5 | Source (PDF: "give them to groups", read as: available to every group); quantities Proposed |
 | SYS-DATA-04 | Loading the demo data can be repeated without creating duplicates or changing the result. | N-5, N-6 | Proposed |
-| SYS-DATA-05 | The TA can obtain, per group, the list of its users with their sign-in details. | N-5 | Inferred |
+| SYS-DATA-05 | The TA can obtain the list of the seeded users with their sign-in details, and each group's service credentials. | N-5 | Inferred |
 | SYS-DATA-06 | The demo data covers everything the panels display: the 25 service entries, the landing content and the widget data. | N-8 | Inferred |
 | SYS-DATA-07 | Demo accounts and their shared password cannot be created in a production environment. | N-5 | Proposed |
 
@@ -244,17 +244,15 @@ A platform service is a machine client, such as a group service, acting with its
 
 ### AC-SEED: default seed allocation
 
-The number of project groups is a setting, default 10. A group is only an allocation of seeded users and of a service client; the system does not record it.
+The seeded users are one pool shared by all groups. The number of project groups is a setting, default 10; a group only has its own service credentials, and the system does not record it.
 
-| Role | Per group | Total at 10 groups |
-| --- | --- | --- |
-| Student | 4 | 40 |
-| Consultant | 1 | 10 |
-| Top-ranker (role `consultant`) | 1 | 10 |
-| Professor | 1 | 10 |
-| Admin | 1 | 10 |
-
-One further TA admin account belongs to no group.
+| Role | Seeded users |
+| --- | --- |
+| Student | 40 |
+| Consultant | 10 |
+| Top-ranker (role `consultant`) | 10 |
+| Professor | 10 |
+| Admin | 10 |
 
 ## 6. Open questions and proposed values
 
@@ -266,7 +264,7 @@ Each feeds a decision in the log, which is marked *Assumed* until the question i
 | --- | --- | --- | --- |
 | Q1 | How does the user sign in: a themed Keycloak page, or a custom form in the Gradian frontend? | Themed Keycloak page | DEC-05 |
 | Q2 | Does "groups" in the PDF's seed note mean student project groups? | Yes, confirmed: the teams that build the group services | DEC-14 |
-| Q3 | Can a user belong to several groups? | Moot: every user is valid for every group; the seed only gives each group its own users to work with | DEC-14 |
+| Q3 | Can a user belong to several groups? | Moot: every user is valid for every group, and the seeded users are one shared pool | DEC-14 |
 | Q4 | Are group services embedded in the panel or opened by redirect? | Either, chosen per entry | DEC-10 |
 | Q5 | Does the course use one shared, long-lived Keycloak, or does everyone run their own copy? | Own copy locally; one shared instance for integration | DEC-11 |
 | Q6 | How many seeded users does each group need? | See AC-SEED | DEC-11 |
@@ -284,7 +282,7 @@ These numbers have no source in the PDF or brief.
 | Failed sign-ins before temporary lockout | 5 | SYS-AUTH-05 |
 | Access-token lifetime | 10 minutes at most | SYS-AUTH-08, SYS-NFR-03 |
 | Load target | 50 concurrent users, 300 ms at the 95th percentile | SYS-NFR-02 |
-| Seed allocation and group count | AC-SEED, 10 groups | SYS-DATA-03 |
+| Seeded users and group count | AC-SEED, 10 groups | SYS-DATA-03 |
 | Minimum password length | 8 characters | SYS-AUTH-10, SYS-ADM-01 |
 
 ## 7. Out of scope

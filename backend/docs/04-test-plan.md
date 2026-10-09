@@ -124,9 +124,9 @@ Levels are those in section 1. A requirement may be checked at several levels.
 | --- | --- | --- |
 | SYS-DATA-01 | INTEG | After `make reset`, a token can be obtained for a sampled seeded user of each role |
 | SYS-DATA-02 | API | Every seeded profile has a non-empty name and email, a valid normalized mobile number, and an email at the `gradian.test` domain |
-| SYS-DATA-03 | UNIT | Per-group and per-role counts match AC-SEED, for 10 groups and for 3; every group has every role |
+| SYS-DATA-03 | UNIT | Per-role counts match AC-SEED and do not depend on the number of groups (10 and 3) |
 | SYS-DATA-04 | UNIT | The generator is deterministic (two runs, identical output); realm user ids equal the fixture ids; the password never reaches a fixture. `loaddata` twice is Django's own behaviour with fixed primary keys |
-| SYS-DATA-05 | UNIT, MANUAL | Each group's file lists only its own users with role, name, mobile and password; files are replaced, private and readable in Excel. Manual: `make users` writes them to the git-ignored directory |
+| SYS-DATA-05 | UNIT, MANUAL | One file lists every seeded user with role, name, mobile and password, another each group's client id and secret; files are replaced, private and readable in Excel. Manual: `make users` writes them to the git-ignored directory |
 | SYS-DATA-06 | API | After bootstrap there are 25 service entries, landing content and widget data |
 | SYS-DATA-07 | UNIT | `seed`, `realm`, `users` and `bootstrap` refuse to run with `ENVIRONMENT=production` |
 
@@ -187,7 +187,7 @@ Run by someone other than the author, on a clean machine, from a fresh clone.
 4. Use the logout icon in each panel and confirm the return to the landing page.
 5. Change one entry's target URL in the Django admin and see it in the panel.
 6. Change a user's email in Keycloak, sign in again, and see the new email.
-7. Run `make users` and check the per-group files.
+7. Run `make users` and check `users.csv` and `services.csv`.
 8. Run `make reset` and confirm the seeded state returns.
 9. Run `make test` with no containers, then `make itest`.
 10. Run `make check-service` against the reference service.

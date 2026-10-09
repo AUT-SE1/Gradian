@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Write the sign-in details of the seeded users, one CSV per group (DES-DATA-08, SYS-DATA-05).
+"""Write the sign-in details of the seeded users (DES-DATA-08, SYS-DATA-05).
 
-`build/credentials/group-N.csv` lists the users of group N (role, name, mobile, password),
-`group-N-service.csv` the client id and secret its service uses to call the Core Service, and
-`ta.csv` the TA admin, who belongs to no group. The files hold passwords, so they are written
-only to the git-ignored `build/` folder, readable by the owner alone, and the script refuses
+`build/credentials/users.csv` lists every seeded user (role, name, mobile, password); the users
+are one pool shared by all groups. `services.csv` lists the client id and secret each group's
+service uses to call the Core Service. The files hold passwords, so they are written only to the
+git-ignored `build/` folder, readable by the owner alone, and the script refuses
 ENVIRONMENT=production. The files are UTF-8 with a byte order mark so that Excel shows Persian.
 
 Run through `make users`.
@@ -22,9 +22,13 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def write_files(directory: Path, files: dict[str, str]) -> None:
-    """Replace this script's own files, so a group that no longer exists leaves nothing behind."""
+    """Replace this script's own files, and the per-group files an earlier version wrote."""
     directory.mkdir(parents=True, exist_ok=True)
-    for stale in [directory / "ta.csv", *directory.glob("group-*.csv")]:
+    for stale in [
+        *directory.glob("group-*.csv"),
+        directory / "ta.csv",
+        *map(directory.joinpath, files),
+    ]:
         stale.unlink(missing_ok=True)
     for name, text in files.items():
         path = directory / name

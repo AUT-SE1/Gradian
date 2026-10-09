@@ -79,16 +79,41 @@ login/
 
 ## Trying your changes
 
-`make start` mounts this folder into Keycloak, and in development Keycloak does not cache themes: edit
-a file, refresh the browser. The simplest test is to press the buttons in the app. To open a page
-directly, use these URLs (one line each; `code_challenge` is any 43-character string for a look at
-the page, a real value is needed only to finish a sign-in):
+`make start` mounts this folder into Keycloak, and in development Keycloak does not cache themes:
+edit a file, refresh the browser. You do not need the React app running to test either page.
 
-    http://localhost:8080/realms/gradian/protocol/openid-connect/auth?client_id=gradian-web&response_type=code&scope=openid&redirect_uri=http://localhost:5173/auth/callback&code_challenge=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&code_challenge_method=S256
-    http://localhost:8080/realms/gradian/protocol/openid-connect/registrations?client_id=gradian-web&response_type=code&scope=openid&redirect_uri=http://localhost:5173/auth/callback&code_challenge=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&code_challenge_method=S256
+**Open each page on its own.** Paste one of these into the browser. The `code_challenge` is a fixed
+test value (its verifier is below), and the redirect URI must be `${FRONTEND_URL}/auth/callback`,
+which is `http://localhost:5173/auth/callback` by default.
 
-The first shows the login page, the second the registration page. (The address
-`/realms/gradian/account` is Keycloak's own account console, not these pages.)
+Login page:
+
+    http://localhost:8080/realms/gradian/protocol/openid-connect/auth?client_id=gradian-web&response_type=code&scope=openid&redirect_uri=http://localhost:5173/auth/callback&code_challenge=oGWBphORiNZ_XxKnaA2dubEoOHkFKtBUsJysFnPwjso&code_challenge_method=S256
+
+Registration page:
+
+    http://localhost:8080/realms/gradian/protocol/openid-connect/registrations?client_id=gradian-web&response_type=code&scope=openid&redirect_uri=http://localhost:5173/auth/callback&code_challenge=oGWBphORiNZ_XxKnaA2dubEoOHkFKtBUsJysFnPwjso&code_challenge_method=S256
+
+The login page links to the registration page and back, and shows Keycloak's Persian error for a
+wrong password. Seeded users are listed in `build/credentials/users.csv` (made by `make users`).
+
+**Finish a sign-in without the frontend.** After a successful login or registration the browser is
+sent to `http://localhost:5173/auth/callback?...&code=<CODE>`. If nothing is running on port 5173 the
+browser shows "can't connect", which is fine: copy the `code` value from the address bar and
+exchange it within a minute:
+
+    curl -s -d grant_type=authorization_code -d client_id=gradian-web \
+      -d redirect_uri=http://localhost:5173/auth/callback -d code=<CODE> \
+      -d code_verifier=gradian-local-test-verifier-0123456789-ABCDEFGHIJKLMNOP \
+      http://localhost:8080/realms/gradian/protocol/openid-connect/token
+
+The answer holds an `access_token`; use it as `Authorization: Bearer ...` on
+`http://localhost:8000/api/v1/me`. (The `code_challenge` above is the S256 hash of that verifier;
+a real app generates a new pair for every sign-in.) Each URL gives a code only once, so open the
+page again for another try.
+
+Other entry points are not these pages: `/realms/gradian/account` is Keycloak's own account
+console, and `prompt=create` does not open registration in Keycloak 26.0.8.
 
 Create a real account to test with, then delete it in the console (http://localhost:8080,
 `KEYCLOAK_ADMIN_USER`) under Users. Seeded users can sign in with the password in `.env`.

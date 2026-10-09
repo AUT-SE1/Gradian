@@ -64,7 +64,7 @@ Django admin: http://localhost:8000/admin/ (create an operator with
 
 ## Trying the system by hand
 
-1. `make start`, then `make users`. Open `build/credentials/group-1.csv`: one line per seeded user
+1. `make start`, then `make users`. Open `build/credentials/users.csv`: one line per seeded user
    with role, name, mobile number and password (the password is `SEED_DEFAULT_PASSWORD`).
 2. Open http://localhost:8000/api/docs/, press *Authorize*, choose `keycloakPassword`, enter a
    mobile number and the password, and leave the client id. Try `GET /api/v1/me`: it returns the
@@ -76,7 +76,7 @@ Django admin: http://localhost:8000/admin/ (create an operator with
    to list accounts, create a professor with a password, and change someone's role. Sign in as
    the new professor to see the new panel.
 5. **Act as a group service.** Take `client_id` and `client_secret` from
-   `build/credentials/group-1-service.csv` and get a token:
+   `build/credentials/services.csv` (the `group-1` row) and get a token:
 
        curl -s -d grant_type=client_credentials -d client_id=group-1 -d client_secret=... \
          http://localhost:8080/realms/gradian/protocol/openid-connect/token
@@ -87,21 +87,19 @@ Django admin: http://localhost:8000/admin/ (create an operator with
 
 ## Seeded users
 
-`seed/people.yaml` is the single source: 10 groups, and per group 4 students, 1 consultant,
-1 top-ranker (a consultant with `consultant_type=top_ranker`), 1 professor and 1 admin, plus one
-TA admin who belongs to no group. Every user signs in with the mobile number and
-`SEED_DEFAULT_PASSWORD` from `.env`.
+`seed/people.yaml` is the single source: 40 students, 10 consultants, 10 top-rankers (consultants
+with `consultant_type=top_ranker`), 10 professors and 10 admins. Every user signs in with the mobile
+number and `SEED_DEFAULT_PASSWORD` from `.env`.
 
-A project group is only an allocation: the system does not record it, and every user is valid for
-every group's service. A group's allocation is its own users in `build/credentials/group-N.csv`
-(role, name, mobile, password) and its own Keycloak client `group-N` in
-`group-N-service.csv`; `ta.csv` holds the TA admin. The folder is git-ignored; do not share it
-outside the course.
+The users are one pool shared by all project groups, and every user is valid for every group's
+service. The system does not record groups. `make users` writes `build/credentials/users.csv`
+(role, name, mobile, password) and `services.csv` (each group's Keycloak client id and secret, one
+client `group-N` per group). The folder is git-ignored; do not share it outside the course.
 
-Mobile number = `0900` + group (3 digits, `000` for the TA) + kind (1 digit) + index (3 digits).
-Kinds: 1 student, 2 consultant, 3 top-ranker, 4 professor, 5 admin. So `09000031002` is the
-second student of group 3. Group number 999 is reserved for the temporary users of integration
-tests. Emails are `<kind>.<group>.<index>@gradian.test`, for example `top-ranker.3.1@gradian.test`.
+Mobile number = `0900` + kind (1 digit) + index (6 digits). Kinds: 1 student, 2 consultant,
+3 top-ranker, 4 professor, 5 admin. So `09001000002` is the second student and `09005000001` the
+first admin. Kind 9 is reserved for the temporary users of integration tests. Emails are
+`<kind>.<index>@gradian.test`, for example `top-ranker.3@gradian.test`.
 User ids are `uuid5(namespace, mobile)`, the same in Keycloak and in the Core `Profile`.
 
 The fixture `core/accounts/fixtures/profiles.json` and the realm file `build/realm-gradian.json`

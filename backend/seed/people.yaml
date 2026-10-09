@@ -1,20 +1,16 @@
 groups: 10
 
-per_group:
-  student: 4
-  consultant: 1
-  top_ranker: 1
-  professor: 1
-  admin: 1
+users:
+  student: 40
+  consultant: 10
+  top_ranker: 10
+  professor: 10
+  admin: 10
 
-# Group 000 is for accounts that belong to no group (the TA admin). The temporary group number is
-# never given to a seeded group: integration tests create their throwaway users there. 0900 is
-# meant to be a block no operator hands out; confirm that before relying on it.
 mobile:
   prefix: "0900"
-  group_digits: 3
-  index_digits: 3
-  temporary_group_number: 999
+  index_digits: 6
+  temporary_kind_code: 9
   kind_codes:
     student: 1
     consultant: 2
@@ -29,10 +25,6 @@ email_labels:
   top_ranker: top-ranker
   professor: professor
   admin: admin
-
-ta_admin:
-  first_name: مدیر
-  last_name: آزمایشگاه
 
 group_name: "گروه {number}"
 

@@ -4,9 +4,9 @@
 The same input always gives byte-identical output. A user's id is `uuid5(namespace, mobile)`, so
 the Django fixture and the Keycloak realm file agree without a lookup and `loaddata` can be
 repeated. The fixture, `core/accounts/fixtures/profiles.json`, is a build artifact: it is
-git-ignored and written again by `make seed`. Project groups are not modelled in the system; they
-only decide which seeded users and which service client a team is given. This module is also the
-library that `render_realm.py` and `seed_credentials.py` use.
+git-ignored and written again by `make seed`. The seeded users are one pool shared by every group.
+A project group only has its own Keycloak service client. This module is also the library that
+`render_realm.py` and `seed_credentials.py` use.
 """
 
 import argparse
@@ -40,7 +40,6 @@ ROLE_OF_KIND = {
 }
 CONSULTANT_TYPE_OF_KIND = {"consultant": "consultant", "top_ranker": "top_ranker"}
 MOBILE_LENGTH = 11
-NO_GROUP = 0
 
 PROFILES_FIXTURE = "core/accounts/fixtures/profiles.json"
 
@@ -69,7 +68,6 @@ class Person:
     last_name: str
     kind: str
     field_of_study: str
-    group: int
 
     @property
     def role(self) -> str:
@@ -89,13 +87,6 @@ class Seed:
     groups: tuple[Group, ...]
     people: tuple[Person, ...]
     timestamp: str
-
-    def members(self, group: Group) -> tuple[Person, ...]:
-        return tuple(person for person in self.people if person.group == group.number)
-
-    @property
-    def ungrouped(self) -> tuple[Person, ...]:
-        return tuple(person for person in self.people if person.group == NO_GROUP)
 
 
 def _get[T](source: Mapping[str, Any], key: str, kind: type[T], where: str) -> T:
@@ -147,19 +138,17 @@ def _pick_name(
 
 def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
     group_count = _get(people, "groups", int, "")
-    per_group = _section(people, "per_group", "")
-    counts = {kind: _get(per_group, kind, int, "per_group.") for kind in KINDS}
+    users = _section(people, "users", "")
+    counts = {kind: _get(users, kind, int, "users.") for kind in KINDS}
     mobile = _section(people, "mobile", "")
     prefix = _get(mobile, "prefix", str, "mobile.")
-    group_digits = _get(mobile, "group_digits", int, "mobile.")
     index_digits = _get(mobile, "index_digits", int, "mobile.")
-    temporary_group = _get(mobile, "temporary_group_number", int, "mobile.")
+    temporary_code = _get(mobile, "temporary_kind_code", int, "mobile.")
     codes_source = _section(mobile, "kind_codes", "mobile.")
     codes = {kind: _get(codes_source, kind, int, "mobile.kind_codes.") for kind in KINDS}
     domain = _get(people, "email_domain", str, "")
     labels_source = _section(people, "email_labels", "")
     labels = {kind: _get(labels_source, kind, str, "email_labels.") for kind in KINDS}
-    ta = _section(people, "ta_admin", "")
     group_name = _get(people, "group_name", str, "")
     fields_of_study = _strings(people, "fields_of_study", "")
     timestamp = _get(people, "fixture_timestamp", str, "")
@@ -168,15 +157,16 @@ def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
     except ValueError:
         raise SeedError("id_namespace must be a UUID") from None
 
-    if len(prefix) + group_digits + 1 + index_digits != MOBILE_LENGTH:
+    if len(prefix) + 1 + index_digits != MOBILE_LENGTH:
         raise SeedError(f"the mobile scheme must add up to {MOBILE_LENGTH} digits")
-    if not 1 <= group_count < min(temporary_group, 10**group_digits):
-        raise SeedError("groups must be at least 1 and below the temporary group number")
-    if len(set(codes.values())) != len(KINDS) or not all(0 <= c <= 9 for c in codes.values()):
-        raise SeedError("kind_codes must be distinct single digits")
+    if group_count < 1:
+        raise SeedError("groups must be at least 1")
+    all_codes = [*codes.values(), temporary_code]
+    if len(set(all_codes)) != len(all_codes) or not all(0 <= c <= 9 for c in all_codes):
+        raise SeedError("kind_codes and temporary_kind_code must be distinct single digits")
     for kind, count in counts.items():
         if not 1 <= count < 10**index_digits:
-            raise SeedError(f"per_group.{kind} must be at least 1 and fit the index digits")
+            raise SeedError(f"users.{kind} must be at least 1 and fit the index digits")
 
     first_names_source = _section(names, "first_names", "")
     first_names = {
@@ -191,43 +181,38 @@ def build_seed(people: Mapping[str, Any], names: Mapping[str, Any]) -> Seed:
     students_made = 0
     members: list[Person] = []
 
-    def make(kind: str, group: int, index: int, name: tuple[str, str] | None) -> Person:
-        number = f"{prefix}{group:0{group_digits}d}{codes[kind]}{index:0{index_digits}d}"
+    def make(kind: str, index: int) -> Person:
+        number = f"{prefix}{codes[kind]}{index:0{index_digits}d}"
         try:
             if normalize_mobile(number) != number:
                 raise SeedError(f"{number} is not in canonical form")
         except InvalidMobileError:
             raise SeedError(f"{number} is not a valid mobile number") from None
-        first, last = name or _pick_name(number, first_names, last_names, taken)
+        first, last = _pick_name(number, first_names, last_names, taken)
         return Person(
             sub=uuid.uuid5(namespace, number),
             mobile=number,
-            email=f"{labels[kind]}.{group}.{index}@{domain}",
+            email=f"{labels[kind]}.{index}@{domain}",
             first_name=first,
             last_name=last,
             kind=kind,
             field_of_study=fields_of_study[students_made % len(fields_of_study)]
             if kind == "student"
             else "",
-            group=group,
         )
 
-    groups = tuple(
-        Group(n, f"group-{n}", group_name.format(number=n)) for n in range(1, group_count + 1)
-    )
-    for group in groups:
-        for kind in KINDS:
-            for index in range(1, counts[kind] + 1):
-                members.append(make(kind, group.number, index, None))
-                students_made += kind == "student"
-    ta_name = (_get(ta, "first_name", str, "ta_admin."), _get(ta, "last_name", str, "ta_admin."))
-    taken.add(ta_name)
-    members.append(make("admin", NO_GROUP, 1, ta_name))
+    for kind in KINDS:
+        for index in range(1, counts[kind] + 1):
+            members.append(make(kind, index))
+            students_made += kind == "student"
 
     for attribute in ("mobile", "email", "sub"):
         values = [getattr(person, attribute) for person in members]
         if len(values) != len(set(values)):
             raise SeedError(f"the scheme produces duplicate {attribute} values")
+    groups = tuple(
+        Group(n, f"group-{n}", group_name.format(number=n)) for n in range(1, group_count + 1)
+    )
     return Seed(groups=groups, people=tuple(members), timestamp=timestamp)
 
 
@@ -372,21 +357,20 @@ def _csv(header: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
 
 
 def credential_files(seed: Seed, password: str) -> dict[str, str]:
-    """Credential CSV text by file name: users per group, one service client per group, and the
-    TA admin, who belongs to no group. The role column is the kind, so top-rankers stand out."""
-    header = ("role", "name", "mobile", "password")
-
-    def rows(people: Sequence[Person]) -> list[tuple[str, str, str, str]]:
-        return [(p.kind, p.full_name, p.mobile, password) for p in people]
-
-    files = {"ta.csv": _csv(header, rows(seed.ungrouped))}
-    for group in seed.groups:
-        files[f"{group.slug}.csv"] = _csv(header, rows(seed.members(group)))
-        files[f"{group.slug}-service.csv"] = _csv(
-            ("client_id", "client_secret"),
-            [(group.client_id, client_secret(password, group.client_id))],
-        )
-    return files
+    """Credential CSV text by file name: every seeded user, and one service client per group.
+    The role column is the kind, so top-rankers stand out from consultants."""
+    users = _csv(
+        ("role", "name", "mobile", "password"),
+        [(p.kind, p.full_name, p.mobile, password) for p in seed.people],
+    )
+    services = _csv(
+        ("group", "client_id", "client_secret"),
+        [
+            (str(group.number), group.client_id, client_secret(password, group.client_id))
+            for group in seed.groups
+        ],
+    )
+    return {"users.csv": users, "services.csv": services}
 
 
 def main() -> int:
