@@ -29,9 +29,10 @@ core/<app>/tests/
     test_*.py                  # fast tests: UNIT and API
     integration/test_*.py      # INTEG, every class tagged "integration"
 core/tests/helpers/
-    tokens.py                  # test key pair, make_token(), fake JWKS
+    base.py                    # ApiTestCase: fake key set and a stubbed Admin API client
     keycloak.py                # real-token helper and temporary-user helper
-    covers.py                  # @covers("SYS-...") requirement tag
+packages/<package>/src/<module>/tests/
+    test_*.py                  # tests of the shared packages, run by `make test`
 scripts/tests/                 # tests for the seed generator and check_service
 tests/perf/                    # load-test script (PERF)
 ```
@@ -39,7 +40,7 @@ tests/perf/                    # load-test script (PERF)
 ### 2.2 Fast tests (UNIT and API)
 
 - API tests extend `APITestCase` through a small base class that installs a fake key set: a throwaway RSA key pair is generated when the tests start, and the code that fetches Keycloak's keys is patched to return the public half.
-- `make_token(sub=..., roles=[...], **claims)` signs a token with that key. Tests build exactly the token they need: wrong issuer, wrong audience, expired, `alg: none`, missing claim, extra roles.
+- `make_token(sub=..., roles=[...], **claims)` (from `gradian_testing.tokens`) signs a token with that key. Tests build exactly the token they need: wrong issuer, wrong audience, expired, `alg: none`, missing claim, extra roles.
 - The Keycloak Admin API client is replaced with a stub that records calls and can be told to fail. This covers write-through (DES-ID-05) and the sync command without a real Keycloak.
 - Fast tests create their own small data. The seed tests build the seed in memory from `seed/` and test that; no generated file is needed.
 - Django creates and destroys its own test database, so nothing here touches the local development database.

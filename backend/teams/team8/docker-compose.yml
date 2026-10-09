@@ -4,11 +4,13 @@
 name: gradian-team8
 services:
   team8:
-    build: .
+    build:
+      context: .
+      additional_contexts:
+        packages: ../../packages
     env_file: .env
     volumes: [".:/app"]
-    # Bound to localhost only: the service trusts the X-User-* headers the core gateway sets,
-    # so the outside world must reach it through the gateway (/api/teams/8/), never directly.
+    # Bound to localhost only: this is a development service. The service validates every token itself.
     ports: ["127.0.0.1:8008:8008"]
 
 networks:

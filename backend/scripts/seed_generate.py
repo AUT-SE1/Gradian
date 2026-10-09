@@ -25,10 +25,9 @@ from typing import Any
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "core"))
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
 
-from accounts.mobile import InvalidMobileError, normalize_mobile  # noqa: E402
+ROOT = Path(__file__).resolve().parent.parent
 
 KINDS = ("student", "consultant", "top_ranker", "professor", "admin")
 ROLE_OF_KIND = {

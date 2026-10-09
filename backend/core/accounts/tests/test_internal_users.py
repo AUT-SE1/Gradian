@@ -4,9 +4,9 @@ import uuid
 from typing import Any
 
 from accounts.models import Profile
+from gradian_testing.covers import covers
+from gradian_testing.tokens import make_token, service_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import make_token, service_token
 
 USERS = "/api/v1/internal/users"
 ROLES = {

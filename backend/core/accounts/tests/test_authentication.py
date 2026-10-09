@@ -11,11 +11,11 @@ from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from accounts.keycloak import KeycloakError
 from accounts.models import Profile
+from gradian_keycloak.errors import KeycloakError
+from gradian_testing.covers import covers
+from gradian_testing.tokens import OTHER_PRIVATE_KEY, make_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import OTHER_PRIVATE_KEY, make_token
 
 ME = "/api/v1/me"
 SUB = uuid.UUID("00000000-0000-4000-8000-000000000001")

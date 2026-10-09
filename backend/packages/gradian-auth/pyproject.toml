@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gradian-auth"
+version = "0.1.0"
+description = "Gradian: validate Keycloak access tokens and decide who is calling (Django and DRF)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gradian-keycloak>=0.1,<0.2",
+    "Django>=6.1",
+    "PyJWT[crypto]>=2.10",
+]
+
+[project.optional-dependencies]
+drf = ["djangorestframework>=3.16"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["*.tests", "*.tests.*"]
+
+[tool.setuptools.package-data]
+gradian_auth = ["py.typed"]

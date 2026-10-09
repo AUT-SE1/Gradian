@@ -51,8 +51,10 @@ services:
     build:
       context: ./core
       target: runtime
+      additional_contexts:
+        packages: ./packages
     env_file: .env
-    volumes: ["./core:/app"]
+    volumes: ["./core:/app", "./packages:/packages"]
     ports: ["${CORE_PORT}:8000"]
     depends_on:
       db: {condition: service_healthy}
@@ -70,7 +72,9 @@ services:
     build:
       context: ./core
       target: dev
-    volumes: [".:/repo"]
+      additional_contexts:
+        packages: ./packages
+    volumes: [".:/repo", "./packages:/packages"]
     working_dir: /repo/core
     environment:
       DJANGO_SETTINGS_MODULE: gradian.settings_test

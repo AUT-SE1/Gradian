@@ -15,20 +15,18 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from accounts import keycloak
-from accounts.errors import (
-    IdentityConflictError,
-    IdentityProviderUnavailableError,
-    SelfModificationError,
-)
+from accounts.errors import IdentityConflictError, SelfModificationError
 from accounts.models import Profile, Role
+from gradian_auth.errors import IdentityProviderUnavailableError
+from gradian_keycloak import admin_client as keycloak
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
 SELF_PROTECTED = {"role", "consultant_type", "is_active"}
 
 
-def _keycloak_failed(exc: keycloak.KeycloakError, event: str) -> Exception:
+def _keycloak_failed(exc: KeycloakError, event: str) -> Exception:
     logger.warning("user management failed", extra={"event": event, "status": exc.status})
     return IdentityConflictError() if exc.status == 409 else IdentityProviderUnavailableError()
 
@@ -58,7 +56,7 @@ def create_user(data: Mapping[str, Any]) -> Profile:
                 consultant_type=consultant_type,
             )
         )
-    except keycloak.KeycloakError as exc:
+    except KeycloakError as exc:
         raise _keycloak_failed(exc, "admin_create_failed") from None
     try:
         profile = Profile.objects.create(
@@ -98,7 +96,7 @@ def update_user(profile: Profile, changes: Mapping[str, Any], actor_sub: str) ->
             admin.set_panel_role(str(profile.sub), role, consultant_type)
         if enabled_changed:
             admin.set_enabled(str(profile.sub), changes["is_active"])
-    except keycloak.KeycloakError as exc:
+    except KeycloakError as exc:
         raise _keycloak_failed(exc, "admin_update_failed") from None
 
     try:

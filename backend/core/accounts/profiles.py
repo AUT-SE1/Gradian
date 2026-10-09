@@ -6,11 +6,12 @@ from datetime import datetime
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from accounts import keycloak
-from accounts.claims import Identity
 from accounts.errors import IdentityConflictError
 from accounts.models import Profile
-from accounts.roles import DEFAULT_PANEL
+from gradian_auth.claims import Identity
+from gradian_auth.roles import DEFAULT_PANEL
+from gradian_keycloak import admin_client
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
@@ -72,8 +73,8 @@ def grant_default_role(sub: str) -> None:
     which read the role from the token, see it too. Core treats such a person as a student
     already, so a failure here is logged and not fatal."""
     try:
-        keycloak.get_admin_client().grant_role(sub, DEFAULT_PANEL)
-    except keycloak.KeycloakError as exc:
+        admin_client.get_admin_client().grant_role(sub, DEFAULT_PANEL)
+    except KeycloakError as exc:
         logger.warning(
             "default role grant failed",
             extra={"event": "default_role_failed", "status": exc.status},

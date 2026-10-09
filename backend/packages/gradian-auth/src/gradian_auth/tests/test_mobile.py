@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 
-from accounts.mobile import InvalidMobileError, normalize_mobile
-from tests.helpers.covers import covers
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
+from gradian_testing.covers import covers
 
 
 @covers("SYS-ID-04")

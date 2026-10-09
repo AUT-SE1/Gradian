@@ -1,28 +1,25 @@
-"""Everything that talks to Keycloak over HTTP. Tests replace `fetch_jwks` and
-`get_admin_client`; nothing else in the code base makes a network call to Keycloak."""
+"""The Keycloak Admin API as Core uses it, through the service account of this service's client.
+
+Only a service whose client has the realm-management roles (Core, `gradian-core`) can use this.
+Group services have no such rights and must not call it.
+"""
 
 import contextlib
 import logging
-import threading
-import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol
 
 import requests
-from django.conf import settings
 
-from accounts.roles import PANEL_ROLES
+from gradian_keycloak.config import get_config
+from gradian_keycloak.errors import KeycloakError
+from gradian_keycloak.roles import PANEL_ROLES
+from gradian_keycloak.service_token import ServiceTokenClient
 
 logger = logging.getLogger("gradian.keycloak")
 
-
-class KeycloakError(Exception):
-    """A Keycloak call failed. `status` is the HTTP status, or None if it was unreachable."""
-
-    def __init__(self, message: str, status: int | None = None) -> None:
-        super().__init__(message)
-        self.status = status
+PAGE_SIZE = 200
 
 
 @dataclass(frozen=True)
@@ -64,75 +61,22 @@ class IdentityAdmin(Protocol):
     def grant_role(self, sub: str, role: str) -> None: ...
 
 
-def fetch_jwks() -> dict[str, Any]:
-    try:
-        response = requests.get(
-            settings.KEYCLOAK_JWKS_URL, timeout=settings.KEYCLOAK_TIMEOUT_SECONDS
-        )
-        response.raise_for_status()
-        document = response.json()
-    except (requests.RequestException, ValueError) as exc:
-        raise KeycloakError("could not fetch the signing keys") from exc
-    if not isinstance(document, dict):
-        raise KeycloakError("signing keys have an unexpected shape")
-    return document
-
-
-def check_reachable() -> None:
-    """Readiness probe: the realm's public keys can be fetched."""
-    fetch_jwks()
-
-
 class KeycloakAdminClient:
-    """Admin API client using the `gradian-core` service account (client credentials)."""
-
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._token = ""
-        self._expires_at = 0.0
-
-    @property
-    def _admin_base(self) -> str:
-        return f"{settings.KEYCLOAK_URL}/admin/realms/{settings.KEYCLOAK_REALM}"
-
-    def _access_token(self) -> str:
-        with self._lock:
-            if self._token and time.monotonic() < self._expires_at - 30:
-                return self._token
-            url = (
-                f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}"
-                "/protocol/openid-connect/token"
-            )
-            try:
-                response = requests.post(
-                    url,
-                    data={
-                        "grant_type": "client_credentials",
-                        "client_id": settings.KEYCLOAK_CORE_CLIENT_ID,
-                        "client_secret": settings.KEYCLOAK_CORE_CLIENT_SECRET,
-                    },
-                    timeout=settings.KEYCLOAK_TIMEOUT_SECONDS,
-                )
-                response.raise_for_status()
-                body = response.json()
-                self._token = str(body["access_token"])
-                self._expires_at = time.monotonic() + float(body.get("expires_in", 60))
-            except (requests.RequestException, ValueError, KeyError) as exc:
-                raise KeycloakError("could not obtain an admin token") from exc
-            return self._token
+    def __init__(self, tokens: ServiceTokenClient | None = None) -> None:
+        self._tokens = tokens or ServiceTokenClient()
 
     def _call(self, method: str, path: str, **kwargs: Any) -> Any:
         response = self._request(method, path, **kwargs)
         return response.json() if response.content else None
 
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
-        headers = {"Authorization": f"Bearer {self._access_token()}"}
+        config = get_config()
         try:
             response = requests.request(
                 method,
-                f"{self._admin_base}{path}",
-                headers=headers,
-                timeout=settings.KEYCLOAK_TIMEOUT_SECONDS,
+                f"{config.admin_url}{path}",
+                headers=self._tokens.auth_headers(),
+                timeout=config.timeout,
                 **kwargs,
             )
         except requests.RequestException as exc:
@@ -218,26 +162,28 @@ class KeycloakAdminClient:
                 page: list[dict[str, Any]] = self._call(
                     "GET",
                     f"/roles/{role}/users",
-                    params={"first": first, "max": 200, "briefRepresentation": "false"},
+                    params={"first": first, "max": PAGE_SIZE, "briefRepresentation": "false"},
                 )
                 for user in page:
                     found[user["id"]] = user
                     roles.setdefault(user["id"], set()).add(role)
-                if len(page) < 200:
+                if len(page) < PAGE_SIZE:
                     break
-                first += 200
+                first += PAGE_SIZE
         first = 0
         while True:  # people who have not been given a role yet are students
             page = self._call(
-                "GET", "/users", params={"first": first, "max": 200, "briefRepresentation": "false"}
+                "GET",
+                "/users",
+                params={"first": first, "max": PAGE_SIZE, "briefRepresentation": "false"},
             )
             for user in page:
                 if user["id"] not in found and not user.get("serviceAccountClientId"):
                     found[user["id"]] = user
                     roles[user["id"]] = set()
-            if len(page) < 200:
+            if len(page) < PAGE_SIZE:
                 break
-            first += 200
+            first += PAGE_SIZE
         return [
             KeycloakUser(
                 sub=sub,

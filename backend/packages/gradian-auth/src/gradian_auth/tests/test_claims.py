@@ -1,8 +1,8 @@
 from django.test import SimpleTestCase
 
-from accounts.claims import identity_from_claims, is_valid_name
-from accounts.errors import IncompleteIdentityError
-from tests.helpers.covers import covers
+from gradian_auth.claims import identity_from_claims, is_valid_name
+from gradian_auth.errors import IncompleteIdentityError
+from gradian_testing.covers import covers
 
 SUB = "00000000-0000-4000-8000-000000000001"
 

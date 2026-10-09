@@ -16,7 +16,7 @@ PASSWORD = "keycloakPassword"  # noqa: S105  # name of a security scheme, not a 
 
 
 class KeycloakBearerScheme(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]  # base registers subclasses through an untyped hook
-    target_class = "accounts.authentication.KeycloakBearerAuthentication"
+    target_class = "gradian_auth.drf.KeycloakBearerAuthentication"
     name: str | list[str] = BEARER if settings.IS_PRODUCTION else [BEARER, PASSWORD]
 
     def get_security_requirement(self, auto_schema: AutoSchema) -> Any:

@@ -2,9 +2,9 @@ from typing import Any
 
 from rest_framework import serializers
 
-from accounts.claims import is_valid_name
-from accounts.mobile import InvalidMobileError, normalize_mobile
 from accounts.models import ConsultantType, FieldOfStudy, Profile, Role
+from gradian_auth.claims import is_valid_name
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
 
 ME_FIELDS: tuple[str, ...] = (
     "sub",

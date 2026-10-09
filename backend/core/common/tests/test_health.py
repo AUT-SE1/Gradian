@@ -2,8 +2,8 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from accounts.keycloak import KeycloakError
-from tests.helpers.covers import covers
+from gradian_keycloak.errors import KeycloakError
+from gradian_testing.covers import covers
 
 
 @covers("SYS-NFR-03")
@@ -13,20 +13,20 @@ class HealthTests(TestCase):
         self.assertEqual((response.status_code, response.json()), (200, {"status": "ok"}))
 
     def test_ready_when_database_and_keycloak_are_up(self) -> None:
-        with patch("accounts.keycloak.fetch_jwks", return_value={"keys": []}):
+        with patch("gradian_keycloak.realm.fetch_jwks", return_value={"keys": []}):
             response = self.client.get("/health/ready")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["checks"], {"database": "ok", "keycloak": "ok"})
 
     def test_ready_fails_when_keycloak_is_down(self) -> None:
-        with patch("accounts.keycloak.fetch_jwks", side_effect=KeycloakError("down")):
+        with patch("gradian_keycloak.realm.fetch_jwks", side_effect=KeycloakError("down")):
             response = self.client.get("/health/ready")
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["checks"], {"database": "ok", "keycloak": "error"})
 
     def test_ready_fails_when_the_database_is_down(self) -> None:
         with (
-            patch("accounts.keycloak.fetch_jwks", return_value={"keys": []}),
+            patch("gradian_keycloak.realm.fetch_jwks", return_value={"keys": []}),
             patch("common.health.connection.cursor", side_effect=RuntimeError("db down")),
         ):
             response = self.client.get("/health/ready")

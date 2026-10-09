@@ -11,12 +11,12 @@ from collections.abc import Callable
 from typing import Any
 
 import jwt
-from rest_framework.exceptions import AuthenticationFailed
 
-from accounts import keycloak
-from accounts.errors import IdentityProviderUnavailableError
+from gradian_auth.errors import IdentityProviderUnavailableError, InvalidTokenError
+from gradian_keycloak import realm
+from gradian_keycloak.errors import KeycloakError
 
-logger = logging.getLogger("gradian.jwks")
+logger = logging.getLogger("gradian.auth")
 
 MIN_REFRESH_INTERVAL_SECONDS = 10.0
 
@@ -35,7 +35,7 @@ class JwksCache:
 
     def get_key(self, kid: str | None) -> Any:
         if not kid:
-            raise AuthenticationFailed(code="invalid_token")
+            raise InvalidTokenError
         with self._lock:
             key = self._keys.get(kid)
             if key is not None:
@@ -47,11 +47,11 @@ class JwksCache:
             )
             if self._keys and recently_tried:
                 # Unknown kid soon after a refresh: do not let random kids cause a fetch storm.
-                raise AuthenticationFailed(code="invalid_token")
+                raise InvalidTokenError
             self._last_attempt = now
             try:
-                document = keycloak.fetch_jwks()
-            except keycloak.KeycloakError:
+                document = realm.fetch_jwks()
+            except KeycloakError:
                 logger.warning("could not refresh the signing keys")
                 raise IdentityProviderUnavailableError from None
             self._keys = {
@@ -61,7 +61,7 @@ class JwksCache:
             }
             key = self._keys.get(kid)
             if key is None:
-                raise AuthenticationFailed(code="invalid_token")
+                raise InvalidTokenError
             return key
 
 

@@ -3,8 +3,9 @@
 import requests
 from django.conf import settings
 
+from gradian_keycloak.config import get_config
+from gradian_testing.covers import covers
 from tests.helpers.base import IntegrationTestCase
-from tests.helpers.covers import covers
 
 
 @covers("SYS-OPS-01", "SYS-NFR-03")
@@ -14,8 +15,8 @@ class StackTests(IntegrationTestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_keycloak_issuer_matches_what_core_expects(self) -> None:
-        """If KC_HOSTNAME and KEYCLOAK_ISSUER disagree, every token would be refused."""
+        """If KC_HOSTNAME and the public Keycloak address disagree, every token would be refused."""
         realm_url = f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_REALM}"
         url = f"{realm_url}/.well-known/openid-configuration"
         document = requests.get(url, timeout=5).json()
-        self.assertEqual(document["issuer"], settings.KEYCLOAK_ISSUER)
+        self.assertEqual(document["issuer"], get_config().issuer)

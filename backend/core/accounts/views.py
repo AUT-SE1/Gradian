@@ -11,13 +11,16 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts import keycloak
-from accounts.errors import IdentityConflictError, IdentityProviderUnavailableError
-from accounts.permissions import IsPanelUser
-from accounts.principals import UserPrincipal
+from accounts.errors import IdentityConflictError
+from accounts.principals import CoreUserPrincipal
 from accounts.serializers import AuthConfigSerializer, MeSerializer, MeUpdateSerializer
 from common.schema import CONFLICT, FORBIDDEN, PROVIDER_DOWN, UNAUTHENTICATED, error
 from common.throttling import PublicRateThrottle
+from gradian_auth.drf import IsPanelUser
+from gradian_auth.errors import IdentityProviderUnavailableError
+from gradian_keycloak import admin_client
+from gradian_keycloak.config import get_config
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
@@ -39,14 +42,13 @@ class AuthConfigView(APIView):
         },
     )
     def get(self, request: Request) -> Response:
+        issuer = get_config().issuer
         data = {
-            "issuer": settings.KEYCLOAK_ISSUER,
-            "registration_endpoint": (
-                f"{settings.KEYCLOAK_ISSUER}/protocol/openid-connect/registrations"
-            ),
+            "issuer": issuer,
+            "registration_endpoint": (f"{issuer}/protocol/openid-connect/registrations"),
             "realm": settings.KEYCLOAK_REALM,
             "client_id": settings.KEYCLOAK_WEB_CLIENT_ID,
-            "end_session_url": f"{settings.KEYCLOAK_ISSUER}/protocol/openid-connect/logout",
+            "end_session_url": f"{issuer}/protocol/openid-connect/logout",
             "landing_url": settings.FRONTEND_URL + "/",
         }
         return Response(AuthConfigSerializer(data).data)
@@ -57,7 +59,7 @@ class MeView(APIView):
 
     def _profile(self, request: Request) -> Any:
         user = request.user
-        if not isinstance(user, UserPrincipal):  # IsPanelUser makes this unreachable
+        if not isinstance(user, CoreUserPrincipal):  # IsPanelUser makes this unreachable
             raise PermissionDenied
         return user.profile
 
@@ -119,8 +121,8 @@ class MeView(APIView):
         }
         if identity_changes:
             try:
-                keycloak.get_admin_client().update_user(str(profile.sub), identity_changes)
-            except keycloak.KeycloakError as exc:
+                admin_client.get_admin_client().update_user(str(profile.sub), identity_changes)
+            except KeycloakError as exc:
                 logger.warning(
                     "identity write-through failed",
                     extra={"event": "write_through_failed", "status": exc.status},

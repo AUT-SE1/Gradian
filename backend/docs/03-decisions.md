@@ -41,6 +41,7 @@ A decision records a tool or approach chosen to realise a design requirement. It
 | DEC-20 | One Keycloak client per group service | Proposed |
 | DEC-21 | Self-registration, with student as the default role | Chosen (project owner) |
 | DEC-22 | Account administration through the Core API | Chosen (project owner) |
+| DEC-23 | Shared authentication code in installable packages | Proposed |
 
 ## Decisions
 
@@ -224,3 +225,11 @@ A decision records a tool or approach chosen to realise a design requirement. It
 - **Decision:** Administrators create accounts and change roles through `/api/v1/admin/users`. The Core Service writes to Keycloak through its service account, first, and updates its cache after Keycloak accepts the change (as in DEC-08).
 - **Alternatives:** Only the Keycloak console (works today, but the Gradian admin panel cannot offer it, and the cache would learn of changes only at the next sign-in); a Keycloak plugin (heavy).
 - **Consequences:** The admin panel can manage people without Keycloak access. A role change reaches a token already issued only when it expires, at most ten minutes (DEC-06). A change spans several Keycloak calls: creating an account that cannot be given its role is rolled back, but a role change that fails halfway can leave a person with a changed attribute and the old role, which is harmless and can be repeated. Administrators cannot change their own role or status, so the system cannot be left without an administrator by accident.
+
+### DEC-23 Shared authentication code in installable packages
+
+- **Status:** Proposed (open for the project owner).
+- **Realizes:** DES-REG-05, DES-REG-06, DES-AUTH-01 to DES-AUTH-04, DES-API-01.
+- **Decision:** The Keycloak and token code that Core wrote for itself lives in `packages/` as three installable Python packages, and Core imports them like any group service does: `gradian-keycloak` (signing keys, service tokens, Admin API), `gradian-auth` (token validation, identity, roles, principals, plain-Django middleware and decorators, DRF authentication and permissions, the shared error shape) and `gradian-testing` (fake keys and tokens, test base classes; development only). Core keeps what is its own: the `Profile` cache, plugged in through `GRADIAN_PRINCIPAL_BUILDER`. Each service names its own Keycloak client in `KEYCLOAK_CLIENT_ID`; tokens are accepted only if `aud` contains it (DES-REG-05). The packages are installed from this repository (a named Compose build context, or wheels from `make packages`), not from PyPI.
+- **Alternatives:** Copy the modules into each group service (they drift apart, and a security fix reaches only the groups that notice it). One package for everything (simpler, but a group service would carry the Admin client and the test fakes). Validate tokens by asking Keycloak (DEC-06 rules it out).
+- **Consequences:** Errors raised by the packages are plain `ApiError` exceptions rather than DRF `APIException` subclasses, so a service without DRF can use them; `gradian_auth.drf.exception_handler` renders them and must be set as the DRF exception handler. The `role_failure` log event is written by the `gradian.auth` logger, no longer `gradian.accounts`. `KEYCLOAK_ISSUER`, `KEYCLOAK_JWKS_URL` and the `KEYCLOAK_CORE_CLIENT_*` settings are replaced by `KEYCLOAK_CLIENT_ID` and `KEYCLOAK_CLIENT_SECRET` (the environment variable names are unchanged). `Role` and `ConsultantType` in `accounts/models.py` and the packages' role lists are two definitions of one vocabulary, checked by a test. A change to a package's documented API affects every service that installs it: see "Versioning" in `packages/README.md`.

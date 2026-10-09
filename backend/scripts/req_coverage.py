@@ -19,7 +19,7 @@ REQUIREMENT_ROW = re.compile(r"^\|\s*(SYS-[A-Z]+-\d{2})\s*\|", re.MULTILINE)
 TABLE_ROW = re.compile(r"^\|\s*(SYS-[A-Z]+-\d{2})\s*\|([^|]*)\|", re.MULTILINE)
 COVERS_CALL = re.compile(r"@covers\(([^)]*)\)", re.DOTALL)
 ID = re.compile(r"SYS-[A-Z]+-\d{2}")
-TEST_DIRS = ("core", "scripts", "tests")
+TEST_DIRS = ("core", "scripts", "tests", "packages")
 
 
 def required_ids(document: Path) -> list[str]:

@@ -2,11 +2,21 @@
 
 from collections.abc import Iterable
 
-from accounts.errors import AmbiguousRoleError
+from gradian_auth.errors import AmbiguousRoleError
+from gradian_keycloak.roles import DEFAULT_PANEL, PANEL_ROLES, SERVICE_ROLE
 
-PANEL_ROLES: tuple[str, ...] = ("student", "consultant", "professor", "admin")
-SERVICE_ROLE = "service"
-DEFAULT_PANEL = "student"
+__all__ = [
+    "CONSULTANT_ROLE",
+    "CONSULTANT_TYPES",
+    "DEFAULT_PANEL",
+    "HOME_PATHS",
+    "PANEL_ROLES",
+    "SERVICE_ROLE",
+    "resolve_panel",
+]
+
+CONSULTANT_ROLE = "consultant"
+CONSULTANT_TYPES: tuple[str, ...] = ("consultant", "top_ranker")
 
 HOME_PATHS: dict[str, str] = {role: f"/{role}" for role in PANEL_ROLES}
 

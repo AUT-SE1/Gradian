@@ -7,7 +7,7 @@ the Core Service by API.
 
 Documentation lives in [`docs/backend/`](docs/backend/): [requirements](docs/backend/01-requirements.md),
 [design and API](docs/backend/02-design.md), [decisions](docs/backend/03-decisions.md),
-[test plan](docs/backend/04-test-plan.md). Working on the code? Read [CONTRIBUTING.md](CONTRIBUTING.md).
+[test plan](docs/backend/04-test-plan.md), and the [guide for the frontend team](docs/05-frontend-guide.md). Working on the code? Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Status
 
@@ -47,6 +47,7 @@ shows them and the steps they are made of):
 | `make check` | Lint, strict types, fast tests and the OpenAPI check: run before every push |
 | `make itest` | Start the system if needed, then the tests that use it |
 | `make users` | Write the sign-in details of the seeded users to `build/credentials/` |
+| `make packages` | Build wheels of `packages/` into `build/wheels/`, for services in another repository |
 
 `make start TEAMS="1 6 5"` also starts the services of teams 1, 6 and 5 (`all` for every team).
 `make logs`, `make shell` and `make manage CMD="..."` are for working with the running system, and
@@ -156,6 +157,7 @@ expires (at most 10 minutes). Administrators cannot change their own role or sta
     core/            Django project: gradian/ (settings), accounts/ (identity, admin and service APIs), common/ (errors, logging, health)
     keycloak/        realm-template.json, user-profile.json, themes/gradian/ (login and registration pages)
     seed/            people.yaml, names.yaml: the seeded users
+    packages/        gradian-keycloak, gradian-auth, gradian-testing: shared code, installed by Core and by every group service (see packages/README.md)
     scripts/         seed_generate.py, seed_credentials.py, render_realm.py, check_env_example.py, req_coverage.py, wait_for.sh, ...
     docs/backend/    requirements, design, decisions, test plan
     teams/           the ten team service skeletons (see below)
@@ -170,6 +172,8 @@ expires (at most 10 minutes). Administrators cannot change their own role or sta
 
 Each `teams/teamN/` is a separate Django project with its own Dockerfile, compose file and `.env`.
 Per the design (DES-REG-05) a group service validates the Keycloak access token itself and checks
-that `aud` contains its own client id; the Core Service no longer proxies requests or sets
-`X-User-*` headers. The skeletons in `teams/` still read those headers and are replaced by a
-token-validating reference service in step 4.
+that `aud` contains its own client id; the Core Service does not proxy requests or set `X-User-*`
+headers. The skeletons in `teams/` do this with the shared [`packages/`](packages/README.md): each
+sets `KEYCLOAK_CLIENT_ID=group-N` in its `.env` (copy the other Keycloak lines from `.env.example`;
+an existing `.env` is never overwritten, so add them by hand) and reads the caller with
+`current_principal(request)`. Start with the [gradian-auth guide](packages/gradian-auth/README.md).

@@ -8,9 +8,9 @@ from django.test import SimpleTestCase
 
 from common import context
 from common.logging import JsonFormatter, RequestContextFilter
+from gradian_testing.covers import covers
+from gradian_testing.tokens import make_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import make_token
 
 FORMATTER = JsonFormatter()
 
@@ -65,7 +65,7 @@ class RequestLoggingTests(ApiTestCase):
         # In production the handler's filter runs while the request is still in flight; assertLogs
         # has its own handler, so attach the same filter to the logger instead.
         log_filter = RequestContextFilter()
-        for name in ("gradian.access", "gradian.accounts"):
+        for name in ("gradian.access", "gradian.accounts", "gradian.auth"):
             logging.getLogger(name).addFilter(log_filter)
             self.addCleanup(logging.getLogger(name).removeFilter, log_filter)
 
@@ -87,7 +87,7 @@ class RequestLoggingTests(ApiTestCase):
 
     @covers("SYS-NFR-06")
     def test_role_failure_is_logged(self) -> None:
-        with self.assertLogs("gradian.accounts", level="WARNING") as logs:
+        with self.assertLogs("gradian.auth", level="WARNING") as logs:
             self.get_as("/api/v1/me", roles=("student", "admin"))
         self.assertEqual(getattr(logs.records[0], "event", None), "role_failure")
         self.assertEqual(getattr(logs.records[0], "reason", None), "ambiguous_role")

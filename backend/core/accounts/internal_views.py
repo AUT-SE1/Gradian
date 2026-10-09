@@ -6,10 +6,10 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from accounts.models import Profile
-from accounts.permissions import IsPlatformService
 from accounts.serializers import ServiceUserSerializer, UserFilterSerializer
 from accounts.user_views import filtered_users
 from common.schema import FORBIDDEN, NOT_FOUND, UNAUTHENTICATED, error
+from gradian_auth.drf import IsPlatformService
 
 NOTE = (
     "Only people the Core Service already knows are found: seeded users, people who have "

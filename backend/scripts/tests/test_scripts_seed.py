@@ -16,7 +16,7 @@ import seed_credentials
 import seed_generate
 from covers import covers
 
-from accounts.mobile import normalize_mobile
+from gradian_auth.mobile import normalize_mobile
 
 ROOT = Path(__file__).resolve().parents[2]
 PASSWORD = "sentinel-Password-1"

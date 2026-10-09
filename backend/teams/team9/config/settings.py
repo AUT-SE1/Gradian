@@ -19,7 +19,14 @@ INSTALLED_APPS = ["core"]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "gradian_auth.middleware.KeycloakAuthMiddleware",
 ]
+
+# Required: copy .env.example to .env. See packages/gradian-keycloak/README.md for each setting.
+KEYCLOAK_PUBLIC_URL = os.environ["KEYCLOAK_PUBLIC_URL"]
+KEYCLOAK_URL = os.environ["KEYCLOAK_URL"]
+KEYCLOAK_CLIENT_ID = os.environ["KEYCLOAK_CLIENT_ID"]
+KEYCLOAK_CLIENT_SECRET = os.environ.get("KEYCLOAK_CLIENT_SECRET", "")
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"

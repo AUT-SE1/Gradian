@@ -15,7 +15,6 @@ from rest_framework.views import APIView
 from accounts import user_management
 from accounts.models import Profile
 from accounts.permissions import IsAdminPanelUser
-from accounts.principals import UserPrincipal
 from accounts.serializers import (
     UserCreateSerializer,
     UserFilterSerializer,
@@ -23,6 +22,7 @@ from accounts.serializers import (
     UserUpdateSerializer,
 )
 from common.schema import CONFLICT, FORBIDDEN, NOT_FOUND, PROVIDER_DOWN, UNAUTHENTICATED, error
+from gradian_auth.principals import UserPrincipal
 
 VALIDATION = error("`validation_error`: `details` maps each invalid field to its problems.")
 
@@ -63,7 +63,7 @@ class UserListCreateView(GenericAPIView[Profile]):
         description="Admin panel only. Paginated with `limit` and `offset`.",
         parameters=[UserFilterSerializer],
         responses={
-            200: UserSerializer,
+            200: UserSerializer(many=True),
             400: VALIDATION,
             401: UNAUTHENTICATED,
             403: FORBIDDEN,

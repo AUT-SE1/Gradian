@@ -15,10 +15,11 @@ HOST_USER  := $(shell id -u):$(shell id -g)
 RUN_TOOLS   = $(COMPOSE) run --rm -T --user $(HOST_USER) -e HOME=/tmp
 CORE_TOOLS  = $(RUN_TOOLS) tools
 ROOT_TOOLS  = $(RUN_TOOLS) -w /repo tools
-PY_PATHS   := . ../scripts
+PY_PATHS   := . ../scripts ../packages
+MYPY_PATHS := . ../scripts $(addprefix ../,$(wildcard packages/*/src))
 
 TOOLS_INPUTS := docker-compose.yml core/Dockerfile $(wildcard core/requirements*.txt) \
-                $(wildcard core/pyproject.toml)
+                $(wildcard core/pyproject.toml) $(wildcard packages/*/pyproject.toml)
 TOOLS_STAMP  := build/.tools-image
 TOOLS_DEPS   := $(CORE_ENV) network tools-image
 
@@ -36,7 +37,7 @@ team_cmd  = $(COMPOSE) -f teams/team$(1)/docker-compose.yml
 team_each = @set -e; for n in $(1); do echo "==> team $$n: $(2)"; $(call team_cmd,$$n) $(2); done
 
 .PHONY: help start stop reset check itest users format logs shell manage \
-        env network tools-image seed realm up bootstrap lint typecheck test schema migrations
+        env network tools-image seed realm up bootstrap lint typecheck test schema migrations packages
 
 help: ## Show this help
 	@echo "Usage: make <target> [VAR=value]"
@@ -56,9 +57,12 @@ stop: $(ALL_ENVS) ## Stop and remove the containers, keep the data
 	$(call team_each,$(ALL_TEAMS),stop)
 	$(COMPOSE) stop
 
-reset: $(ALL_ENVS) ## Wipe all data, then start clean [stop, then start]
+down: $(ALL_ENVS) ## Wipe all data, delete every container and volumes
 	$(call team_each,$(ALL_TEAMS),down)
 	$(COMPOSE) down -v
+
+reset: $(ALL_ENVS) ## Wipe all data, then start clean [stop, then start]
+	$(MAKE) down
 	$(MAKE) start
 
 check: lint typecheck test schema ## All static checks and fast tests, before every push [lint typecheck test schema]
@@ -125,15 +129,19 @@ lint: $(TOOLS_DEPS) ## (step) ruff, formatting, .env.example, missing migrations
 	$(ROOT_TOOLS) python scripts/req_coverage.py
 
 typecheck: $(TOOLS_DEPS) ## (step) mypy in strict mode
-	$(CORE_TOOLS) mypy $(PY_PATHS)
+	$(CORE_TOOLS) mypy $(MYPY_PATHS)
 
 test: $(TOOLS_DEPS) ## (step) Fast tests, no system needed
 	$(CORE_TOOLS) python manage.py test --exclude-tag=integration
+	$(CORE_TOOLS) python ../packages/run_tests.py
 	$(RUN_TOOLS) -w /repo -e PYTHONPATH=scripts tools python -m unittest discover -s scripts/tests
 
 schema: $(TOOLS_DEPS) ## (step) Export and validate the OpenAPI schema to build/openapi.yaml
 	@mkdir -p build
 	$(CORE_TOOLS) python manage.py spectacular --validate --fail-on-warn --file ../build/openapi.yaml
+
+packages: $(TOOLS_DEPS) ## (step) Build the package wheels into build/wheels/ for services outside this repository
+	$(ROOT_TOOLS) python scripts/build_packages.py
 
 makemigrations: $(TOOLS_DEPS) ## (step) Create migrations after a model change (changes files)
 	$(CORE_TOOLS) python manage.py makemigrations

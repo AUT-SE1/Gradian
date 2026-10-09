@@ -10,6 +10,7 @@ build/
 backend/core/accounts/fixtures/
 staticfiles/
 .mypy_cache/
+*.egg-info/
 .ruff_cache/
 
 .env

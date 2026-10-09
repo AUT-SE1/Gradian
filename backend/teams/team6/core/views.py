@@ -1,14 +1,29 @@
-from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied
+from django.http import HttpRequest, JsonResponse
+
+from gradian_auth.decorators import current_principal, require_user
+from gradian_auth.principals import UserPrincipal
 
 TEAM = 6
 SERVICE = "books"
 
 
-def current_user(request):
-    """(phone, role) of the caller. The core gateway authenticates with Keycloak and sets these headers."""
-    return request.headers.get("X-User-Phone"), request.headers.get("X-User-Role")
+def health(request: HttpRequest) -> JsonResponse:
+    return JsonResponse({"status": "ok"})
 
 
-def index(request):
-    phone, role = current_user(request)
-    return JsonResponse({"team": TEAM, "service": SERVICE, "phone": phone, "role": role})
+@require_user()
+def index(request: HttpRequest) -> JsonResponse:
+    """Who is calling, from the validated Keycloak token. Authorize by `principal.panel`."""
+    principal = current_principal(request)
+    if not isinstance(principal, UserPrincipal):
+        raise PermissionDenied
+    return JsonResponse(
+        {
+            "team": TEAM,
+            "service": SERVICE,
+            "sub": principal.sub,
+            "mobile": principal.identity.mobile,
+            "role": principal.panel,
+        }
+    )

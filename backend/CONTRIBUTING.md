@@ -72,12 +72,12 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 
 ### Tests
 
-- Fast tests extend `tests.helpers.base.ApiTestCase` (fake Keycloak keys, stubbed Admin API) or
+- Fast tests extend `tests.helpers.base.ApiTestCase` (fake Keycloak keys from `gradian_testing`, stubbed Admin API) or
   Django's `TestCase`/`SimpleTestCase`. They need no stack and never touch the network.
 - Tests that need the running stack extend `IntegrationTestCase` (tag `integration`) and live in a
   `tests/integration/` folder.
 - Tie every test to the requirement it checks with `@covers("SYS-AUTH-02")` from
-  `tests.helpers.covers`. This also adds a tag, so one requirement's tests run with
+  `gradian_testing.covers`. This also adds a tag, so one requirement's tests run with
   `--tag=req-SYS-AUTH-02`.
 - `make lint` lists requirements without a test. Making that report fail (`--strict` in
   `scripts/req_coverage.py`) is for once the system is complete.
@@ -87,6 +87,15 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
 - Do not write a test that only restates a setting or the realm file: it duplicates the decision it
   checks and breaks whenever that decision changes. Behaviour that Keycloak or Django implements is
   marked `EXT` in the test plan instead (DEC-17). Test the code we write on top of it.
+
+## Shared packages
+
+Code that Core and the group services both need lives in `packages/` (see
+[`packages/README.md`](packages/README.md)), not in `core/`. `make check` lints, type-checks and tests it
+with Core; its tests live in `packages/<package>/src/<module>/tests/`. Import from the package
+(`gradian_auth`, `gradian_keycloak`, `gradian_testing`), never copy a module back into `core/`. A change to
+something a package's README documents is a change for every service that installs it: keep it
+compatible, or say so in the pull request and bump the version.
 
 ## Conventions
 
@@ -105,8 +114,8 @@ tests and scripts included, together with `django-stubs` and `djangorestframewor
   (`require`, `get`, `flag`, `csv`) with a literal name, and list every new variable in
   `.env.example` (an optional one can be listed commented out). `make lint` fails if the two
   disagree. Never commit a secret.
-- **Errors.** Raise a subclass of `common.exceptions.ApiError` with a stable English
-  `default_code`, and add its Persian message to `common/exceptions.py`. Every response has the
+- **Errors.** Raise a subclass of `gradian_auth.errors.ApiError` with a stable English
+  `default_code`, and add its Persian message with `register_messages` next to the class. Every response has the
   shape `{"code", "message", "details"}`.
 - **Logging.** Use the `gradian.*` loggers with an `event` key in `extra`. Log field names, never
   values, and never tokens or passwords. Do not use `created`, `name`, `message` or other

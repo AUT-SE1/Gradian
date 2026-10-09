@@ -1,17 +1,16 @@
 """One error shape, English codes (DES-API-01, DES-XC-03)."""
 
-import re
 from typing import Any
 from unittest.mock import patch
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.http import Http404
-from django.test import Client, SimpleTestCase
+from django.test import Client
 
-from common.exceptions import MESSAGES, exception_handler
+from gradian_auth.drf import exception_handler
+from gradian_testing.covers import covers
+from gradian_testing.tokens import make_token
 from tests.helpers.base import ApiTestCase
-from tests.helpers.covers import covers
-from tests.helpers.tokens import make_token
 
 
 @covers("SYS-NFR-05")
@@ -60,4 +59,3 @@ class ErrorShapeTests(ApiTestCase):
             response = client.get("/api/v1/auth/config")
         self.assert_shape(response, 500, "server_error")
         self.assertNotIn("boom", response.content.decode())
-

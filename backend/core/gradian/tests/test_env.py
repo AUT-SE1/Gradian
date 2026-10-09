@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
 from gradian import env
-from tests.helpers.covers import covers
+from gradian_testing.covers import covers
 
 
 @covers("SYS-OPS-06")

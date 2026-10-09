@@ -6,9 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from accounts.errors import IncompleteIdentityError
-from accounts.mobile import InvalidMobileError, normalize_mobile
-from accounts.models import ConsultantType, Role
+from gradian_auth.errors import IncompleteIdentityError
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
+from gradian_auth.roles import CONSULTANT_ROLE, CONSULTANT_TYPES
 
 NAME_MAX_LENGTH = 100
 
@@ -76,9 +76,9 @@ def identity_from_claims(claims: Mapping[str, Any], role: str) -> Identity:
         problems.append("family_name")
 
     consultant_type = ""
-    if role == Role.CONSULTANT:
+    if role == CONSULTANT_ROLE:
         consultant_type = _text(claims, "consultant_type")
-        if consultant_type not in ConsultantType.values:
+        if consultant_type not in CONSULTANT_TYPES:
             problems.append("consultant_type")
 
     if problems:

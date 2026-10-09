@@ -91,17 +91,18 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # PUBLIC_URL is what browsers use. Compose gives it to Keycloak as its hostname, so it is also the
-# `iss` claim of every token, and the issuer is derived from it. KEYCLOAK_URL is how this server
-# reaches Keycloak (inside Compose: http://keycloak:8080). The two differ and both are correct.
+# `iss` claim of every token; gradian_keycloak derives the issuer from it. KEYCLOAK_URL is how
+# this server reaches Keycloak (inside Compose: http://keycloak:8080). The two differ and both
+# are correct.
 KEYCLOAK_REALM = env.get("KEYCLOAK_REALM", "gradian")
 KEYCLOAK_PUBLIC_URL = env.require("KEYCLOAK_PUBLIC_URL").rstrip("/")
-KEYCLOAK_ISSUER = f"{KEYCLOAK_PUBLIC_URL}/realms/{KEYCLOAK_REALM}"
 KEYCLOAK_URL = env.require("KEYCLOAK_URL").rstrip("/")
-KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
 KEYCLOAK_WEB_CLIENT_ID = env.get("KEYCLOAK_WEB_CLIENT_ID", "gradian-web")
-# The audience every token must carry, and the client whose service account calls the Admin API.
-KEYCLOAK_CORE_CLIENT_ID = env.get("KEYCLOAK_CORE_CLIENT_ID", "gradian-core")
-KEYCLOAK_CORE_CLIENT_SECRET = env.require("KEYCLOAK_CORE_CLIENT_SECRET")
+# This service's own client: the audience every token must carry, and the client whose service
+# account calls the Admin API. Read by gradian_keycloak and gradian_auth.
+KEYCLOAK_CLIENT_ID = env.get("KEYCLOAK_CORE_CLIENT_ID", "gradian-core")
+KEYCLOAK_CLIENT_SECRET = env.require("KEYCLOAK_CORE_CLIENT_SECRET")
+GRADIAN_PRINCIPAL_BUILDER = "accounts.authentication.build_principal"
 KEYCLOAK_TIMEOUT_SECONDS = float(env.get("KEYCLOAK_TIMEOUT_SECONDS", "5"))
 
 FRONTEND_URL = env.require("FRONTEND_URL").rstrip("/")
@@ -109,14 +110,14 @@ CORS_ALLOWED_ORIGINS = env.csv("CORS_ALLOWED_ORIGINS", FRONTEND_URL)
 PUBLIC_RATE_LIMIT = env.get("PUBLIC_RATE_LIMIT", "60/min")
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.KeycloakBearerAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": ["gradian_auth.drf.KeycloakBearerAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_PAGINATION_CLASS": "common.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "EXCEPTION_HANDLER": "common.exceptions.exception_handler",
+    "EXCEPTION_HANDLER": "gradian_auth.drf.exception_handler",
     "UNAUTHENTICATED_USER": None,
     "UNAUTHENTICATED_TOKEN": None,
 }

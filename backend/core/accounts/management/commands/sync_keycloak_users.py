@@ -13,12 +13,13 @@ from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 from django.utils import timezone
 
-from accounts import keycloak
-from accounts.claims import Identity, is_valid_name
-from accounts.mobile import InvalidMobileError, normalize_mobile
 from accounts.models import ConsultantType, Profile, Role
 from accounts.profiles import apply_identity, differences
-from accounts.roles import DEFAULT_PANEL
+from gradian_auth.claims import Identity, is_valid_name
+from gradian_auth.mobile import InvalidMobileError, normalize_mobile
+from gradian_auth.roles import DEFAULT_PANEL
+from gradian_keycloak import admin_client as keycloak
+from gradian_keycloak.errors import KeycloakError
 
 logger = logging.getLogger("gradian.accounts")
 
@@ -64,7 +65,7 @@ class Command(BaseCommand):
         dry_run: bool = options["dry_run"]
         try:
             users = keycloak.get_admin_client().list_panel_users()
-        except keycloak.KeycloakError as exc:
+        except KeycloakError as exc:
             raise CommandError(f"Keycloak Admin API failed: {exc}") from exc
 
         profiles = {profile.sub: profile for profile in Profile.objects.all()}

@@ -2,8 +2,8 @@
 
 from accounts.models import Profile
 from gradian import env
+from gradian_testing.covers import covers
 from tests.helpers.base import IntegrationTestCase
-from tests.helpers.covers import covers
 from tests.helpers.keycloak import password_token
 
 KINDS = [
