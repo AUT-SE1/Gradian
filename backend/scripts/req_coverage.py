@@ -52,7 +52,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    docs = ROOT / "docs" / "backend"
+    docs = ROOT / "docs"
     required = required_ids(docs / "01-requirements.md")
     covered = covered_ids(ROOT)
     external = external_ids(docs / "04-test-plan.md")

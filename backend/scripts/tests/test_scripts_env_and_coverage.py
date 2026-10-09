@@ -33,23 +33,23 @@ class EnvExampleTests(unittest.TestCase):
 @covers("SYS-NFR-08")
 class RequirementCoverageTests(unittest.TestCase):
     def test_requirement_ids_are_read_from_the_document(self) -> None:
-        ids = req_coverage.required_ids(ROOT / "docs" / "backend" / "01-requirements.md")
+        ids = req_coverage.required_ids(ROOT / "docs" / "01-requirements.md")
         self.assertIn("SYS-AUTH-01", ids)
         self.assertIn("SYS-NFR-08", ids)
         self.assertEqual(len(ids), len(set(ids)))
 
     def test_tests_only_name_requirements_that_exist(self) -> None:
-        required = set(req_coverage.required_ids(ROOT / "docs" / "backend" / "01-requirements.md"))
+        required = set(req_coverage.required_ids(ROOT / "docs" / "01-requirements.md"))
         self.assertEqual(sorted(req_coverage.covered_ids(ROOT) - required), [])
 
     def test_external_marks_are_read_from_the_test_plan(self) -> None:
-        external = req_coverage.external_ids(ROOT / "docs" / "backend" / "04-test-plan.md")
+        external = req_coverage.external_ids(ROOT / "docs" / "04-test-plan.md")
         self.assertIn("SYS-AUTH-01", external)
         self.assertNotIn("SYS-AUTH-02", external)
 
     def test_external_marks_only_name_requirements_that_exist(self) -> None:
-        required = set(req_coverage.required_ids(ROOT / "docs" / "backend" / "01-requirements.md"))
-        external = req_coverage.external_ids(ROOT / "docs" / "backend" / "04-test-plan.md")
+        required = set(req_coverage.required_ids(ROOT / "docs" / "01-requirements.md"))
+        external = req_coverage.external_ids(ROOT / "docs" / "04-test-plan.md")
         self.assertEqual(sorted(external - required), [])
 
     def test_only_the_level_column_counts(self) -> None:
