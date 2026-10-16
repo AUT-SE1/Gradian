@@ -1,6 +1,9 @@
 import { ApiError } from './ApiError';
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const configuredBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const baseUrl = configuredBase
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '/api/v1');
 
 type HttpOptions = Omit<RequestInit, 'body'> & { body?: unknown };
 

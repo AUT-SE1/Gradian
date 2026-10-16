@@ -2,8 +2,8 @@ import { Outlet } from 'react-router-dom';
 
 export function PublicLayout() {
   return (
-    <main className="public-shell">
-      <Outlet />
-    </main>
+    <div className="public-shell">
+      <main className="public-main"><Outlet /></main>
+    </div>
   );
 }

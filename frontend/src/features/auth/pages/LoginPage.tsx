@@ -1,39 +1,40 @@
-import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { authApi } from '@/features/auth/api/authApi';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { authApi } from '@/features/auth/api/authApi';
 
 export function LoginPage() {
   const { t } = useTranslation('auth');
-  const { setSession } = useAuth();
-  const navigate = useNavigate();
-  const [mobile, setMobile] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { session } = useAuth();
+  const [error, setError] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const session = await authApi.login({ mobile, password });
-      setSession(session);
-      navigate(`/${session.user.primaryRole}`);
-    } catch {
-      // Login UI is intentionally minimal; map ApiError to a shared form error in the next step.
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  useEffect(() => {
+    if (session) return;
+    let active = true;
+    authApi.beginLogin().catch(() => {
+      if (active) setError(true);
+    });
+    return () => { active = false; };
+  }, [session]);
+
+  if (session) return <Navigate to={`/${session.user.primaryRole}`} replace />;
 
   return (
-    <section className="placeholder-page auth-page">
-      <h1>{t('title')}</h1>
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label>{t('mobile')}<input value={mobile} onChange={(event) => setMobile(event.target.value)} /></label>
-        <label>{t('password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-        <button className="primary-button" disabled={isSubmitting} type="submit">{isSubmitting ? t('submitting') : t('submit')}</button>
-      </form>
-    </section>
+    <div className="auth-page">
+      <section className="auth-figma-card auth-redirect-card">
+        <h1>{t('title')}</h1>
+        {!error ? (
+          <p className="auth-redirect-message">در حال انتقال به صفحه ورود امن...</p>
+        ) : (
+          <>
+            <div className="form-error" role="alert">اتصال به سرویس ورود برقرار نشد.</div>
+            <button className="auth-figma-submit" type="button" onClick={() => authApi.beginLogin()}>
+              تلاش دوباره
+            </button>
+          </>
+        )}
+      </section>
+    </div>
   );
 }

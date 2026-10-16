@@ -1,1 +1,115 @@
-{"appName":"Gradian","landing":{"title":"Gradian learning ecosystem","subtitle":"Starter shell for educational and exam features.","login":"Sign in"}}
+{
+  "appName": "Gradian",
+  "landing": {
+    "header": {
+      "welcome": "Welcome",
+      "navLabel": "Main navigation",
+      "home": "Home",
+      "about": "About",
+      "services": "Educational services",
+      "contact": "Contact",
+      "start": "Start learning"
+    },
+    "hero": {
+      "title": "Gradian; the smartest route to your highest result",
+      "subtitle": "We combine AI with the experience of top-ranked students to find a more effective path to your goal.",
+      "portal": "Enter unified portal"
+    },
+    "stats": {
+      "students": {
+        "value": "45,000+",
+        "label": "Active students nationwide"
+      },
+      "satisfaction": {
+        "value": "98.4%",
+        "label": "Mock-exam satisfaction"
+      },
+      "ranks": {
+        "value": "120+",
+        "label": "National top ranks"
+      },
+      "authors": {
+        "value": "500+",
+        "label": "Reference authors and designers"
+      }
+    },
+    "mission": {
+      "eyebrow": "Identity and mission",
+      "title": "A specialized ecosystem for educational equity and exam readiness",
+      "description": "Gradian is built on the idea that geography and access should not limit talented students. Scientific supervision and AI-based test analysis create a standardized assessment environment nationwide.",
+      "badgeOne": "Official supervision",
+      "badgeTwo": "Question standardization",
+      "cards": {
+        "scientific": {
+          "title": "Continuous scientific supervision",
+          "description": "Content quality is reviewed by experienced authors and exam educators.",
+          "footer": "Two-stage validation"
+        },
+        "analytics": {
+          "title": "Data and AI analysis",
+          "description": "Smart classification of calculation errors, learning traps and test-taking speed.",
+          "footer": "Weakness analysis"
+        },
+        "justice": {
+          "title": "Nationwide educational equity",
+          "description": "Equal access to question banks, conceptual videos and simulators.",
+          "footer": "Coverage across provinces"
+        }
+      }
+    },
+    "faculty": {
+      "title": "Distinguished faculty and top rankers",
+      "subtitle": "Experienced teachers and high achievers guiding students through the national exam",
+      "soltani": {
+        "badge": "National rank 4",
+        "role": "Medical student, University of Tehran",
+        "name": "Mohammadreza Soltani",
+        "bio": "Biology instructor and mentor for top-ranked students.",
+        "metric": "99.2% satisfaction"
+      },
+      "mirsadeghi": {
+        "badge": "Reference author",
+        "role": "Senior physics question designer",
+        "name": "Dr. Alireza Mirsadeghi",
+        "bio": "24 years of specialized physics teaching experience.",
+        "metric": "3,000+ questions designed"
+      },
+      "rahmani": {
+        "badge": "Top mathematics instructor",
+        "role": "PhD in Pure Mathematics, Sharif University",
+        "name": "Niloufar Rahmani",
+        "bio": "Conceptual problem-solving methods and test techniques.",
+        "metric": "98.7% satisfaction"
+      },
+      "nikpour": {
+        "badge": "Chemistry lead",
+        "role": "Chemistry instructor and simulator designer",
+        "name": "Babak Nikpour",
+        "bio": "Exam structure analyst and computational chemistry workshop instructor.",
+        "metric": "18 years of assessment experience"
+      }
+    },
+    "testimonials": {
+      "title": "Student experiences and nationwide outcomes",
+      "subtitle": "Real stories from high-performing students across the country",
+      "ghanbari": {
+        "initial": "A",
+        "name": "Alireza Ghanbari",
+        "role": "Experimental sciences rank 18",
+        "text": "The simulator matched the real exam difficulty very closely, and the analytical report showed exactly where I had to change my approach."
+      },
+      "movahedian": {
+        "initial": "S",
+        "name": "Sara Movahedian",
+        "role": "Mathematics rank 34",
+        "text": "Access to top-rank mentors and high-quality solution videos made premium guidance available to me regardless of location."
+      },
+      "motamedi": {
+        "initial": "M",
+        "name": "Mr. Motamedi",
+        "role": "High-school principal",
+        "text": "The exam builder transformed our monthly assessments and made statistical comparison immediate."
+      }
+    }
+  }
+}

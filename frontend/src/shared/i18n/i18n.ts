@@ -3,14 +3,16 @@ import { initReactI18next } from 'react-i18next';
 import faCommon from '@/locales/fa/common.json';
 import faAuth from '@/locales/fa/auth.json';
 import faNavigation from '@/locales/fa/navigation.json';
+import faPortal from '@/locales/fa/portal.json';
 import enCommon from '@/locales/en/common.json';
 import enAuth from '@/locales/en/auth.json';
 import enNavigation from '@/locales/en/navigation.json';
+import enPortal from '@/locales/en/portal.json';
 
 void i18n.use(initReactI18next).init({
   resources: {
-    fa: { common: faCommon, auth: faAuth, navigation: faNavigation },
-    en: { common: enCommon, auth: enAuth, navigation: enNavigation },
+    fa: { common: faCommon, auth: faAuth, navigation: faNavigation, portal: faPortal },
+    en: { common: enCommon, auth: enAuth, navigation: enNavigation, portal: enPortal },
   },
   lng: 'fa',
   fallbackLng: 'en',

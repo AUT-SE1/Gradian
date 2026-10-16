@@ -1,5 +1,6 @@
 FROM python:3.13-slim
 WORKDIR /app
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 COPY --from=packages . /tmp/packages
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \

@@ -1,0 +1,217 @@
+{
+  "home": {
+    "student": {
+      "title": "Student panel"
+    },
+    "instructor": {
+      "title": "Professor panel"
+    },
+    "counsellor": {
+      "title": "Consultant panel"
+    },
+    "admin": {
+      "title": "Admin panel"
+    }
+  },
+  "studentDashboard": {
+    "welcomeTitle": "Welcome to your academic panel",
+    "welcomeSubtitle": "Your academic monitoring plan based on the latest exam coefficients and records.",
+    "streakLabel": "Study streak",
+    "countdownLabel": "Exam countdown",
+    "day": "days",
+    "servicesTitle": "Educational services desk",
+    "communityTitle": "Experience exchange community",
+    "tabTop": "Top experiences",
+    "tabMy": "Following",
+    "tabAll": "All experiences",
+    "communityCta": "Have a question or experience to share with candidates and top rankers?",
+    "communityAction": "Open discussions",
+    "posts": {
+      "rahbar": {
+        "initial": "M",
+        "name": "Mira Mohammadi",
+        "meta": "Rank 14 • Medicine, Tehran • 2 hours ago",
+        "title": "How I raised biology from 55% to 88%",
+        "text": "In the final months I focused on visual biology and textbook annotations instead of scattered tests.",
+        "tags": "#top_ranker #review #biology"
+      },
+      "amirhossein": {
+        "initial": "A",
+        "name": "Amirhossein Kazemi",
+        "meta": "Rank 29 • Sharif EE • yesterday",
+        "title": "Planning and stress management during final review",
+        "text": "A simple weekly structure helped balance review, testing and analysis.",
+        "tags": "#planning #time_management"
+      },
+      "zahra": {
+        "initial": "Z",
+        "name": "Zahra Rafiei",
+        "meta": "Rank 45 • Law, Beheshti • 2 days ago",
+        "title": "Fast keyword notes for memory-heavy subjects",
+        "text": "Drawing concept trees before practice worked best for Arabic and sociology.",
+        "tags": "#humanities #study_method"
+      }
+    }
+  },
+  "cards": {
+    "mockExam": {
+      "eyebrow": "Ready to compete",
+      "title": "National exam simulator",
+      "description": "Full simulated exam with national statistics, solutions and instant report.",
+      "meta": "Target score: 7,000",
+      "action": "Enter exam"
+    },
+    "topicExam": {
+      "eyebrow": "Comprehensive bank",
+      "title": "Topic exam",
+      "description": "Classified question bank by textbook chapter and difficulty.",
+      "meta": "35,000 standard questions",
+      "action": "Choose topic"
+    },
+    "finalExam": {
+      "eyebrow": "Final exams",
+      "title": "Grade 12 final exam",
+      "description": "Archive and simulated final exams with marking scheme.",
+      "meta": "Answer key included",
+      "action": "View samples"
+    },
+    "privateClass": {
+      "eyebrow": "Top instructors",
+      "title": "Private class",
+      "description": "Book private online or in-person sessions.",
+      "meta": "Instant booking",
+      "action": "Book instructor"
+    },
+    "marketplace": {
+      "eyebrow": "Book market",
+      "title": "Books and resources marketplace",
+      "description": "Buy and exchange exam books and top-ranker notes.",
+      "meta": "Book condition guarantee",
+      "action": "Open marketplace"
+    },
+    "consultation": {
+      "eyebrow": "Daily planning",
+      "title": "Consultation and planning",
+      "description": "Personalized planning, nightly reports and weekly analysis.",
+      "meta": "Consultant: Dr. Kazemi",
+      "action": "Request"
+    },
+    "majorSelection": {
+      "eyebrow": "AI consultant",
+      "title": "Smart major selection",
+      "description": "Estimate admission using latest capacities and historical ranks.",
+      "meta": "94% estimated accuracy",
+      "action": "Open simulator"
+    },
+    "topRanker": {
+      "eyebrow": "2022 and 2023",
+      "title": "Top-ranker experiences",
+      "description": "Exam reports, study methods and verified experiences.",
+      "meta": "120+ verified reports",
+      "action": "View experiences"
+    },
+    "courses": {
+      "eyebrow": "Courses and tests",
+      "title": "Courses, tips and tests",
+      "description": "Topic reviews, hard-question solving and speed techniques.",
+      "meta": "Next: Physics",
+      "action": "Continue course"
+    }
+  },
+  "servicePage": {
+    "kicker": "Educational service",
+    "back": "Back to services",
+    "readyTitle": "Service shell ready",
+    "readyDescription": "This route is ready for the owning team's service logic and API integration."
+  },
+  "pages": {
+    "exams": {
+      "title": "National exam simulator",
+      "description": "Full simulation and analytical reporting."
+    },
+    "questionBank": {
+      "title": "Topic exam",
+      "description": "Topic question bank by chapter and difficulty."
+    },
+    "finalExams": {
+      "title": "Grade 12 final exam",
+      "description": "Final-exam archive and simulations."
+    },
+    "privateClass": {
+      "title": "Private class",
+      "description": "Private instructor session booking."
+    },
+    "marketplace": {
+      "title": "Resources marketplace",
+      "description": "Books and study resources marketplace."
+    },
+    "consultation": {
+      "title": "Consultation and planning",
+      "description": "Planning and consultation services."
+    },
+    "majorSelection": {
+      "title": "Smart major selection",
+      "description": "Admission estimation and major guidance."
+    },
+    "topRanker": {
+      "title": "Top-ranker experiences",
+      "description": "Study experiences and academic troubleshooting."
+    },
+    "courses": {
+      "title": "Courses and test tips",
+      "description": "Educational courses and test techniques."
+    },
+    "community": {
+      "title": "Experience community",
+      "description": "Discussion and experience exchange."
+    },
+    "progress": {
+      "title": "Academic progress dashboard",
+      "description": "Student academic progress."
+    },
+    "questionManagement": {
+      "title": "Exam and question management",
+      "description": "Manage exams and questions."
+    },
+    "courseCreation": {
+      "title": "Create educational course",
+      "description": "Create and manage courses."
+    },
+    "resources": {
+      "title": "Resources hub",
+      "description": "Study materials and notes."
+    },
+    "studentReports": {
+      "title": "Student reports dashboard",
+      "description": "Consulted student reports."
+    },
+    "experiences": {
+      "title": "Add experiences",
+      "description": "Publish educational experiences."
+    },
+    "troubleshooting": {
+      "title": "Subject troubleshooting",
+      "description": "Answer academic questions."
+    },
+    "sessions": {
+      "title": "Online consultation sessions",
+      "description": "Manage online consultation sessions."
+    },
+    "examManagement": {
+      "title": "Exam bank and simulator",
+      "description": "Manage exams and simulations."
+    },
+    "consultationManagement": {
+      "title": "Guidance and consultation",
+      "description": "Manage guidance services."
+    },
+    "products": {
+      "title": "Store product management",
+      "description": "Manage educational store products."
+    },
+    "profile": {
+      "title": "Complete professional profile",
+      "description": "Complete professional and account information."
+    }
+  }
+}

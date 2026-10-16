@@ -1,6 +1,7 @@
 FROM python:3.13-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 COPY --from=packages . /packages
 COPY requirements.txt .
 # Editable, so that Compose can mount ./packages over /packages and pick up edits without a rebuild.
