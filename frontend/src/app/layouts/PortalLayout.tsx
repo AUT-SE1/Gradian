@@ -1,3 +1,4 @@
+import { countdownText } from '@/features/portal/api/panelAdapters';
 import { startTransition, useId } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,19 +8,25 @@ import { portalNavigationGroups } from '@/app/navigation/navigation.config';
 import { PortalIcon } from '@/features/portal/components/PortalIcon';
 import { useMobileSidebar } from '@/app/hooks/useMobileSidebar';
 import { PortalHeaderActions } from './PortalHeaderActions';
+import { usePanelData, usePanelServices } from '@/features/portal/hooks/usePanelData';
+import { serviceKeys } from '@/features/portal/api/serviceRoutes';
+import { serviceHref } from '@/features/portal/api/panelApi';
+import { PanelDataState } from '@/features/portal/components/PanelDataState';
 import type { PortalRole } from '@/shared/types/portal';
 
 type Props = { portal: PortalRole };
 
 export function PortalLayout({ portal }: Props) {
-  const { t } = useTranslation('navigation');
+  const { t, i18n } = useTranslation('navigation');
   const { session, setSession } = useAuth();
   const navigate = useNavigate();
   const sidebar = useMobileSidebar();
   const sidebarId = useId();
   const sidebarTitleId = useId();
   const mainId = useId();
-  const displayName = session?.user.displayName?.trim() || t('unknownUser');
+  const panel = usePanelData();
+  const services = usePanelServices();
+  const displayName = panel.data?.header.full_name.trim() || t('unknownUser');
 
   function logout() {
     const idToken = session?.idToken;
@@ -67,20 +74,24 @@ export function PortalLayout({ portal }: Props) {
           </NavLink>
         )}
         <nav className="management-nav" aria-label={t('mainMenu')}>
+          <PanelDataState pending={services.isPending} error={services.error} retry={services.refetch} empty={services.data?.length === 0} />
           {portalNavigationGroups[portal].map((group) => (
             <div className="management-nav-group" key={group.id}>
               <span className="management-nav-label">{t(group.labelKey)}</span>
-              {group.items.map((item) => (
+              {group.items.map((item) => {
+                const service = services.data?.find(entry => entry.key === serviceKeys[item.path]);
+                if (services.isPending || services.isError || !serviceHref(service)) return <span className="management-nav-disabled" key={item.id} aria-disabled="true"><PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}<small>{t('serviceUnavailable')}</small></span></span>;
+                return (
                 <NavLink key={item.id} to={item.path} onClick={sidebar.close}>
                   <PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}</span>
                 </NavLink>
-              ))}
+              ); })}
             </div>
           ))}
         </nav>
         <div className="sidebar-countdown-widget">
           <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name="calendar" size={22} /></span>
-          <div><strong>{t('countdownTitle')}</strong><small>{t('countdownUnavailable')}</small></div>
+          <div><strong>{t('countdownTitle')}</strong><small>{panel.data ? (countdownText(panel.data.countdown, i18n.language)) : t('countdownUnavailable')}</small><PanelDataState pending={panel.isPending} error={panel.error} retry={panel.refetch} /></div>
         </div>
       </aside>
       <section className="management-content" inert={sidebar.isOpen}>
