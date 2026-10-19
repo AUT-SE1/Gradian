@@ -1,1 +1,52 @@
-{"appName":"Gradian","landing":{"title":"Gradian learning ecosystem","subtitle":"Starter shell for educational and exam features.","login":"Sign in"}}
+{
+  "appName": "Gradian",
+  "landing": {
+    "title": "Gradian learning ecosystem",
+    "subtitle": "Starter shell for educational and exam features.",
+    "login": "Sign in"
+  },
+  "ui": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "login": "Sign in",
+    "register": "Register",
+    "myPanel": "My panel",
+    "loginTitle": "Sign in to Gradian",
+    "loginHint": "Continue to the secure sign-in or registration page.",
+    "callbackLoading": "Completing sign-in…",
+    "backToLogin": "Back to sign-in",
+    "checkingAccess": "Checking access…",
+    "supportHint": "If the account access problem persists, contact support.",
+    "loginAgain": "Sign in again",
+    "noAccess": "Access denied",
+    "otherRole": "This page belongs to a different role.",
+    "goToMyPanel": "Go to my panel",
+    "studyStreak": "Study streak",
+    "streakCounts": "Current streak: {{current}} days — Best: {{best}} days",
+    "feedCounts": "{{likes}} likes · {{comments}} comments",
+    "services": "Services",
+    "unavailable": "Currently unavailable",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications.",
+    "previous": "Previous",
+    "next": "Next",
+    "noServices": "No services have been registered for this panel.",
+    "connectionError": "Could not connect to the server"
+  },
+  "errors": {
+    "not_authenticated": "Please sign in.",
+    "invalid_token": "Your session expired. Sign in again.",
+    "permission_denied": "You do not have access to this section.",
+    "ambiguous_role": "Your account has conflicting roles. Contact support.",
+    "account_disabled": "Your account is disabled.",
+    "incomplete_identity": "Your identity information is incomplete. Contact support.",
+    "self_modification_forbidden": "You cannot change your own role or account status.",
+    "validation_error": "Please correct the submitted fields.",
+    "parse_error": "The request is invalid.",
+    "not_found": "Not found.",
+    "identity_conflict": "The email or mobile belongs to another account.",
+    "throttled": "Too many requests. Try again later.",
+    "identity_provider_unavailable": "The sign-in service is unavailable. Try again later.",
+    "server_error": "Server error. Try again later."
+  }
+}

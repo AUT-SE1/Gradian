@@ -1,1 +1,1 @@
-export type PortalRole = 'student' | 'instructor' | 'counsellor' | 'admin';
+export type PortalRole = "student" | "professor" | "consultant" | "admin";

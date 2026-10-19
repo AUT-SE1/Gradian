@@ -1,39 +1,36 @@
-import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { authApi } from '@/features/auth/api/authApi';
-import { useAuth } from '@/app/providers/AuthProvider';
-
+import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { login, register } from "@/features/auth/oidc";
+import { errorMessage } from "@/shared/api/authedClient";
 export function LoginPage() {
-  const { t } = useTranslation('auth');
-  const { setSession } = useAuth();
-  const navigate = useNavigate();
-  const [mobile, setMobile] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
+  const { t } = useTranslation("common");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  async function start(action: () => Promise<void>) {
+    setPending(true);
+    setError("");
     try {
-      const session = await authApi.login({ mobile, password });
-      setSession(session);
-      navigate(`/${session.user.primaryRole}`);
-    } catch {
-      // Login UI is intentionally minimal; map ApiError to a shared form error in the next step.
-    } finally {
-      setIsSubmitting(false);
+      await action();
+    } catch (failure) {
+      setError(errorMessage(failure));
+      setPending(false);
     }
   }
-
   return (
     <section className="placeholder-page auth-page">
-      <h1>{t('title')}</h1>
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label>{t('mobile')}<input value={mobile} onChange={(event) => setMobile(event.target.value)} /></label>
-        <label>{t('password')}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-        <button className="primary-button" disabled={isSubmitting} type="submit">{isSubmitting ? t('submitting') : t('submit')}</button>
-      </form>
+      <h1>{t("ui.loginTitle")}</h1>
+      <p>{t("ui.loginHint")}</p>
+      {error && <p role="alert">{error}</p>}
+      <button
+        className="primary-button"
+        disabled={pending}
+        onClick={() => void start(login)}
+      >
+        {t("ui.login")}
+      </button>{" "}
+      <button disabled={pending} onClick={() => void start(register)}>
+        {t("ui.register")}
+      </button>
     </section>
   );
 }

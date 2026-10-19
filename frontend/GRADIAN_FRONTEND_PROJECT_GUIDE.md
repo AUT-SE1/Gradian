@@ -1184,3 +1184,12 @@ Owners: <افراد/تیم>
 - کد واقعی Django یا OpenAPI در فایل‌های فعلی وجود ندارد؛
 - قراردادهای endpoint، token، role و permission هنوز باید از تیم Backend دریافت شوند؛
 - می‌توان بر اساس این سند، مرحله بعدی را با ساخت shell مشترک و قرارداد mock API شروع کرد.
+
+
+### ADR-20261011: اتصال به قرارداد فعلی Core
+Date: 2026-10-11
+Status: accepted
+Context: مسیرها و فرم ورود اسکلت اولیه با Core فعلی هماهنگ نبودند.
+Decision: قرارداد backend/docs/05-frontend-guide.md و کد backend/core مرجع اتصال هستند. ورود با oidc-client-ts و Keycloak/PKCE، callback در /auth/callback، API در /api/v1 بدون slash پایانی، نقش‌های student/consultant/professor/admin و هدایت بر اساس /me.panel و /me.home_path است. مسیرهای instructor/counsellor فقط alias هستند. گروه‌ها با redirect و SSO باز می‌شوند. embed فعلاً همان redirect است. Nginx تولیدی API را به Core روی شبکه gradian proxy می‌کند.
+Consequences: route guard و خطاهای 401/403، بازیابی نشست، تمدید و خروج، منوی سرویس‌ها و داده‌های پنل از بک‌اند پیاده شده‌اند. بخش‌های قدیمی این سند درباره endpoint پیشنهادی login یا iframe مرجع اجرای فعلی نیستند.
+Owners: Frontend / Core teams
