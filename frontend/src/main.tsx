@@ -7,6 +7,7 @@ import { AuthProvider } from '@/app/providers/AuthProvider';
 import { I18nProvider } from '@/app/providers/I18nProvider';
 import { ThemeProvider } from '@/app/providers/ThemeProvider';
 import '@/shared/styles/globals.css';
+import '@/shared/styles/portals.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

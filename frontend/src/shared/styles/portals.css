@@ -1,0 +1,235 @@
+/* vazirmatn-arabic-wght-normal */
+@font-face {
+  font-family: 'Gradian Portal';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../../assets/fonts/vazirmatn-arabic-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1;
+}
+
+/* vazirmatn-latin-ext-wght-normal */
+@font-face {
+  font-family: 'Gradian Portal';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../../assets/fonts/vazirmatn-latin-ext-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+/* vazirmatn-latin-wght-normal */
+@font-face {
+  font-family: 'Gradian Portal';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../../assets/fonts/vazirmatn-latin-wght-normal.woff2) format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* T02: panel foundation. Sizes other than the confirmed canvas color are
+   provisional measurements from screenshots; see docs/T02_VISUAL_FOUNDATION.md. */
+.student-portal-shell, .management-portal-shell {
+  --portal-canvas: #f7f9fb;
+  --portal-surface: #fff;
+  --portal-soft: #f2f4f7;
+  --portal-line: #e9edf1;
+  --portal-ink: #343b49;
+  --portal-muted: #747b88;
+  --portal-accent: #123382;
+  --portal-on-accent: #fff;
+  --portal-warning: #b9682e;
+  --portal-sidebar-width: 288px;
+  --portal-sidebar-gutter: 16px;
+  --portal-logo-height: 56px;
+  --portal-header-height: 64px;
+  --portal-page-gutter: 24px;
+  --portal-content-max: 1232px;
+  --portal-radius: 12px;
+  --navy: #0c2d69;
+  font-family: 'Gradian Portal', Tahoma, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--portal-ink);
+}
+.student-portal-shell { --portal-header-height: 80px; }
+.management-portal-shell--counsellor { --portal-logo-height: 82px; }
+:root[data-theme='dark'] :is(.student-portal-shell, .management-portal-shell) {
+  --portal-canvas: #111a27;
+  --portal-surface: #182333;
+  --portal-soft: #1e2c3e;
+  --portal-line: #28384b;
+  --portal-ink: #eef4ff;
+  --portal-muted: #aeb7c5;
+  --portal-accent: #214a98;
+  --portal-warning: #f2a16a;
+  --navy: #9abaff;
+}
+:is(.student-portal-shell, .management-portal-shell) :is(button, input, textarea, select) { font-family: inherit; }
+:is(.student-portal-shell, .management-portal-shell) :is(a, button):focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; }
+
+.management-service-canvas { min-height: calc(100vh - var(--portal-header-height)); display: grid; place-items: center; padding: 36px; background: var(--portal-canvas); }
+.management-service-card { width: min(100%, 520px); padding: 32px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface); box-shadow: 0 10px 28px rgba(31, 55, 82, .06); text-align: right; }
+.management-service-card h1 { margin: 16px 0 8px; color: var(--navy); font-size: 22px; }
+.management-service-card p { margin: 0; color: var(--portal-muted); font-size: 11px; line-height: 2; }
+.management-service-open, .student-service-open { display: inline-flex; align-items: center; justify-content: center; margin-top: 20px; min-height: 40px; padding: 0 18px; border-radius: 8px; color: var(--portal-on-accent); background: var(--navy); font-size: 10px; font-weight: 700; }
+
+/* Student portal */
+.student-portal-shell { min-height: 100vh; background: var(--portal-canvas); }
+.student-portal-header { height: var(--portal-header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--portal-page-gutter); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
+.student-brand-block { display: flex; align-items: baseline; gap: 12px; }
+.student-brand-block strong { color: var(--navy); font-size: 17px; }
+.student-brand-block small { color: var(--portal-muted); font-size: 9px; }
+.student-header-actions { display: flex; align-items: center; gap: 14px; }
+.portal-bell { position: relative; width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--portal-ink); cursor: pointer; }
+.student-user-summary, .management-user-summary { display: grid; gap: 1px; min-width: 0; max-width: 240px; padding-inline: 10px; border-inline-start: 1px solid var(--portal-line); }
+.student-user-summary strong, .management-user-summary strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.student-user-summary strong, .management-user-summary strong { color: var(--portal-ink); font-size: 12px; }
+.student-user-summary small, .management-user-summary small { color: var(--portal-muted); font-size: 10px; }
+.portal-logout-icon { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--portal-ink); font-size: 17px; cursor: pointer; }
+.student-page-content { padding: 24px var(--portal-page-gutter) 48px; }
+.student-dashboard-page { width: min(100%, var(--portal-content-max)); margin: 0 auto; }
+.student-welcome-card { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 21px 24px; border: 1px solid var(--portal-line); border-radius: 13px; background: var(--portal-surface); box-shadow: 0 4px 14px rgba(35, 56, 78, .03); }
+.student-welcome-copy h1 { margin: 0; color: var(--navy); font-size: 19px; }
+.student-welcome-copy p { margin: 7px 0 0; color: var(--portal-muted); font-size: 9.5px; line-height: 1.85; }
+.student-welcome-widgets { display: flex; gap: 12px; }
+.student-welcome-widgets article { min-width: 142px; display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid var(--portal-line); border-radius: 11px; background: var(--portal-soft); }
+.student-welcome-widgets article > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #4571a0; background: #edf4fb; }
+.student-welcome-widgets div { display: grid; gap: 1px; }
+.student-welcome-widgets small { color: var(--portal-muted); font-size: 8px; }
+.student-welcome-widgets strong { color: var(--navy); font-size: 12px; }
+.student-section-heading { display: flex; align-items: center; gap: 8px; margin: 31px 0 14px; }
+.student-section-heading span { color: #526275; }
+.student-section-heading h2 { margin: 0; color: var(--navy); font-size: 17px; }
+.student-service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.student-service-card { min-height: 181px; display: flex; flex-direction: column; padding: 17px 18px 13px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); box-shadow: 0 4px 13px rgba(25, 46, 70, .025); transition: transform .16s ease, box-shadow .16s ease; }
+.student-service-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(34, 57, 82, .07); }
+.student-service-card-top { display: flex; align-items: center; justify-content: space-between; }
+.student-service-card-top small { color: var(--portal-muted); font-size: 8px; }
+.service-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; }
+.service-icon--blue { color: #315d95; background: #edf4fc; }
+.service-icon--violet { color: #67569d; background: #f1effb; }
+.service-icon--orange { color: #b8713d; background: #fff0e4; }
+.service-icon--cyan { color: #367a91; background: #eaf6fa; }
+.student-service-card h3 { margin: 13px 0 6px; color: var(--navy); font-size: 13px; }
+.student-service-card p { flex: 1; margin: 0; color: var(--portal-muted); font-size: 8.9px; line-height: 1.9; }
+.student-service-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--portal-line); }
+.student-service-card-footer span { color: var(--portal-muted); font-size: 10px; }
+.student-service-card-footer strong { color: #253e68; font-size: 8px; white-space: nowrap; }
+.student-community-section { margin-top: 30px; }
+.student-community-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.student-community-heading > div:first-child { display: flex; align-items: center; gap: 8px; }
+.student-community-heading h2 { margin: 0; color: var(--navy); font-size: 17px; }
+.student-community-tabs { display: flex; gap: 7px; }
+.student-community-tabs span { padding: 6px 11px; border-radius: 999px; color: var(--portal-muted); background: var(--portal-surface); font-size: 8px; }
+.student-community-tabs span.active { color: var(--portal-on-accent); background: var(--navy); }
+.student-post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.student-post-card { min-height: 210px; padding: 15px 17px 12px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); }
+.post-author-row { display: flex; align-items: center; gap: 9px; }
+.post-avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; font-size: 9px; font-weight: 800; }
+.post-avatar--1 { color: #356582; background: #dceff8; }
+.post-avatar--2 { color: #8b5d31; background: #f6eadf; }
+.post-avatar--3 { color: #5f6990; background: #edf0fb; }
+.post-author-row div { display: grid; gap: 2px; }
+.post-author-row strong { color: var(--portal-ink); font-size: 9px; }
+.post-author-row small { color: var(--portal-muted); font-size: 6.8px; }
+.student-post-card h3 { margin: 12px 0 6px; color: var(--navy); font-size: 11px; line-height: 1.7; }
+.student-post-card > p { margin: 0; color: var(--portal-muted); font-size: 8.1px; line-height: 1.8; }
+.post-tags { display: block; margin-top: 7px; color: #4a7890; font-size: 6.9px; }
+.post-stats { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--portal-line); color: var(--portal-muted); font-size: 7px; }
+.student-community-cta { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 14px; padding: 10px 15px; border-radius: 10px; background: var(--portal-soft); color: #314863; font-size: 8.5px; }
+.student-community-cta strong { color: var(--navy); font-size: 8px; }
+
+/* Management portals (admin / counsellor / instructor) */
+.management-portal-shell { min-height: 100vh; display: grid; grid-template-columns: var(--portal-sidebar-width) minmax(0, 1fr); background: var(--portal-canvas); }
+.management-sidebar { grid-column: 1; grid-row: 1; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; padding: 20px var(--portal-sidebar-gutter) 16px; border-inline-start: 1px solid var(--portal-line); background: var(--portal-surface); z-index: 20; }
+.management-brand-row { display: flex; align-items: flex-start; flex-shrink: 0; }
+.management-logo { min-height: var(--portal-logo-height); padding: 0 9px 24px; color: var(--navy); font-size: 20px; font-weight: 800; }
+.management-sidebar-close { display: none; }
+.profile-complete-nav { width: 100%; min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 17px; padding: 8px 10px; border: 0; border-radius: 9px; color: var(--portal-on-accent); background: var(--portal-accent); cursor: pointer; }
+.profile-complete-nav > span { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; }
+.profile-complete-nav small { font-size: 10px; opacity: .9; }
+.management-nav { display: grid; gap: 13px; }
+.management-nav-group { display: grid; gap: 4px; }
+.management-nav-label { padding: 0 9px 4px; color: var(--portal-muted); font-size: 10px; }
+.management-nav a { min-height: 38px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; color: var(--portal-ink); font-size: 12px; font-weight: 500; }
+.management-nav a:hover { background: var(--portal-soft); }
+.management-nav a.active { color: var(--portal-on-accent); background: var(--portal-accent); }
+.management-nav a.active::before { content: ''; width: 5px; height: 5px; margin-inline-start: auto; border-radius: 50%; background: #9d4c0e; order: 3; }
+.sidebar-countdown-widget { margin-top: auto; flex-shrink: 0; display: flex; align-items: center; gap: 9px; padding: 11px 10px; border-radius: 11px; background: var(--portal-soft); }
+.sidebar-countdown-icon { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 10px; color: #345386; background: #e8edf2; }
+.sidebar-countdown-widget div { display: grid; gap: 2px; }
+.sidebar-countdown-widget strong { color: var(--portal-ink); font-size: 11px; }
+.sidebar-countdown-widget small { color: var(--portal-warning); font-size: 10px; }
+.management-content { grid-column: 2; grid-row: 1; min-width: 0; min-height: 100vh; }
+.management-header { height: var(--portal-header-height); display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 var(--portal-page-gutter); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
+.management-header-actions { display: flex; align-items: center; gap: 10px; }
+.management-header-actions, .student-header-actions { min-width: 0; }
+.portal-bell, .portal-logout-icon { flex-shrink: 0; }
+.management-workspace { min-height: calc(100vh - var(--portal-header-height)); background: var(--portal-canvas); }
+.management-empty-canvas { min-height: calc(100vh - var(--portal-header-height)); background: var(--portal-canvas); }
+.management-sidebar-overlay, .mobile-menu-button { display: none; }
+
+.portal-skip-link { position: fixed; inset-block-start: 8px; inset-inline-start: 16px; transform: translateY(-200%); z-index: 40; padding: 8px 14px; color: var(--portal-on-accent); background: var(--portal-accent); border-radius: 8px; }
+.portal-skip-link:focus { transform: translateY(0); }
+.portal-notifications-dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); color: var(--portal-ink); background: var(--portal-surface); font: inherit; box-shadow: 0 16px 48px rgba(0, 0, 0, .18); }
+.portal-notifications-dialog::backdrop { background: rgba(16, 30, 46, .42); }
+.portal-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.portal-dialog-heading h2 { margin: 0; font-size: 16px; color: var(--navy); }
+.portal-dialog-heading button { width: 36px; height: 36px; flex-shrink: 0; border: 0; border-radius: 8px; background: var(--portal-soft); color: var(--portal-ink); font-size: 24px; cursor: pointer; }
+.portal-notifications-dialog p { margin: 16px 0 0; color: var(--portal-muted); }
+
+/* Student service placeholder */
+.student-service-page-view { width: min(100%, 900px); margin: 0 auto; padding: 10px 0 30px; }
+.student-service-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.service-title-row { display: flex; align-items: center; gap: 12px; }
+.service-title-row small { color: #738096; font-size: 8px; }
+.service-title-row h1 { margin: 3px 0 0; color: var(--navy); font-size: 22px; }
+.student-service-back { color: var(--navy); font-size: 9px; font-weight: 700; }
+.student-service-page-view > p { margin: 14px 0 0; color: var(--portal-muted); font-size: 10px; line-height: 1.8; }
+.student-service-placeholder { display: grid; place-items: center; margin-top: 24px; min-height: 330px; padding: 28px; border: 1px dashed #cad7e4; border-radius: 14px; background: var(--portal-surface); text-align: center; color: #527197; }
+.student-service-placeholder h2 { margin: 14px 0 6px; color: var(--navy); font-size: 16px; }
+.student-service-placeholder p { max-width: 480px; margin: 0; color: var(--portal-muted); font-size: 9px; line-height: 1.8; }
+
+@media (max-width: 1050px) {
+  .student-service-grid { grid-template-columns: repeat(2, 1fr); }
+  .student-post-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 780px) {
+  .student-portal-header { padding-inline: 15px; }
+  .student-user-summary { display: none; }
+  .student-page-content { padding: 16px 14px 34px; }
+  .student-welcome-card { align-items: flex-start; flex-direction: column; }
+  .student-welcome-widgets { width: 100%; }
+  .student-welcome-widgets article { flex: 1; min-width: 0; }
+  .student-service-grid { grid-template-columns: 1fr; }
+  .student-community-heading { align-items: flex-start; flex-direction: column; }
+  .student-community-tabs { overflow-x: auto; max-width: 100%; }
+  .student-community-cta { align-items: flex-start; flex-direction: column; }
+  .management-portal-shell { display: block; }
+  .management-sidebar { position: fixed; inset-block: 0; inset-inline-start: 0; width: min(84vw, var(--portal-sidebar-width)); height: 100dvh; visibility: hidden; transform: translateX(110%); transition: transform .2s ease; box-shadow: -10px 0 30px rgba(20, 38, 58, .12); }
+  .management-portal-shell.is-sidebar-open .management-sidebar { transform: translateX(0); visibility: visible; }
+  .management-brand-row { justify-content: space-between; }
+  .management-sidebar-close { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: var(--portal-soft); color: var(--portal-ink); font-size: 24px; cursor: pointer; }
+  .management-user-summary { max-width: min(48vw, 240px); }
+  .management-sidebar-overlay { position: fixed; inset: 0; z-index: 18; border: 0; background: rgba(16, 30, 46, .42); }
+  .management-portal-shell.is-sidebar-open .management-sidebar-overlay { display: block; }
+  .management-header { justify-content: space-between; padding-inline: 15px; }
+  .mobile-menu-button { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 8px; background: var(--portal-soft); cursor: pointer; }
+  .management-workspace, .management-empty-canvas { min-height: calc(100vh - var(--portal-header-height)); }
+}
+
+@media (max-width: 480px) {
+  .student-welcome-widgets { display: grid; grid-template-columns: 1fr; }
+}
+
+
+/* Mirror the existing drawer presentation for English without changing its behavior. */
+@media (max-width: 780px) {
+  .management-portal-shell:dir(ltr) .management-sidebar { transform: translateX(-110%); }
+  .management-portal-shell:dir(ltr).is-sidebar-open .management-sidebar { transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .management-sidebar, .student-service-card { transition: none; }
+}

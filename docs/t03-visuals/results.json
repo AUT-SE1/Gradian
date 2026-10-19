@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "scenarios": [
+    "student: own menu, routes, direct entry, refresh, home and sample-data removal",
+    "student: notifications open, close button, Escape, backdrop and focus return",
+    "instructor: own menu, routes, direct entry, refresh, home and sample-data removal",
+    "instructor: notifications open, close button, Escape, backdrop and focus return",
+    "counsellor: own menu, routes, direct entry, refresh, home and sample-data removal",
+    "counsellor: notifications open, close button, Escape, backdrop and focus return",
+    "admin: own menu, routes, direct entry, refresh, home and sample-data removal",
+    "admin: notifications open, close button, Escape, backdrop and focus return",
+    "instructor/fa: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "counsellor/fa: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "admin/fa: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "instructor/en: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "counsellor/en: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "admin/en: mobile inert, focus trap, Escape, close, overlay, link, refresh, resize, overflow",
+    "neutral fallback name; English dark theme",
+    "student 320px English dark, no sidebar, notifications",
+    "no panel/services/notifications API requests introduced before T05",
+    "logout clears local session and calls existing end-session flow (fixture)",
+    "no browser JavaScript errors"
+  ],
+  "errors": []
+}
