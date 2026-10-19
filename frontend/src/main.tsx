@@ -1,19 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from '@/app/App';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { AuthProvider } from '@/app/providers/AuthProvider';
 import { I18nProvider } from '@/app/providers/I18nProvider';
 import { ThemeProvider } from '@/app/providers/ThemeProvider';
 import '@/shared/styles/globals.css';
 import '@/shared/styles/portals.css';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1 },
-  },
-});
+const queryClient = createAppQueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
