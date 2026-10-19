@@ -47,5 +47,21 @@
   "skipToContent": "رفتن به محتوای اصلی",
   "closeNotifications": "بستن اعلان‌ها",
   "notificationsUnavailable": "اعلان‌ها فعلاً در دسترس نیستند.",
-  "countdownUnavailable": "زمان آزمون فعلاً در دسترس نیست."
+  "countdownUnavailable": "زمان آزمون فعلاً در دسترس نیست.",
+  "dataLoading": "در حال دریافت اطلاعات…",
+  "dataError": "دریافت اطلاعات ناموفق بود.",
+  "dataForbidden": "دسترسی به این اطلاعات مجاز نیست.",
+  "dataUnauthorized": "نشست شما معتبر نیست.",
+  "dataRetry": "تلاش دوباره",
+  "dataEmpty": "موردی وجود ندارد.",
+  "serviceUnavailable": "فعلاً در دسترس نیست",
+  "openService": "ورود به سرویس",
+  "topRankerRole": "رتبه برتر",
+  "consultantRole": "مشاور",
+  "unreadCount": "{{count}} اعلان خوانده‌نشده",
+  "previousPage": "صفحه قبل",
+  "nextPage": "صفحه بعد",
+  "countdownToday": "امروز روز کنکور است",
+  "countdownPast": "کنکور برگزار شده است",
+  "countdownUpcoming": "{{count}} روز تا کنکور"
 }

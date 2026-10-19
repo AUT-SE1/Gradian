@@ -47,5 +47,21 @@
   "skipToContent": "Skip to main content",
   "closeNotifications": "Close notifications",
   "notificationsUnavailable": "Notifications are currently unavailable.",
-  "countdownUnavailable": "The exam date is currently unavailable."
+  "countdownUnavailable": "The exam date is currently unavailable.",
+  "dataLoading": "Loading…",
+  "dataError": "Could not load data.",
+  "dataForbidden": "Access to this data is denied.",
+  "dataUnauthorized": "Your session is not valid.",
+  "dataRetry": "Retry",
+  "dataEmpty": "No items.",
+  "serviceUnavailable": "Currently unavailable",
+  "openService": "Open service",
+  "topRankerRole": "Top ranker",
+  "consultantRole": "Consultant",
+  "unreadCount": "{{count}} unread notifications",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "countdownToday": "The exam is today",
+  "countdownPast": "The exam has taken place",
+  "countdownUpcoming": "{{count}} days until Konkur"
 }

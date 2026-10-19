@@ -32,5 +32,7 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 backend/core/accounts/fixtures/profiles.json
-t02-visuals/
-t03-visuals/
+docs/t02-visuals/
+docs/t03-visuals/
+docs/T05_SHARED_DATA.md
+docs/t05-verification/

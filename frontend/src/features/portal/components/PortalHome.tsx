@@ -1,4 +1,8 @@
-import { Link } from 'react-router-dom';
+import { countdownText } from '@/features/portal/api/panelAdapters';
+import { usePanelServices, usePanelData } from '../hooks/usePanelData';
+import { serviceKeys } from '../api/serviceRoutes';
+import { serviceHref } from '../api/panelApi';
+import { PanelDataState } from './PanelDataState';
 import { useTranslation } from 'react-i18next';
 import type { PortalRole } from '@/shared/types/portal';
 import { dashboardCards } from '@/features/portal/config/portalContent';
@@ -7,7 +11,10 @@ import { PortalIcon } from './PortalIcon';
 const postKeys = ['rahbar', 'amirhossein', 'zahra'] as const;
 
 export function PortalHome({ portal }: { portal: PortalRole }) {
-  const { t } = useTranslation('portal');
+  const { t, i18n } = useTranslation('portal');
+  const { t: tn } = useTranslation('navigation');
+  const services = usePanelServices();
+  const panel = usePanelData();
 
   if (portal !== 'student') {
     return <div className="management-empty-canvas"><span className="sr-only">{t(`home.${portal}.title`)}</span></div>;
@@ -22,7 +29,7 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
         </div>
         <div className="student-welcome-widgets">
           <article><span>◇</span><div><small>{t('studentDashboard.streakLabel')}</small><strong>۱۸ {t('studentDashboard.day')}</strong></div></article>
-          <article><span>▣</span><div><small>{t('studentDashboard.countdownLabel')}</small><strong>۹۴ {t('studentDashboard.day')}</strong></div></article>
+          <article><span>▣</span><div><small>{t('studentDashboard.countdownLabel')}</small><strong>{panel.data ? countdownText(panel.data.countdown, i18n.language) : tn('countdownUnavailable')}</strong></div></article>
         </div>
       </section>
 
@@ -30,8 +37,11 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
         <span>⌘</span><h2>{t('studentDashboard.servicesTitle')}</h2>
       </div>
 
+      <PanelDataState pending={services.isPending} error={services.error} retry={services.refetch} empty={services.data?.length === 0} />
       <section className="student-service-grid">
-        {dashboardCards.student.map((card) => {
+        {!services.isPending && !services.isError && services.data?.length !== 0 && dashboardCards.student.map((card) => {
+          const service = services.data?.find(entry => entry.key === serviceKeys[card.path]);
+          const href = serviceHref(service);
           const content = (
             <>
               <div className="student-service-card-top">
@@ -42,14 +52,14 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
               <p>{t(card.descriptionKey)}</p>
               <div className="student-service-card-footer">
                 <span>{card.metaKey ? t(card.metaKey) : ''}</span>
-                <strong>{card.actionKey ? t(card.actionKey) : ''} ←</strong>
+                <strong>{href ? (card.actionKey ? t(card.actionKey) : '') : tn('serviceUnavailable')} {href ? '←' : ''}</strong>
               </div>
             </>
           );
-          return card.serviceUrl ? (
-            <a className="student-service-card" href={card.serviceUrl} key={card.titleKey}>{content}</a>
+          return href ? (
+            <a className="student-service-card" href={href} key={card.titleKey}>{content}</a>
           ) : (
-            <Link className="student-service-card" to={card.path} key={card.titleKey}>{content}</Link>
+            <article className="student-service-card" aria-disabled="true" key={card.titleKey}>{content}</article>
           );
         })}
       </section>
@@ -73,8 +83,8 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
             </article>
           ))}
         </div>
-        <a className="student-community-cta" href="http://localhost:8010/app">
-          <span>{t('studentDashboard.communityCta')}</span><strong>{t('studentDashboard.communityAction')} ←</strong>
+        <a className="student-community-cta" aria-disabled={services.isError || !serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community']))} href={!services.isError ? serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community'])) : undefined}>
+          <span>{t('studentDashboard.communityCta')}</span><strong>{!services.isError && serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community'])) ? `${t('studentDashboard.communityAction')} ←` : tn('serviceUnavailable')}</strong>
         </a>
       </section>
     </div>
