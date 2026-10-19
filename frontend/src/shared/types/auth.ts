@@ -10,6 +10,6 @@ export type AuthSession = {
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
-  expiresAt?: number;
+  expiresAt: number;
   user: AuthUser;
 };

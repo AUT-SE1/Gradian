@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { AuthSession } from '@/shared/types/auth';
-
-const STORAGE_KEY = 'gradian.auth.session';
+import { isUsableSession, persistSession, readStoredSession, sameIdentity, SESSION_STORAGE_KEY } from '@/shared/auth/session';
+import { onUnauthorized } from '@/shared/auth/authEvents';
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -10,34 +11,70 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function readStoredSession(): AuthSession | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const session = JSON.parse(raw) as AuthSession;
-    if (session.expiresAt && session.expiresAt <= Date.now()) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    return session;
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-    return null;
-  }
-}
+const MAX_TIMEOUT = 2_147_483_647;
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [session, setSessionState] = useState<AuthSession | null>(() => readStoredSession());
+  const queryClient = useQueryClient();
+  const [session, setSessionState] = useState<AuthSession | null>(readStoredSession);
+  const sessionRef = useRef(session);
 
-  const setSession = useCallback((next: AuthSession | null) => {
+  const applySession = useCallback((next: AuthSession | null, persist: boolean) => {
+    if (next !== null && !isUsableSession(next)) throw new Error('Invalid or expired authentication session.');
+    if (next === null || !sameIdentity(sessionRef.current, next)) {
+      // Cancel first, then remove all queries AND mutations. Clearing only data
+      // without cancelling could let a late result restore the previous user.
+      void queryClient.cancelQueries();
+      queryClient.clear();
+    }
+    sessionRef.current = next;
+    if (persist) persistSession(next);
     setSessionState(next);
-    if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    else localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  }, [queryClient]);
+
+  const setSession = useCallback((next: AuthSession | null) => applySession(next, true), [applySession]);
+
+  useEffect(() => onUnauthorized((token) => {
+    if (sessionRef.current?.accessToken === token) setSession(null);
+  }), [setSession]);
+
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.storageArea === localStorage && (event.key === SESSION_STORAGE_KEY || event.key === null)) {
+        applySession(readStoredSession(), false);
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [applySession]);
+
+  useEffect(() => {
+    if (!session) return;
+    let timer: ReturnType<typeof setTimeout>;
+    function checkExpiry() {
+      const current = sessionRef.current;
+      if (!current) return;
+      if (!isUsableSession(current)) {
+        setSession(null);
+      } else {
+        clearTimeout(timer);
+        timer = setTimeout(checkExpiry, Math.min(current.expiresAt - Date.now(), MAX_TIMEOUT));
+      }
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'visible') checkExpiry();
+    }
+    checkExpiry();
+    window.addEventListener('focus', checkExpiry);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', checkExpiry);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [session, setSession]);
 
   const value = useMemo(
-    () => ({ session, isAuthenticated: Boolean(session), setSession }),
+    () => ({ session, isAuthenticated: isUsableSession(session), setSession }),
     [session, setSession],
   );
 

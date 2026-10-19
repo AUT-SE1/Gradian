@@ -1,4 +1,5 @@
 import { ApiError } from './ApiError';
+import { reportUnauthorized } from '@/shared/auth/authEvents';
 
 const configuredBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const baseUrl = configuredBase
@@ -25,7 +26,12 @@ async function request<T>(path: string, options: HttpOptions = {}): Promise<T> {
 
   let payload: unknown = null;
   try { payload = await response.json(); } catch { /* empty response */ }
-  if (!response.ok) throw new ApiError(response.status, payload);
+  if (!response.ok) {
+    const bearer = /^Bearer\s+(\S+)$/i.exec(headers.get('Authorization') ?? '');
+    if (response.status === 401 && bearer) reportUnauthorized(bearer[1]);
+    // A 403 is permission denial, not proof that the session is invalid.
+    throw new ApiError(response.status, payload);
+  }
   return payload as T;
 }
 

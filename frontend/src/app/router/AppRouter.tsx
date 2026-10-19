@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
@@ -8,15 +8,21 @@ import { LandingPage } from '@/features/landing/pages/LandingPage';
 import { PortalHomePage } from '@/features/portal/pages/PortalHomePage';
 import { ServicePage } from '@/features/portal/components/ServicePage';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { isUsableSession } from '@/shared/auth/session';
 import type { PortalRole } from '@/shared/types/portal';
 
 function ProtectedPortal({ portal, children }: { portal: PortalRole; children: ReactNode }) {
   const { session } = useAuth();
-  if (!session) return <Navigate to="/login" replace />;
+  if (!isUsableSession(session)) return <Navigate to="/login" replace />;
   if (session.user.primaryRole !== portal) {
     return <Navigate to={`/${session.user.primaryRole}`} replace />;
   }
   return <>{children}</>;
+}
+
+function LegacyPortalRedirect({ from, to }: { from: string; to: string }) {
+  const location = useLocation();
+  return <Navigate to={{ pathname: to + location.pathname.slice(from.length), search: location.search, hash: location.hash }} replace />;
 }
 
 export function AppRouter() {
@@ -69,8 +75,8 @@ export function AppRouter() {
         <Route path="products" element={<ServicePage titleKey="pages.products.title" descriptionKey="pages.products.description" icon="store" serviceUrl="http://localhost:8006/app" />} />
       </Route>
 
-      <Route path="/professor/*" element={<Navigate to="/instructor" replace />} />
-      <Route path="/consultant/*" element={<Navigate to="/counsellor" replace />} />
+      <Route path="/professor/*" element={<LegacyPortalRedirect from="/professor" to="/instructor" />} />
+      <Route path="/consultant/*" element={<LegacyPortalRedirect from="/consultant" to="/counsellor" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

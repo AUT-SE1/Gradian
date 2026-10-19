@@ -1,5 +1,6 @@
 import { httpClient } from '@/shared/api/httpClient';
 import type { AuthSession } from '@/shared/types/auth';
+import { isUsableSession } from '@/shared/auth/session';
 import type { PortalRole } from '@/shared/types/portal';
 
 type AuthConfig = {
@@ -138,9 +139,10 @@ async function completeLogin(): Promise<AuthSession> {
   const me = await httpClient.get<Me>('/me', {
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   });
-  const primaryRole = roleMap[me.panel];
+  const primaryRole = Object.hasOwn(roleMap, me.panel) ? roleMap[me.panel] : undefined;
+  if (!primaryRole) throw new Error('Unsupported account role.');
 
-  return {
+  const session: AuthSession = {
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
     idToken: tokens.id_token,
@@ -151,12 +153,13 @@ async function completeLogin(): Promise<AuthSession> {
       primaryRole,
     },
   };
+  if (!isUsableSession(session)) throw new Error('Invalid authentication response.');
+  return session;
 }
 
 function finishLogin(): Promise<AuthSession> {
-  callbackPromise ??= completeLogin().catch((error) => {
+  callbackPromise ??= completeLogin().finally(() => {
     callbackPromise = null;
-    throw error;
   });
   return callbackPromise;
 }
