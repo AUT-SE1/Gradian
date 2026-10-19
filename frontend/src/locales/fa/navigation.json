@@ -5,11 +5,9 @@
   "closeSidebar": "بستن منو",
   "brandFa": "گرادیان",
   "studentPanel": "پنل داوطلب",
-  "studentField": "رشته تجربی",
   "notifications": "اعلان‌ها",
   "profileComplete": "تکمیل پروفایل حرفه‌ای",
   "countdownTitle": "شمارش معکوس کنکور",
-  "countdownValue": "۱۲۸ روز تا مرحله اول",
   "roleLabels": {
     "student": "داوطلب",
     "instructor": "استاد",
@@ -43,5 +41,11 @@
     "examBank": "بانک آزمون و شبیه‌ساز",
     "guidanceServices": "خدمات هدایت و مشاوره",
     "products": "مدیریت محصولات فروشگاه"
-  }
+  },
+  "unknownUser": "کاربر",
+  "portalHome": "خانهٔ پنل",
+  "skipToContent": "رفتن به محتوای اصلی",
+  "closeNotifications": "بستن اعلان‌ها",
+  "notificationsUnavailable": "اعلان‌ها فعلاً در دسترس نیستند.",
+  "countdownUnavailable": "زمان آزمون فعلاً در دسترس نیست."
 }

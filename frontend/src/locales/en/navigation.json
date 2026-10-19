@@ -5,11 +5,9 @@
   "closeSidebar": "Close menu",
   "brandFa": "Gradian",
   "studentPanel": "Candidate panel",
-  "studentField": "Experimental sciences",
   "notifications": "Notifications",
   "profileComplete": "Complete professional profile",
   "countdownTitle": "Exam countdown",
-  "countdownValue": "128 days to phase one",
   "roleLabels": {
     "student": "Candidate",
     "instructor": "Professor",
@@ -43,5 +41,11 @@
     "examBank": "Exam bank and simulator",
     "guidanceServices": "Guidance and consultation",
     "products": "Store product management"
-  }
+  },
+  "unknownUser": "User",
+  "portalHome": "Panel home",
+  "skipToContent": "Skip to main content",
+  "closeNotifications": "Close notifications",
+  "notificationsUnavailable": "Notifications are currently unavailable.",
+  "countdownUnavailable": "The exam date is currently unavailable."
 }

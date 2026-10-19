@@ -1,103 +1,94 @@
-import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { startTransition, useId } from 'react';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { authApi } from '@/features/auth/api/authApi';
 import { portalNavigationGroups } from '@/app/navigation/navigation.config';
 import { PortalIcon } from '@/features/portal/components/PortalIcon';
+import { useMobileSidebar } from '@/app/hooks/useMobileSidebar';
+import { PortalHeaderActions } from './PortalHeaderActions';
 import type { PortalRole } from '@/shared/types/portal';
 
 type Props = { portal: PortalRole };
 
-function BellIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M10 21h4" />
-    </svg>
-  );
-}
-
-const fallbackNames: Record<PortalRole, string> = {
-  student: 'علیرضا رضایی',
-  instructor: 'سارا احمدی‌تبار',
-  counsellor: 'سارا احمدی‌تبار',
-  admin: 'سارا احمدی‌تبار',
-};
-
 export function PortalLayout({ portal }: Props) {
   const { t } = useTranslation('navigation');
   const { session, setSession } = useAuth();
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const displayName = session?.user.displayName || fallbackNames[portal];
+  const navigate = useNavigate();
+  const sidebar = useMobileSidebar();
+  const sidebarId = useId();
+  const sidebarTitleId = useId();
+  const mainId = useId();
+  const displayName = session?.user.displayName?.trim() || t('unknownUser');
 
   function logout() {
     const idToken = session?.idToken;
-    setSession(null);
-    setIsMobileSidebarOpen(false);
+    sidebar.close();
+    // Leave the protected route before clearing the session so /login does not
+    // start a fresh sign-in while the end-session request is pending.
+    startTransition(() => {
+      navigate('/', { replace: true });
+      setSession(null);
+    });
     void authApi.logout(idToken);
   }
 
   if (portal === 'student') {
     return (
       <div className="student-portal-shell">
+        <a className="portal-skip-link" href={`#${mainId}`}>{t('skipToContent')}</a>
         <header className="student-portal-header">
-          <div className="student-brand-block">
-            <strong>{t('brandFa')}</strong>
-            <small>{t('studentPanel')}</small>
-          </div>
-          <div className="student-header-actions">
-            <button className="portal-bell" type="button" aria-label={t('notifications')}><span /><BellIcon /></button>
-            <div className="student-user-summary"><strong>{displayName}</strong><small>{t('studentField')}</small></div>
-            <button className="portal-logout-icon" type="button" onClick={logout} aria-label={t('logout')}>↪</button>
-          </div>
+          <Link className="student-brand-block" to="/student" aria-label={t('portalHome')}>
+            <strong>{t('brandFa')}</strong><small>{t('studentPanel')}</small>
+          </Link>
+          <PortalHeaderActions portal={portal} displayName={displayName} onLogout={logout} />
         </header>
-        <main className="student-page-content"><Outlet /></main>
+        <main className="student-page-content" id={mainId} tabIndex={-1}><Outlet /></main>
       </div>
     );
   }
 
-  const groups = portalNavigationGroups[portal];
-
   return (
-    <div className={`management-portal-shell management-portal-shell--${portal}${isMobileSidebarOpen ? ' is-sidebar-open' : ''}`}>
-      <button className="management-sidebar-overlay" type="button" aria-label={t('closeSidebar')} onClick={() => setIsMobileSidebarOpen(false)} />
-      <aside className="management-sidebar">
-        <div className="management-logo">{t('brandFa')}</div>
+    <div className={`management-portal-shell management-portal-shell--${portal}${sidebar.isOpen ? ' is-sidebar-open' : ''}`}>
+      <a className="portal-skip-link" href={`#${mainId}`}>{t('skipToContent')}</a>
+      <button className="management-sidebar-overlay" type="button" tabIndex={-1} aria-hidden="true" onClick={sidebar.close} />
+      <aside className="management-sidebar" id={sidebarId} ref={sidebar.sidebarRef} tabIndex={-1}
+        role={sidebar.isMobile ? 'dialog' : undefined} aria-modal={sidebar.isOpen ? true : undefined}
+        aria-labelledby={sidebarTitleId} aria-hidden={sidebar.isMobile && !sidebar.isOpen ? true : undefined}
+        inert={sidebar.isMobile && !sidebar.isOpen}>
+        <h2 className="sr-only" id={sidebarTitleId}>{t('mainMenu')}</h2>
+        <div className="management-brand-row">
+          <Link className="management-logo" to={`/${portal}`} onClick={sidebar.close} aria-label={t('portalHome')}>{t('brandFa')}</Link>
+          <button className="management-sidebar-close" type="button" onClick={sidebar.close} aria-label={t('closeSidebar')}>×</button>
+        </div>
         {portal !== 'admin' && (
-          <NavLink className="profile-complete-nav" to={`/${portal}/profile`} onClick={() => setIsMobileSidebarOpen(false)}>
-            <span><PortalIcon name="settings" size={15} />{t('profileComplete')}</span><small>۸۰٪ ←</small>
+          <NavLink className="profile-complete-nav" to={`/${portal}/profile`} onClick={sidebar.close}>
+            <span><PortalIcon name="settings" size={15} />{t('profileComplete')}</span><small aria-hidden="true">←</small>
           </NavLink>
         )}
         <nav className="management-nav" aria-label={t('mainMenu')}>
-          {groups.map((group) => (
+          {portalNavigationGroups[portal].map((group) => (
             <div className="management-nav-group" key={group.id}>
               <span className="management-nav-label">{t(group.labelKey)}</span>
               {group.items.map((item) => (
-                <NavLink key={item.id} to={item.path} onClick={() => setIsMobileSidebarOpen(false)}>
-                  <PortalIcon name={item.icon} size={17} />
-                  <span>{t(item.labelKey)}</span>
+                <NavLink key={item.id} to={item.path} onClick={sidebar.close}>
+                  <PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}</span>
                 </NavLink>
               ))}
             </div>
           ))}
         </nav>
         <div className="sidebar-countdown-widget">
-          <span className="sidebar-countdown-icon">◉</span>
-          <div><strong>{t('countdownTitle')}</strong><small>{t('countdownValue')}</small></div>
+          <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name="calendar" size={22} /></span>
+          <div><strong>{t('countdownTitle')}</strong><small>{t('countdownUnavailable')}</small></div>
         </div>
       </aside>
-
-      <section className="management-content">
+      <section className="management-content" inert={sidebar.isOpen}>
         <header className="management-header">
-          <button className="mobile-menu-button" type="button" aria-label={t('openSidebar')} onClick={() => setIsMobileSidebarOpen(true)}>☰</button>
-          <div className="management-header-actions">
-            <button className="portal-logout-icon" type="button" onClick={logout} aria-label={t('logout')}>↪</button>
-            <div className="management-user-summary"><strong>{displayName}</strong><small>{t(`roleLabels.${portal}`)}</small></div>
-            <button className="portal-bell" type="button" aria-label={t('notifications')}><span /><BellIcon /></button>
-          </div>
+          <button className="mobile-menu-button" type="button" ref={sidebar.triggerRef} aria-label={t('openSidebar')} aria-expanded={sidebar.isOpen} aria-controls={sidebarId} aria-haspopup="dialog" onClick={sidebar.open}>☰</button>
+          <PortalHeaderActions portal={portal} displayName={displayName} onLogout={logout} />
         </header>
-        <main className="management-workspace"><Outlet /></main>
+        <main className="management-workspace" id={mainId} tabIndex={-1}><Outlet /></main>
       </section>
     </div>
   );
