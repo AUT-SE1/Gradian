@@ -1,5 +1,20 @@
 {
   "mainMenu": "Main menu",
+  "overview": "Overview",
+  "logout": "Log out",
+  "openSidebar": "Open menu",
+  "closeSidebar": "Close menu",
+  "collapseSidebar": "Collapse menu",
+  "expandSidebar": "Expand menu",
+  "portals": {
+    "student": "Student portal",
+    "admin": "Admin portal",
+    "professor": "Instructor portal",
+    "consultant": "Counsellor portal"
+  },
+  "portalPlaceholder": {
+    "title": "Portal shell is ready",
+    "description": "Real features will be added here as separate routes."
   "logout": "Logout",
   "openSidebar": "Open menu",
   "closeSidebar": "Close menu",

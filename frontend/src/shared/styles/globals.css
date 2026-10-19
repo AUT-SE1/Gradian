@@ -411,3 +411,14 @@ body, button, input, textarea, select {
     font-size: 8.5px;
   }
 }
+
+.landing-page { width: min(100%, 1100px); }
+.landing-nav { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding: 16px 0; }
+.content-card { padding: 24px; margin-bottom: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
+.content-card p { line-height: 1.9; }
+.service-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.hero-image { width: 100%; max-height: 360px; object-fit: contain; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+button:disabled, .unavailable-service { opacity: .55; cursor: not-allowed; }
+.unavailable-service { display: flex; gap: 10px; padding: 10px 12px; }
+.portal-heading { flex-wrap: wrap; }

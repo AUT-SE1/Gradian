@@ -1,5 +1,20 @@
 {
   "mainMenu": "منوی اصلی",
+  "overview": "نمای کلی",
+  "logout": "خروج",
+  "openSidebar": "باز کردن منو",
+  "closeSidebar": "بستن منو",
+  "collapseSidebar": "جمع کردن منو",
+  "expandSidebar": "باز کردن منو",
+  "portals": {
+    "student": "پرتال دانش‌آموز",
+    "admin": "پرتال ادمین",
+    "professor": "پرتال استاد",
+    "consultant": "پرتال مشاور"
+  },
+  "portalPlaceholder": {
+    "title": "قالب پرتال آماده است",
+    "description": "Featureهای واقعی در این ناحیه به‌صورت route جدا اضافه خواهند شد."
   "logout": "خروج",
   "openSidebar": "باز کردن منو",
   "closeSidebar": "بستن منو",
