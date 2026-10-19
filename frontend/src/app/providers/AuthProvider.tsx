@@ -12,6 +12,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getManagers, renewSession } from "@/features/auth/oidc";
 import { authApi, type ProfilePatch } from "@/features/auth/api/authApi";
 import type { Me } from "@/shared/types/auth";
+import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from 'react';
+import type { AuthSession } from '@/shared/types/auth';
+
+const STORAGE_KEY = 'gradian.auth.session';
+
 type AuthContextValue = {
   me: Me | null;
   loading: boolean;
@@ -19,6 +24,7 @@ type AuthContextValue = {
   reload: () => Promise<Me>;
   updateProfile: (body: ProfilePatch) => Promise<Me>;
 };
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
@@ -165,6 +171,38 @@ export function AuthProvider({ children }: PropsWithChildren) {
       {children}
     </AuthContext.Provider>
   );
+
+function readStoredSession(): AuthSession | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw) as AuthSession;
+    if (session.expiresAt && session.expiresAt <= Date.now()) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return session;
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+export function AuthProvider({ children }: PropsWithChildren) {
+  const [session, setSessionState] = useState<AuthSession | null>(() => readStoredSession());
+
+  const setSession = useCallback((next: AuthSession | null) => {
+    setSessionState(next);
+    if (next) localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    else localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  const value = useMemo(
+    () => ({ session, isAuthenticated: Boolean(session), setSession }),
+    [session, setSession],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {
   const value = useContext(AuthContext);

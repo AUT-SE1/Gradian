@@ -15,5 +15,48 @@
   "portalPlaceholder": {
     "title": "Portal shell is ready",
     "description": "Real features will be added here as separate routes."
+  "logout": "Logout",
+  "openSidebar": "Open menu",
+  "closeSidebar": "Close menu",
+  "brandFa": "Gradian",
+  "studentPanel": "Candidate panel",
+  "studentField": "Experimental sciences",
+  "notifications": "Notifications",
+  "profileComplete": "Complete professional profile",
+  "countdownTitle": "Exam countdown",
+  "countdownValue": "128 days to phase one",
+  "roleLabels": {
+    "student": "Candidate",
+    "instructor": "Professor",
+    "counsellor": "Consultant / top ranker",
+    "admin": "Site administrator"
+  },
+  "groups": {
+    "workAndLearning": "Work and learning",
+    "educationalServices": "Educational services",
+    "guidanceServices": "Guidance and consulting"
+  },
+  "menu": {
+    "mockExam": "Mock national exam",
+    "topicExam": "Topic exam",
+    "finalExam": "Final school exam",
+    "privateClass": "Private class",
+    "marketplace": "Book marketplace",
+    "consultation": "Consultation and planning",
+    "majorSelection": "Smart major selection",
+    "topRanker": "Top-ranker experiences",
+    "courses": "Courses and rapid test tips",
+    "community": "Experience exchange community",
+    "educationalProgress": "Academic progress dashboard",
+    "questionManagement": "Exam and question management",
+    "courseCreation": "Create course",
+    "resourceHub": "Resources hub",
+    "studentReports": "Student reports dashboard",
+    "experiences": "Add experiences",
+    "troubleshooting": "Subject troubleshooting",
+    "consultationSessions": "Online consultation sessions",
+    "examBank": "Exam bank and simulator",
+    "guidanceServices": "Guidance and consultation",
+    "products": "Store product management"
   }
 }

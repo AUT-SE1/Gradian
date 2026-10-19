@@ -15,5 +15,48 @@
   "portalPlaceholder": {
     "title": "قالب پرتال آماده است",
     "description": "Featureهای واقعی در این ناحیه به‌صورت route جدا اضافه خواهند شد."
+  "logout": "خروج",
+  "openSidebar": "باز کردن منو",
+  "closeSidebar": "بستن منو",
+  "brandFa": "گرادیان",
+  "studentPanel": "پنل داوطلب",
+  "studentField": "رشته تجربی",
+  "notifications": "اعلان‌ها",
+  "profileComplete": "تکمیل پروفایل حرفه‌ای",
+  "countdownTitle": "شمارش معکوس کنکور",
+  "countdownValue": "۱۲۸ روز تا مرحله اول",
+  "roleLabels": {
+    "student": "داوطلب",
+    "instructor": "استاد",
+    "counsellor": "مشاور - رتبه برتر",
+    "admin": "مدیر سایت"
+  },
+  "groups": {
+    "workAndLearning": "میز کار و آموزش",
+    "educationalServices": "خدمات آموزشی",
+    "guidanceServices": "خدمات هدایت و مشاوره"
+  },
+  "menu": {
+    "mockExam": "آزمون شبیه‌ساز کنکور",
+    "topicExam": "آزمون مبحثی",
+    "finalExam": "امتحان نهایی دوازدهم",
+    "privateClass": "کلاس خصوصی",
+    "marketplace": "خرید و فروش منابع و کتاب",
+    "consultation": "مشاوره و برنامه‌ریزی",
+    "majorSelection": "انتخاب رشته هوشمند",
+    "topRanker": "تجارب رتبه‌های برتر و رفع اشکال درسی",
+    "courses": "دوره‌های آموزشی و نکته و تست",
+    "community": "شبکه اجتماعی تبادل تجربیات",
+    "educationalProgress": "داشبورد پیشرفت تحصیلی",
+    "questionManagement": "مدیریت آزمون و سوال",
+    "courseCreation": "ایجاد دوره آموزشی",
+    "resourceHub": "هاب منابع و جزوات کنکور",
+    "studentReports": "داشبورد گزارشات دانش‌آموزان",
+    "experiences": "اضافه کردن تجربیات",
+    "troubleshooting": "رفع اشکال درسی",
+    "consultationSessions": "جلسات مشاوره آنلاین",
+    "examBank": "بانک آزمون و شبیه‌ساز",
+    "guidanceServices": "خدمات هدایت و مشاوره",
+    "products": "مدیریت محصولات فروشگاه"
   }
 }

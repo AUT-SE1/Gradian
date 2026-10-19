@@ -13,6 +13,22 @@ import type { PortalRole } from "@/shared/types/portal";
 
 type Props = { portal: PortalRole };
 
+function BellIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
+    </svg>
+  );
+}
+
+const fallbackNames: Record<PortalRole, string> = {
+  student: 'علیرضا رضایی',
+  instructor: 'سارا احمدی‌تبار',
+  counsellor: 'سارا احمدی‌تبار',
+  admin: 'سارا احمدی‌تبار',
+};
+
 export function PortalLayout({ portal }: Props) {
   const { me } = useAuth();
   const [logoutError, setLogoutError] = useState("");
@@ -36,10 +52,35 @@ export function PortalLayout({ portal }: Props) {
   const { language, toggleLanguage } = useI18n();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const displayName = session?.user.displayName || fallbackNames[portal];
 
-  function closeMobileSidebar() {
+  function logout() {
+    const idToken = session?.idToken;
+    setSession(null);
     setIsMobileSidebarOpen(false);
+    void authApi.logout(idToken);
   }
+
+  if (portal === 'student') {
+    return (
+      <div className="student-portal-shell">
+        <header className="student-portal-header">
+          <div className="student-brand-block">
+            <strong>{t('brandFa')}</strong>
+            <small>{t('studentPanel')}</small>
+          </div>
+          <div className="student-header-actions">
+            <button className="portal-bell" type="button" aria-label={t('notifications')}><span /><BellIcon /></button>
+            <div className="student-user-summary"><strong>{displayName}</strong><small>{t('studentField')}</small></div>
+            <button className="portal-logout-icon" type="button" onClick={logout} aria-label={t('logout')}>↪</button>
+          </div>
+        </header>
+        <main className="student-page-content"><Outlet /></main>
+      </div>
+    );
+  }
+
+  const groups = portalNavigationGroups[portal];
 
   return (
     <div
