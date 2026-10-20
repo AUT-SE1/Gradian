@@ -3,7 +3,7 @@ import type { PortalRole } from '@/shared/types/portal';
 export type NavigationIcon =
   | 'home' | 'exam' | 'book' | 'calendar' | 'users' | 'chart' | 'message'
   | 'briefcase' | 'video' | 'star' | 'plus' | 'store' | 'settings' | 'target'
-  | 'dashboard' | 'experience' | 'help' | 'headset' | 'library' | 'alarm' | 'verified';
+  | 'course' | 'classroom' | 'dashboard' | 'experience' | 'help' | 'headset' | 'library' | 'alarm' | 'verified';
 
 export type NavigationItem = {
   id: string;
@@ -32,11 +32,11 @@ export const portalNavigation: Record<PortalRole, NavigationItem[]> = {
     { id: 'community', labelKey: 'menu.community', path: '/student/community', icon: 'users' },
   ],
   instructor: [
-    { id: 'progress', labelKey: 'menu.educationalProgress', path: '/instructor/progress', icon: 'chart' },
+    { id: 'progress', labelKey: 'menu.educationalProgress', path: '/instructor/progress', icon: 'dashboard' },
     { id: 'questions', labelKey: 'menu.questionManagement', path: '/instructor/questions', icon: 'exam' },
-    { id: 'courses', labelKey: 'menu.courseCreation', path: '/instructor/courses', icon: 'video' },
-    { id: 'private-class', labelKey: 'menu.privateClass', path: '/instructor/private-class', icon: 'users' },
-    { id: 'resources', labelKey: 'menu.resourceHub', path: '/instructor/resources', icon: 'book' },
+    { id: 'courses', labelKey: 'menu.courseCreation', path: '/instructor/courses', icon: 'course' },
+    { id: 'private-class', labelKey: 'menu.privateClass', path: '/instructor/private-class', icon: 'classroom' },
+    { id: 'resources', labelKey: 'menu.resourceHub', path: '/instructor/resources', icon: 'library' },
   ],
   counsellor: [
     { id: 'students', labelKey: 'menu.studentReports', path: '/counsellor/students', icon: 'dashboard' },
