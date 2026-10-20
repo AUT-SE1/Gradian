@@ -1,6 +1,8 @@
 import { countdownText } from '@/features/portal/api/panelAdapters';
 import { usePanelServices, useStudentDashboard } from '../hooks/usePanelData';
 import { serviceKeys } from '../api/serviceRoutes';
+import { ServiceLink } from './ServiceLink';
+import { serviceStateKey } from '../api/serviceNavigation';
 import { serviceHref } from '../api/panelApi';
 import { PanelDataState } from './PanelDataState';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +17,7 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
   const services = usePanelServices();
   const dashboard = useStudentDashboard();
   const data = dashboard.isError ? undefined : dashboard.data;
+  const community = !services.isError && !services.isPending ? services.data?.find(entry => entry.key === serviceKeys['/student/community']) : undefined;
   const number = (value: number) => value.toLocaleString(i18n.language);
 
   if (portal !== 'student') {
@@ -48,7 +51,7 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
             <>
               <div className="student-service-card-top">
                 <span className={`service-icon service-icon--${card.accent || 'blue'}`}><PortalIcon name={card.icon} size={18} /></span>
-                <small>{service?.status === 'unavailable' ? tn('serviceUnavailable') : ''}</small>
+                <small>{!href ? tn(serviceStateKey(services, service)) : ''}</small>
               </div>
               <h3>{t(card.titleKey)}</h3>
               <p>{service?.description || t(card.descriptionKey)}</p>
@@ -58,11 +61,7 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
               </div>
             </>
           );
-          return href ? (
-            <a className={`student-service-card student-service-card--${card.accent}`} href={href} key={card.titleKey}>{content}</a>
-          ) : (
-            <article className={`student-service-card student-service-card--${card.accent}`} aria-disabled="true" key={card.titleKey}>{content}</article>
-          );
+          return <ServiceLink className={`student-service-card student-service-card--${card.accent}`} service={service} path={card.path} key={card.titleKey}>{content}</ServiceLink>;
         })}
       </section>
 
@@ -90,9 +89,9 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
             </article>
           ))}
         </div>
-        <a className="student-community-cta" aria-disabled={services.isError || !serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community']))} href={!services.isError ? serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community'])) : undefined}>
-          <span>{t('studentDashboard.communityCta')}</span><strong>{!services.isError && serviceHref(services.data?.find(entry => entry.key === serviceKeys['/student/community'])) ? `${t('studentDashboard.communityAction')} ←` : tn('serviceUnavailable')}</strong>
-        </a>
+        <ServiceLink className="student-community-cta" service={community} path="/student/community">
+          <span>{t('studentDashboard.communityCta')}</span><strong>{serviceHref(community) ? `${t('studentDashboard.communityAction')} ←` : tn(serviceStateKey(services, community))}</strong>
+        </ServiceLink>
       </section>
     </div>
   );

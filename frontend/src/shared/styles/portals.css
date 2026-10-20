@@ -304,3 +304,8 @@
 .management-portal-shell--admin .sidebar-countdown-widget { min-height: 64px; }
 .management-portal-shell--admin .sidebar-countdown-widget > div { flex: 1; text-align: center; }
 .management-portal-shell--admin .sidebar-countdown-icon { width: 40px; height: 40px; color: var(--navy); background: var(--portal-line); }
+
+
+/* T11: the existing service content area hosts registry embed destinations. */
+.portal-service-frame { display: block; width: 100%; min-height: 60vh; border: 1px solid currentColor; border-radius: 8px; margin-block: 16px; background: white; }
+.management-service-card:has(.portal-service-frame) { width: 100%; max-width: none; }

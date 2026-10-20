@@ -63,5 +63,8 @@
   "nextPage": "Next page",
   "countdownToday": "The exam is today",
   "countdownPast": "The exam has taken place",
-  "countdownUpcoming": "{{count}} days until Konkur"
+  "countdownUpcoming": "{{count}} days until Konkur",
+  "serviceAvailable": "Connected",
+  "embedNotice": "If the service does not appear here, open it separately. The service may require sign-in.",
+  "openServiceSeparately": "Open service separately"
 }
