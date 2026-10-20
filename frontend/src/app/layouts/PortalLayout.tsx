@@ -70,7 +70,7 @@ export function PortalLayout({ portal }: Props) {
         </div>
         {portal !== 'admin' && (
           <NavLink className="profile-complete-nav" to={`/${portal}/profile`} onClick={sidebar.close}>
-            <span><PortalIcon name="settings" size={15} />{t('profileComplete')}</span><small aria-hidden="true">←</small>
+            <span><PortalIcon name={portal === 'counsellor' ? 'verified' : 'settings'} size={15} />{t('profileComplete')}</span><small aria-hidden="true">←</small>
           </NavLink>
         )}
         <nav className="management-nav" aria-label={t('mainMenu')}>
@@ -90,7 +90,7 @@ export function PortalLayout({ portal }: Props) {
           ))}
         </nav>
         <div className="sidebar-countdown-widget">
-          <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name="calendar" size={22} /></span>
+          <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name={portal === 'counsellor' ? 'alarm' : 'calendar'} size={22} /></span>
           <div><strong>{t('countdownTitle')}</strong><small>{panel.data ? (countdownText(panel.data.countdown, i18n.language)) : t('countdownUnavailable')}</small><PanelDataState pending={panel.isPending} error={panel.error} retry={panel.refetch} /></div>
         </div>
       </aside>
