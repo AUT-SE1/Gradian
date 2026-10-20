@@ -1,0 +1,18 @@
+{
+  "results": [
+    "student: redirect URL, embedded content, separate-open fallback and mode refresh",
+    "instructor: redirect URL, embedded content, separate-open fallback and mode refresh",
+    "counsellor: redirect URL, embedded content, separate-open fallback and mode refresh",
+    "admin: redirect URL, embedded content, separate-open fallback and mode refresh",
+    "student card/community embed routes and direct refresh",
+    "redirect performs full-page navigation without bearer or referrer",
+    "absolute HTTP(S), credential-free URLs; ordinary query/hash preserved",
+    "all 25 paths map to exact registry fixture keys",
+    "403: distinct item state and retry",
+    "500: distinct item state and retry",
+    "missing entry/direct route has no active destination",
+    "loading items are distinguished from unavailable",
+    "same-origin embed isolation and cached destinations removed after 403"
+  ],
+  "errors": []
+}

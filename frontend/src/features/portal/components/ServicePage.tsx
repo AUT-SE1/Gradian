@@ -22,6 +22,15 @@ export function ServicePage({
   const services = usePanelServices();
   const service = services.data?.find(entry => entry.key === serviceKeys[location.pathname.replace(/\/$/, '')]);
   const serviceUrl = !services.isError ? serviceHref(service) : undefined;
+  const embedded = !!serviceUrl && service?.mode === 'embed';
+  // Preserve storage for cross-origin services; never combine scripts and same-origin
+  // privileges for a service sharing the portal origin.
+  const frameSandbox = 'allow-scripts allow-forms allow-popups' + (serviceUrl && new URL(serviceUrl).origin !== window.location.origin ? ' allow-same-origin' : '');
+  const destination = serviceUrl && <>
+    <p role="status">{tn('serviceAvailable')}</p>
+    {embedded && <><p>{tn('embedNotice')}</p><iframe key={serviceUrl} className="portal-service-frame" src={serviceUrl} title={t(titleKey)} sandbox={frameSandbox} referrerPolicy="no-referrer" /></>}
+    <a className={location.pathname.startsWith('/student') ? 'student-service-open' : 'management-service-open'} href={serviceUrl} referrerPolicy="no-referrer">{tn(embedded ? 'openServiceSeparately' : 'openService')} ←</a>
+  </>;
   const state = <><PanelDataState pending={services.isPending} error={services.error} retry={services.refetch} />{services.isSuccess && !serviceUrl && <p role="status">{tn('serviceUnavailable')}</p>}</>;
   const isStudent = location.pathname.startsWith('/student');
 
@@ -33,7 +42,7 @@ export function ServicePage({
           <h1>{t(titleKey)}</h1>
           <p>{t(descriptionKey)}</p>
           {state}
-          {serviceUrl && <a className="management-service-open" href={serviceUrl}>{tn('openService')} ←</a>}
+          {destination}
         </section>
       </div>
     );
@@ -48,10 +57,9 @@ export function ServicePage({
       <p>{t(descriptionKey)}</p>
       <section className="student-service-placeholder">
         <PortalIcon name={icon} size={42} />
-        <h2>{t('servicePage.readyTitle')}</h2>
-        <p>{t('servicePage.readyDescription')}</p>
+        <h2>{tn('openService')}</h2>
         {state}
-          {serviceUrl && <a className="student-service-open" href={serviceUrl}>{tn('openService')} ←</a>}
+          {destination}
       </section>
     </div>
   );

@@ -34,8 +34,13 @@ export async function getServices(session: AuthSession, signal: AbortSignal): Pr
 export function serviceHref(service?: Service): string | undefined {
   if (service?.status !== 'available' || !service.url) return undefined;
   try {
-    const url = new URL(service.url, window.location.origin);
+    const url = new URL(service.url);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return undefined;
+    // Registry URLs are absolute HTTP(S), matching the backend URLField contract.
+    // Credentials belong to each service's own sign-in, never to a navigation URL.
+    const credentials = /^(access_?token|refresh_?token|id_?token|token|authorization)$/i;
+    const fragment = url.hash.slice(1).split('?').pop() || '';
+    if ([...url.searchParams.keys(), ...new URLSearchParams(fragment).keys()].some(key => credentials.test(key))) return undefined;
     return url.href;
   } catch { return undefined; }
 }

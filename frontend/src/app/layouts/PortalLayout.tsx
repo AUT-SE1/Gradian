@@ -1,3 +1,4 @@
+import { serviceStateKey } from '@/features/portal/api/serviceNavigation';
 import { countdownText } from '@/features/portal/api/panelAdapters';
 import { startTransition, useId } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
@@ -80,7 +81,7 @@ export function PortalLayout({ portal }: Props) {
               <span className="management-nav-label">{t(group.labelKey)}</span>
               {group.items.map((item) => {
                 const service = services.data?.find(entry => entry.key === serviceKeys[item.path]);
-                if (services.isPending || services.isError || !serviceHref(service)) return <span className="management-nav-disabled" key={item.id} aria-disabled="true"><PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}<small>{t('serviceUnavailable')}</small></span></span>;
+                if (services.isPending || services.isError || !serviceHref(service)) return <span className="management-nav-disabled" key={item.id} aria-disabled="true"><PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}<small>{t(serviceStateKey(services, service))}</small></span></span>;
                 return (
                 <NavLink key={item.id} to={item.path} onClick={sidebar.close}>
                   <PortalIcon name={item.icon} size={17} /><span>{t(item.labelKey)}</span>

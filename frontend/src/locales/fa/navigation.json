@@ -63,5 +63,8 @@
   "nextPage": "صفحه بعد",
   "countdownToday": "امروز روز کنکور است",
   "countdownPast": "کنکور برگزار شده است",
-  "countdownUpcoming": "{{count}} روز تا کنکور"
+  "countdownUpcoming": "{{count}} روز تا کنکور",
+  "serviceAvailable": "متصل",
+  "embedNotice": "اگر سرویس در این بخش نمایش داده نمی‌شود، آن را جداگانه باز کنید. ورود به سرویس ممکن است لازم باشد.",
+  "openServiceSeparately": "باز کردن جداگانه سرویس"
 }
