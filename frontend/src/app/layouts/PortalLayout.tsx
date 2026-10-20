@@ -90,7 +90,7 @@ export function PortalLayout({ portal }: Props) {
           ))}
         </nav>
         <div className="sidebar-countdown-widget">
-          <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name={portal !== 'admin' ? 'alarm' : 'calendar'} size={22} /></span>
+          <span className="sidebar-countdown-icon" aria-hidden="true"><PortalIcon name="alarm" size={22} /></span>
           <div><strong>{t('countdownTitle')}</strong><small>{panel.data ? (countdownText(panel.data.countdown, i18n.language)) : t('countdownUnavailable')}</small><PanelDataState pending={panel.isPending} error={panel.error} retry={panel.refetch} /></div>
         </div>
       </aside>
