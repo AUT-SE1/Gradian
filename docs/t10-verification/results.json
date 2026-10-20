@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "geometry": {
+    "sidebar": {
+      "x": 992,
+      "y": 0,
+      "width": 288,
+      "height": 978
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 992,
+      "height": 64
+    },
+    "countdown": {
+      "x": 1008,
+      "y": 898,
+      "width": 255,
+      "height": 64
+    },
+    "overflow": false
+  },
+  "scenarios": [
+    "1280×978 reference geometry, menu order, empty home, API role and no student query",
+    "all three services navigate, active state is unique, direct refresh works",
+    "logo returns to empty admin home",
+    "unavailable service is disabled, direct route shows explicit status without outbound link",
+    "mobile drawer, Escape, navigation, dark fa without overflow",
+    "mobile drawer, Escape, navigation, dark en without overflow",
+    "no browser JavaScript errors"
+  ],
+  "errors": []
+}

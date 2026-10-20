@@ -294,3 +294,13 @@
 .management-portal-shell--instructor .sidebar-countdown-widget > div { flex: 1; text-align: center; }
 .management-portal-shell--instructor .sidebar-countdown-icon { width: 40px; height: 40px; color: var(--navy); background: var(--portal-line); }
 .management-portal-shell--instructor:dir(ltr) .profile-complete-nav small { transform: scaleX(-1); }
+
+/* T10: admin frame 1280 × 978; no profile row in this role. */
+.management-portal-shell--admin { --portal-logo-height: 64px; }
+.management-portal-shell--admin .management-nav { gap: 10px; }
+.management-portal-shell--admin .management-nav-group { gap: 2px; }
+.management-portal-shell--admin .management-nav-label { padding-bottom: 0; }
+.management-portal-shell--admin .management-nav svg { flex-shrink: 0; }
+.management-portal-shell--admin .sidebar-countdown-widget { min-height: 64px; }
+.management-portal-shell--admin .sidebar-countdown-widget > div { flex: 1; text-align: center; }
+.management-portal-shell--admin .sidebar-countdown-icon { width: 40px; height: 40px; color: var(--navy); background: var(--portal-line); }

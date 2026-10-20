@@ -47,8 +47,8 @@ export const portalNavigation: Record<PortalRole, NavigationItem[]> = {
   ],
   admin: [
     { id: 'exams', labelKey: 'menu.examBank', path: '/admin/exams', icon: 'exam' },
-    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/admin/sessions', icon: 'message' },
-    { id: 'products', labelKey: 'menu.products', path: '/admin/products', icon: 'store' },
+    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/admin/sessions', icon: 'headset' },
+    { id: 'products', labelKey: 'menu.products', path: '/admin/products', icon: 'library' },
   ],
 };
 
