@@ -2,7 +2,8 @@ import type { PortalRole } from '@/shared/types/portal';
 
 export type NavigationIcon =
   | 'home' | 'exam' | 'book' | 'calendar' | 'users' | 'chart' | 'message'
-  | 'briefcase' | 'video' | 'star' | 'plus' | 'store' | 'settings' | 'target';
+  | 'briefcase' | 'video' | 'star' | 'plus' | 'store' | 'settings' | 'target'
+  | 'dashboard' | 'experience' | 'help' | 'headset' | 'library' | 'alarm' | 'verified';
 
 export type NavigationItem = {
   id: string;
@@ -38,11 +39,11 @@ export const portalNavigation: Record<PortalRole, NavigationItem[]> = {
     { id: 'resources', labelKey: 'menu.resourceHub', path: '/instructor/resources', icon: 'book' },
   ],
   counsellor: [
-    { id: 'students', labelKey: 'menu.studentReports', path: '/counsellor/students', icon: 'chart' },
-    { id: 'experiences', labelKey: 'menu.experiences', path: '/counsellor/experiences', icon: 'message' },
-    { id: 'troubleshooting', labelKey: 'menu.troubleshooting', path: '/counsellor/troubleshooting', icon: 'book' },
-    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/counsellor/sessions', icon: 'message' },
-    { id: 'resources', labelKey: 'menu.resourceHub', path: '/counsellor/resources', icon: 'book' },
+    { id: 'students', labelKey: 'menu.studentReports', path: '/counsellor/students', icon: 'dashboard' },
+    { id: 'experiences', labelKey: 'menu.experiences', path: '/counsellor/experiences', icon: 'experience' },
+    { id: 'troubleshooting', labelKey: 'menu.troubleshooting', path: '/counsellor/troubleshooting', icon: 'help' },
+    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/counsellor/sessions', icon: 'headset' },
+    { id: 'resources', labelKey: 'menu.resourceHub', path: '/counsellor/resources', icon: 'library' },
   ],
   admin: [
     { id: 'exams', labelKey: 'menu.examBank', path: '/admin/exams', icon: 'exam' },

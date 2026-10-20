@@ -3,6 +3,13 @@ import type { NavigationIcon } from '@/app/navigation/navigation.config';
 export function PortalIcon({ name, size = 20 }: { name: NavigationIcon; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
   const paths: Record<NavigationIcon, React.ReactNode> = {
+    dashboard: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+    experience: <><path d="M4 4h16v13H9l-5 4z"/><path d="m8 13 2-5 3 5 3-5"/></>,
+    help: <><path d="M4 3h16v15h-6l-4 4v-4H4z"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 4M12 15h.01"/></>,
+    headset: <><path d="M4 13V11a8 8 0 0 1 16 0v5c0 4-3 5-8 5"/><rect x="2" y="11" width="4" height="7" rx="2"/><rect x="18" y="11" width="4" height="7" rx="2"/><path d="M8 10a4 4 0 0 1 8 0M9 16c2 2 4 2 6 0"/></>,
+    library: <><path d="m3 12 9 4 9-4M3 16l9 5 9-5M3 12v8l9 4 9-4v-8"/><circle cx="12" cy="5" r="3"/></>,
+    alarm: <><circle cx="12" cy="13" r="8"/><path d="m9 13 2 2 4-5M3 4l3-2M18 2l3 2M6 20l-2 2M18 20l2 2"/></>,
+    verified: <><path d="m12 2 3 2 3 .5.5 3L21 11l-1.5 3 .5 3-3 1.5-2 2.5-3-1-3 1L7 18.5 4 17l.5-3L3 11l2.5-3.5.5-3L9 4z"/><path d="m8 11 3 3 5-6"/></>,
     home: <><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></>,
     exam: <><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5M8 16h7"/></>,
     book: <><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11v17H7.5A3.5 3.5 0 0 0 4 22z"/><path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v17h3.5A3.5 3.5 0 0 1 20 22z"/></>,
