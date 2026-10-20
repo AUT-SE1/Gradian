@@ -30,6 +30,7 @@ const pass=name=>{results.push(name);console.log('PASS '+name);};
    if(u.pathname.endsWith('/panel'))data=config.malformed?{}:{panel:roleMap[role],home_path:'/'+roleMap[role],header:{full_name:'Fresh API name',avatar_url:config.avatar||'',consultant_type:role==='counsellor'?(config.consultantType||'top_ranker'):null,field_of_study:role==='student'?'mathematics':null,field_of_study_label:role==='student'?'ریاضی و فیزیک':null},countdown:{date:'2027-06-20',state:config.countdownState||'upcoming',days_remaining:config.countdownState?0:42,label:config.countdownState==='past'?'کنکور برگزار شده است':config.countdownState==='today'?'امروز روز کنکور است':'۴۲ روز تا کنکور'}};
    else if(u.pathname.endsWith('/panel/services')){let items=config.empty?[]:keys[role].map((k,i)=>service(role,k,i!==1));if(config.servicePagination){items=u.searchParams.get('offset')==='0'?items.slice(0,1):items.slice(1);data=envelope(items,u.searchParams.get('offset')==='0');}else data=envelope(items);}
    else if(u.pathname.endsWith('/notifications')){status=config.notificationStatus;const offset=Number(u.searchParams.get('offset'));const items=config.empty?[]:[{id:offset+1,title:offset?'Second page':'First notice',body:'<script>literal text</script>',created_at:'2026-10-19T10:00:00Z',is_read:false}];data={...envelope(items,!offset&&!config.empty),count:config.empty?0:51,previous:offset?'https://untrusted.example/previous':null,unread_count:config.empty?0:2};}
+   else if(u.pathname.endsWith('/student/dashboard'))data=require('./fixtures/student-dashboard.json');
    else if(u.pathname.endsWith('/auth/config')){status=503;}
    await r.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
   });
@@ -43,7 +44,7 @@ const pass=name=>{results.push(name);console.log('PASS '+name);};
    const v=await fresh(role,{lang:'fa'});await v.p.getByText('Fresh API name',{exact:true}).waitFor();
    assert.ok(v.requests.filter(r=>/panel|notifications/.test(r.path)).every(r=>r.auth==='Bearer test-A'));
    assert.equal(v.requests.filter(r=>r.path.endsWith('/panel')).length,1);
-   assert.equal(v.requests.filter(r=>r.path.endsWith('/student/dashboard')).length,0);
+   assert.equal(v.requests.filter(r=>r.path.endsWith('/student/dashboard')).length,role==='student'?1:0);
    if(role==='student'){assert.equal(await v.p.locator('a.student-service-card').count(),8);assert.equal(await v.p.locator('article.student-service-card[aria-disabled]').count(),1);assert.match(await v.p.locator('.student-user-summary small').innerText(),/ریاضی/);}
    else{assert.ok(await v.p.locator('.management-nav-disabled').count());assert.match(await v.p.locator('.sidebar-countdown-widget').innerText(),/۴۲/);assert.equal(await v.p.locator('.management-empty-canvas').count(),1);}
    if(role==='counsellor')assert.equal(await v.p.locator('.management-user-summary small').innerText(),'رتبه برتر');

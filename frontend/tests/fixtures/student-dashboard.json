@@ -1,0 +1,34 @@
+{
+  "welcome": {
+    "message": "سلام دانشجوی واقعی، به گرادیان خوش آمدی!",
+    "tip": "راهنمای دریافتی از API"
+  },
+  "countdown": {
+    "date": "2027-06-20",
+    "state": "upcoming",
+    "days_remaining": 27,
+    "label": "۲۷ روز تا کنکور"
+  },
+  "study_streak": {
+    "current_days": 7,
+    "best_days": 12,
+    "message": "پیام توالی API",
+    "week": [
+      {
+        "day": "شنبه",
+        "done": true
+      }
+    ]
+  },
+  "experience_feed": [
+    {
+      "id": 17,
+      "author": "نویسنده API",
+      "author_title": "رتبه برتر",
+      "title": "تجربه API",
+      "excerpt": "<script>literal text</script>",
+      "likes": 23,
+      "comments": 4
+    }
+  ]
+}

@@ -39,3 +39,11 @@ export function serviceHref(service?: Service): string | undefined {
     return url.href;
   } catch { return undefined; }
 }
+
+// Shapes from panels/content.py and panels/serializers.py; content blocks may be deleted.
+export type StudentDashboard = {
+  welcome: { message: string; tip: string } | null;
+  countdown: Countdown | null;
+  study_streak: { current_days: number; best_days: number; message: string; week: { day: string; done: boolean }[] } | null;
+  experience_feed: { id: number; author: string; author_title: string; title: string; excerpt: string; likes: number; comments: number }[] | null;
+};
