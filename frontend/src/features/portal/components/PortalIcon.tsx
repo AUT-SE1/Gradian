@@ -3,6 +3,8 @@ import type { NavigationIcon } from '@/app/navigation/navigation.config';
 export function PortalIcon({ name, size = 20 }: { name: NavigationIcon; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
   const paths: Record<NavigationIcon, React.ReactNode> = {
+    course: <><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></>,
+    classroom: <><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M5 17v-1a4 4 0 0 1 8 0v1M15 8h3M15 12h3"/></>,
     dashboard: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
     experience: <><path d="M4 4h16v13H9l-5 4z"/><path d="m8 13 2-5 3 5 3-5"/></>,
     help: <><path d="M4 3h16v15h-6l-4 4v-4H4z"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 4M12 15h.01"/></>,

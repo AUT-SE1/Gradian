@@ -284,3 +284,13 @@
   .student-community-section { margin-top: 36px; }
   .student-service-card { min-height: 205px; }
 }
+
+/* T09: instructor frame 1280×927; preserve the shared responsive drawer. */
+.management-portal-shell--instructor .profile-complete-nav { min-height: 36px; margin-bottom: 12px; border-radius: 12px; }
+.management-portal-shell--instructor .profile-complete-nav small { padding: 0 6px; border-radius: 10px; background: rgba(255, 255, 255, .15); }
+.management-portal-shell--instructor .management-nav { gap: 17px; }
+.management-portal-shell--instructor .management-nav svg { flex-shrink: 0; }
+.management-portal-shell--instructor .sidebar-countdown-widget { min-height: 64px; }
+.management-portal-shell--instructor .sidebar-countdown-widget > div { flex: 1; text-align: center; }
+.management-portal-shell--instructor .sidebar-countdown-icon { width: 40px; height: 40px; color: var(--navy); background: var(--portal-line); }
+.management-portal-shell--instructor:dir(ltr) .profile-complete-nav small { transform: scaleX(-1); }
