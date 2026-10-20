@@ -1,5 +1,5 @@
 import i18n from '@/shared/i18n/i18n';
-import type { Panel, Notifications, Page, Service, Countdown } from './panelApi';
+import type { Panel, Notifications, Page, Service, Countdown, StudentDashboard } from './panelApi';
 
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const textOrNull = (value: unknown) => value === null || typeof value === 'string';
@@ -28,4 +28,15 @@ export function countdownText(countdown: Countdown, language: string): string {
   if (countdown.state === 'today') return i18n.t('navigation:countdownToday', { lng: language });
   if (countdown.state === 'past') return i18n.t('navigation:countdownPast', { lng: language });
   return i18n.t('navigation:countdownUpcoming', { lng: language, count: countdown.days_remaining });
+}
+
+export function adaptStudentDashboard(value: unknown): StudentDashboard {
+  if (!record(value)) return invalid();
+  const { welcome, countdown, study_streak: streak, experience_feed: feed } = value;
+  if (welcome !== null && (!record(welcome) || typeof welcome.message !== 'string' || typeof welcome.tip !== 'string')) return invalid();
+  // The current serializer always supplies countdown; tolerate an explicitly null widget.
+  if (countdown !== null && (!record(countdown) || typeof countdown.date !== 'string' || !Number.isFinite(Date.parse(countdown.date)) || !['upcoming', 'today', 'past'].includes(String(countdown.state)) || !integer(countdown.days_remaining) || typeof countdown.label !== 'string')) return invalid();
+  if (streak !== null && (!record(streak) || !integer(streak.current_days) || !integer(streak.best_days) || typeof streak.message !== 'string' || !Array.isArray(streak.week) || !streak.week.every(day => record(day) && typeof day.day === 'string' && typeof day.done === 'boolean'))) return invalid();
+  if (feed !== null && (!Array.isArray(feed) || !feed.every(item => record(item) && integer(item.id) && Number(item.id) > 0 && ['author', 'author_title', 'title', 'excerpt'].every(key => typeof item[key] === 'string') && integer(item.likes) && integer(item.comments)) || new Set(feed.map(item => item.id)).size !== feed.length)) return invalid();
+  return value as StudentDashboard;
 }

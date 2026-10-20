@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "scenarios": [
+    "authenticated student data, identity, dashboard countdown, localized streak/feed counts, literal content, registry, readonly controls",
+    "dashboard cache scoped to identity and cleared on account change/logout",
+    "loading without sample posts",
+    "nullable block without crash: welcome",
+    "nullable block without crash: study_streak",
+    "nullable block without crash: experience_feed",
+    "nullable block without crash: countdown",
+    "nullable block without crash: all",
+    "zero streak and empty feed",
+    "dashboard error 500 and retry",
+    "dashboard error 403 and retry",
+    "malformed contract fails visibly without sample fallback",
+    "dashboard countdown today",
+    "dashboard countdown past",
+    "no student request for instructor",
+    "no student request for counsellor",
+    "no student request for admin",
+    "layout 390 fa light",
+    "layout 1280 en dark",
+    "layout 390 en dark",
+    "dashboard 401 clears session",
+    "no browser runtime errors"
+  ],
+  "errors": []
+}

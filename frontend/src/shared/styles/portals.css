@@ -77,9 +77,9 @@
 /* Student portal */
 .student-portal-shell { min-height: 100vh; background: var(--portal-canvas); }
 .student-portal-header { height: var(--portal-header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--portal-page-gutter); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
-.student-brand-block { display: flex; align-items: baseline; gap: 12px; }
+.student-brand-block { display: flex; align-items:center; gap:10px; }
 .student-brand-block strong { color: var(--navy); font-size: 17px; }
-.student-brand-block small { color: var(--portal-muted); font-size: 9px; }
+.student-brand-block small { color: var(--portal-muted); font-size:10px; background:var(--portal-soft); border-radius:999px; padding:2px 8px; }
 .student-header-actions { display: flex; align-items: center; gap: 14px; }
 .portal-bell { position: relative; width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--portal-ink); cursor: pointer; }
 .student-user-summary, .management-user-summary { display: grid; gap: 1px; min-width: 0; max-width: 240px; padding-inline: 10px; border-inline-start: 1px solid var(--portal-line); }
@@ -88,57 +88,57 @@
 .student-user-summary small, .management-user-summary small { color: var(--portal-muted); font-size: 10px; }
 .portal-logout-icon { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--portal-ink); font-size: 17px; cursor: pointer; }
 .student-page-content { padding: 24px var(--portal-page-gutter) 48px; }
-.student-dashboard-page { width: min(100%, var(--portal-content-max)); margin: 0 auto; }
-.student-welcome-card { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 21px 24px; border: 1px solid var(--portal-line); border-radius: 13px; background: var(--portal-surface); box-shadow: 0 4px 14px rgba(35, 56, 78, .03); }
+.student-dashboard-page { width: min(100%, var(--portal-content-max)); margin: 0 auto; min-height:1826px; }
+.student-welcome-card { min-height: 112px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 21px 24px; border: 1px solid var(--portal-line); border-radius: 13px; background: var(--portal-surface); box-shadow:none; }
 .student-welcome-copy h1 { margin: 0; color: var(--navy); font-size: 19px; }
-.student-welcome-copy p { margin: 7px 0 0; color: var(--portal-muted); font-size: 9.5px; line-height: 1.85; }
+.student-welcome-copy p { margin: 7px 0 0; color: var(--portal-muted); font-size:11px; line-height: 1.85; }
 .student-welcome-widgets { display: flex; gap: 12px; }
-.student-welcome-widgets article { min-width: 142px; display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid var(--portal-line); border-radius: 11px; background: var(--portal-soft); }
-.student-welcome-widgets article > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #4571a0; background: #edf4fb; }
+.student-welcome-widgets article { min-width:132px; display: flex; align-items: center; gap:8px; padding:10px 12px; border:0; border-radius: 11px; background: var(--portal-soft); }
+.student-welcome-widgets article > span { width:22px; height:28px; display: grid; place-items: center; border-radius: 9px; color:var(--navy); background:transparent; order:-1; }
 .student-welcome-widgets div { display: grid; gap: 1px; }
-.student-welcome-widgets small { color: var(--portal-muted); font-size: 8px; }
+.student-welcome-widgets small { color: var(--portal-muted); font-size:10px; }
 .student-welcome-widgets strong { color: var(--navy); font-size: 12px; }
-.student-section-heading { display: flex; align-items: center; gap: 8px; margin: 31px 0 14px; }
+.student-section-heading { display: flex; align-items: center; gap:8px; margin:40px 0 32px; }
 .student-section-heading span { color: #526275; }
-.student-section-heading h2 { margin: 0; color: var(--navy); font-size: 17px; }
-.student-service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-.student-service-card { min-height: 181px; display: flex; flex-direction: column; padding: 17px 18px 13px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); box-shadow: 0 4px 13px rgba(25, 46, 70, .025); transition: transform .16s ease, box-shadow .16s ease; }
+.student-section-heading h2 { margin: 0; color: var(--navy); font-size:16px; }
+.student-service-grid { display: grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:24px 20px; }
+.student-service-card { min-height:205px; display: flex; flex-direction: column; padding:18px 20px 16px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); box-shadow:none; transition: transform .16s ease, box-shadow .16s ease; }
 .student-service-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(34, 57, 82, .07); }
 .student-service-card-top { display: flex; align-items: center; justify-content: space-between; }
-.student-service-card-top small { color: var(--portal-muted); font-size: 8px; }
-.service-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; }
+.student-service-card-top small { color: var(--portal-muted); font-size:10px; order:1; }
+.service-icon { width:36px; height:36px; display: grid; place-items: center; border-radius: 9px; color:var(--navy); background:var(--portal-soft); }
 .service-icon--blue { color: #315d95; background: #edf4fc; }
 .service-icon--violet { color: #67569d; background: #f1effb; }
 .service-icon--orange { color: #b8713d; background: #fff0e4; }
 .service-icon--cyan { color: #367a91; background: #eaf6fa; }
-.student-service-card h3 { margin: 13px 0 6px; color: var(--navy); font-size: 13px; }
-.student-service-card p { flex: 1; margin: 0; color: var(--portal-muted); font-size: 8.9px; line-height: 1.9; }
-.student-service-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--portal-line); }
+.student-service-card h3 { margin:10px 0 6px; color: var(--navy); font-size:14px; }
+.student-service-card p { flex: 1; margin: 0; color: var(--portal-muted); font-size:11px; line-height: 1.9; }
+.student-service-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top:16px; padding-top:12px; border-top: 1px solid var(--portal-line); }
 .student-service-card-footer span { color: var(--portal-muted); font-size: 10px; }
-.student-service-card-footer strong { color: #253e68; font-size: 8px; white-space: nowrap; }
-.student-community-section { margin-top: 30px; }
-.student-community-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.student-service-card-footer strong { color:var(--navy); font-size:10px; white-space: nowrap; }
+.student-community-section { margin-top:72px; }
+.student-community-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom:20px; }
 .student-community-heading > div:first-child { display: flex; align-items: center; gap: 8px; }
-.student-community-heading h2 { margin: 0; color: var(--navy); font-size: 17px; }
-.student-community-tabs { display: flex; gap: 7px; }
-.student-community-tabs span { padding: 6px 11px; border-radius: 999px; color: var(--portal-muted); background: var(--portal-surface); font-size: 8px; }
-.student-community-tabs span.active { color: var(--portal-on-accent); background: var(--navy); }
-.student-post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-.student-post-card { min-height: 210px; padding: 15px 17px 12px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); }
-.post-author-row { display: flex; align-items: center; gap: 9px; }
-.post-avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; font-size: 9px; font-weight: 800; }
+.student-community-heading h2 { margin: 0; color: var(--navy); font-size:16px; }
+.student-community-tabs { display: flex; gap:8px; justify-content:flex-start; }
+
+
+.student-post-grid { display: grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:20px; }
+.student-post-card { min-height:264px; padding:20px 20px 16px; border: 1px solid var(--portal-line); border-radius: var(--portal-radius); background: var(--portal-surface); display:flex; flex-direction:column; }
+.post-author-row { display: flex; align-items: center; gap: 9px; position:relative; }
+.post-avatar { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 50%; font-size:10px; font-weight: 800; }
 .post-avatar--1 { color: #356582; background: #dceff8; }
 .post-avatar--2 { color: #8b5d31; background: #f6eadf; }
 .post-avatar--3 { color: #5f6990; background: #edf0fb; }
 .post-author-row div { display: grid; gap: 2px; }
-.post-author-row strong { color: var(--portal-ink); font-size: 9px; }
-.post-author-row small { color: var(--portal-muted); font-size: 6.8px; }
-.student-post-card h3 { margin: 12px 0 6px; color: var(--navy); font-size: 11px; line-height: 1.7; }
-.student-post-card > p { margin: 0; color: var(--portal-muted); font-size: 8.1px; line-height: 1.8; }
-.post-tags { display: block; margin-top: 7px; color: #4a7890; font-size: 6.9px; }
-.post-stats { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--portal-line); color: var(--portal-muted); font-size: 7px; }
-.student-community-cta { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 14px; padding: 10px 15px; border-radius: 10px; background: var(--portal-soft); color: #314863; font-size: 8.5px; }
-.student-community-cta strong { color: var(--navy); font-size: 8px; }
+.post-author-row strong { color:var(--navy); font-size:11px; }
+.post-author-row small { color: var(--portal-muted); font-size:9px; }
+.student-post-card h3 { margin:14px 0 12px; color: var(--navy); font-size:14px; line-height: 1.7; }
+.student-post-card > p { margin: 0; color: var(--portal-muted); font-size:11px; line-height:1.9; }
+.post-tags { display: block; margin-top:14px; color: #4a7890; font-size:10px; }
+.post-stats { display: flex; align-items: center; gap: 10px; margin-top:auto; padding-top:12px; border-top:0; color: var(--portal-muted); font-size:10px; }
+.student-community-cta { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top:20px; padding:12px 16px; border-radius: 10px; background: var(--portal-soft); color:var(--navy); font-size:12px; min-height:54px; }
+.student-community-cta strong { color: var(--navy); font-size:10px; }
 
 /* Management portals (admin / counsellor / instructor) */
 .management-portal-shell { min-height: 100vh; display: grid; grid-template-columns: var(--portal-sidebar-width) minmax(0, 1fr); background: var(--portal-canvas); }
@@ -251,3 +251,26 @@
 .portal-unread-dot { position: absolute; inset-block-start: 4px; inset-inline-end: 5px; width: 6px; height: 6px; border-radius: 50%; background: #bc3434; }
 .management-nav-disabled { min-height: 38px; gap: 10px; padding: 8px 10px; font-size: 12px; font-weight: 500; border-radius: 7px; color: var(--portal-ink); }
 @media (max-width: 600px) { .student-portal-header, .management-header { height: auto; min-height: var(--portal-header-height); flex-wrap: wrap; } }
+
+/* T06: details visible in the student reference. Exact source assets were not supplied. */
+.student-welcome-widgets article:first-child { order: 0; }
+.student-community-controls { margin-bottom: 20px; }
+.student-community-tabs button { padding: 4px 12px; border: 0; border-radius: 999px; background: var(--portal-soft); color: var(--portal-muted); font: inherit; font-size: 10px; opacity: 1; cursor: not-allowed; }
+.student-community-tabs button.active { color: var(--portal-on-accent); background: var(--portal-accent); }
+.student-preview-note { display: block; margin-top: 6px; color: var(--portal-muted); font-size: 10px; }
+.student-service-card .service-icon { color: var(--navy); background: var(--portal-soft); }
+.student-service-card--orange .student-service-card-top small { padding: 1px 7px; border-radius: 4px; color: var(--portal-warning); background: var(--portal-soft); }
+.student-service-card--cyan .student-service-card-top small { color: #367a91; }
+.student-service-card[aria-disabled="true"]:hover { transform: none; box-shadow: none; }
+.post-stats > span { display: inline-flex; align-items: center; gap: 4px; }
+.post-stats svg { width: 14px; height: 14px; }
+.post-bookmark { margin-inline-start: auto; }
+.student-post-card > .post-attachment { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--portal-soft); color: var(--portal-ink); }
+.student-portal-shell:dir(ltr) .student-service-card-footer strong { white-space: normal; }
+@media (max-width: 780px) {
+  .student-dashboard-page { min-height: 0; }
+  .student-welcome-copy h1 { font-size: 18px; }
+  .student-section-heading { margin: 28px 0 20px; }
+  .student-community-section { margin-top: 36px; }
+  .student-service-card { min-height: 205px; }
+}
