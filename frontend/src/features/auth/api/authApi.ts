@@ -1,15 +1,26 @@
 import { httpClient } from '@/shared/api/httpClient';
+import { ApiError } from '@/shared/api/ApiError';
 import type { AuthSession } from '@/shared/types/auth';
+import { isUsableSession } from '@/shared/auth/session';
 import type { PortalRole } from '@/shared/types/portal';
+import {
+  createAuthFlowStarter,
+  OIDC_FLOW_KEY,
+  OIDC_STATE_KEY,
+  PKCE_VERIFIER_KEY,
+  validateIssuer,
+  type AuthConfig,
+  type AuthFlow,
+} from '@/features/auth/api/authFlow';
+import {
+  AuthCallbackFailure,
+  callbackFailureFromStatus,
+  clearCallbackAttempt,
+  readCallbackAttempt,
+} from '@/features/auth/api/authCallback';
 
-type AuthConfig = {
-  issuer: string;
-  realm: string;
-  client_id: string;
-  registration_endpoint: string;
-  end_session_url: string;
-  landing_url: string;
-};
+export { AuthCallbackFailure } from '@/features/auth/api/authCallback';
+export type { AuthFlow } from '@/features/auth/api/authFlow';
 
 type Me = {
   sub: string;
@@ -35,9 +46,6 @@ type TokenResponse = {
   token_type: string;
 };
 
-const PKCE_VERIFIER_KEY = 'gradian.auth.pkce_verifier';
-const OIDC_STATE_KEY = 'gradian.auth.oidc_state';
-let loginStarting = false;
 let callbackPromise: Promise<AuthSession> | null = null;
 
 const roleMap: Record<Me['panel'], PortalRole> = {
@@ -47,23 +55,6 @@ const roleMap: Record<Me['panel'], PortalRole> = {
   admin: 'admin',
 };
 
-function randomBase64Url(bytes = 32) {
-  const values = new Uint8Array(bytes);
-  crypto.getRandomValues(values);
-  return base64Url(values);
-}
-
-function base64Url(bytes: Uint8Array) {
-  let binary = '';
-  bytes.forEach((value) => { binary += String.fromCharCode(value); });
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-async function codeChallenge(verifier: string) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-  return base64Url(new Uint8Array(digest));
-}
-
 function callbackUrl() {
   return `${window.location.origin}/auth/callback`;
 }
@@ -72,98 +63,116 @@ async function getConfig() {
   return httpClient.get<AuthConfig>('/auth/config');
 }
 
-async function beginLogin() {
-  if (loginStarting) return;
-  loginStarting = true;
-  try {
-    const config = await getConfig();
-  const verifier = randomBase64Url(48);
-  const state = randomBase64Url(24);
-  const challenge = await codeChallenge(verifier);
+const authFlowStarter = createAuthFlowStarter({
+  getConfig,
+  callbackUrl,
+  assign: (url) => window.location.assign(url),
+  storage: sessionStorage,
+});
 
-  sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
-  sessionStorage.setItem(OIDC_STATE_KEY, state);
-
-  const authorize = new URL(`${config.issuer}/protocol/openid-connect/auth`);
-  authorize.searchParams.set('client_id', config.client_id);
-  authorize.searchParams.set('response_type', 'code');
-  authorize.searchParams.set('scope', 'openid');
-  authorize.searchParams.set('redirect_uri', callbackUrl());
-  authorize.searchParams.set('code_challenge', challenge);
-  authorize.searchParams.set('code_challenge_method', 'S256');
-  authorize.searchParams.set('state', state);
-
-    window.location.assign(authorize.toString());
-  } catch (error) {
-    loginStarting = false;
-    throw error;
-  }
+function validTokenResponse(value: unknown): value is TokenResponse {
+  if (!value || typeof value !== 'object') return false;
+  const token = value as Partial<TokenResponse>;
+  return typeof token.access_token === 'string' && token.access_token.trim().length > 0
+    && typeof token.expires_in === 'number' && Number.isFinite(token.expires_in) && token.expires_in > 0
+    && typeof token.token_type === 'string' && token.token_type.trim().length > 0
+    && (token.refresh_token === undefined || (typeof token.refresh_token === 'string' && token.refresh_token.length > 0))
+    && (token.id_token === undefined || (typeof token.id_token === 'string' && token.id_token.length > 0));
 }
 
 async function completeLogin(): Promise<AuthSession> {
-  const params = new URLSearchParams(window.location.search);
-  const error = params.get('error');
-  if (error) throw new Error(params.get('error_description') || error);
+  let flow: AuthFlow = sessionStorage.getItem(OIDC_FLOW_KEY) === 'registration' ? 'registration' : 'login';
+  try {
+    const attempt = readCallbackAttempt(window.location.search, sessionStorage);
+    flow = attempt.flow;
 
-  const code = params.get('code');
-  const returnedState = params.get('state');
-  const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY);
-  const expectedState = sessionStorage.getItem(OIDC_STATE_KEY);
+    const config = await getConfig();
+    const issuer = validateIssuer(config.issuer);
+    const tokenEndpoint = new URL(`${issuer.origin}${issuer.pathname.replace(/\/+$/, '')}/protocol/openid-connect/token`);
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: config.client_id,
+      redirect_uri: callbackUrl(),
+      code: attempt.code,
+      code_verifier: attempt.verifier,
+    });
 
-  if (!code || !verifier || !returnedState || returnedState !== expectedState) {
-    throw new Error('Invalid authentication callback.');
+    const tokenResponse = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (!tokenResponse.ok) throw callbackFailureFromStatus(tokenResponse.status, flow);
+
+    let tokenPayload: unknown;
+    try {
+      tokenPayload = await tokenResponse.json();
+    } catch {
+      throw new AuthCallbackFailure('provider', flow);
+    }
+    if (!validTokenResponse(tokenPayload)) throw new AuthCallbackFailure('failed', flow);
+    const tokens = tokenPayload;
+
+    let me: Me;
+    try {
+      me = await httpClient.get<Me>('/me', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+    } catch (failure: unknown) {
+      if (failure instanceof ApiError) throw callbackFailureFromStatus(failure.status, flow);
+      throw new AuthCallbackFailure('provider', flow);
+    }
+
+    const primaryRole = Object.hasOwn(roleMap, me.panel) ? roleMap[me.panel] : undefined;
+    if (!primaryRole) throw new AuthCallbackFailure('forbidden', flow);
+
+    // Core owns the role decision. Refuse an internally inconsistent /me response rather than
+    // routing from an arbitrary path supplied by a stale/misconfigured provider response.
+    if (me.home_path && me.home_path !== `/${me.panel}`) {
+      throw new AuthCallbackFailure('failed', flow);
+    }
+
+    const session: AuthSession = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      idToken: tokens.id_token,
+      expiresAt: Date.now() + (tokens.expires_in * 1000),
+      user: {
+        id: me.sub,
+        displayName: me.full_name || me.mobile,
+        primaryRole,
+      },
+    };
+    if (!isUsableSession(session)) throw new AuthCallbackFailure('failed', flow);
+    return session;
+  } catch (failure: unknown) {
+    if (failure instanceof AuthCallbackFailure) throw failure;
+    if (failure instanceof ApiError) throw callbackFailureFromStatus(failure.status, flow);
+    throw new AuthCallbackFailure('provider', flow);
+  } finally {
+    // A callback code/state/verifier is one-shot. Success and every terminal error clear it so
+    // retry always starts a fresh PKCE flow and a repeated callback cannot consume it again.
+    clearCallbackAttempt(sessionStorage);
   }
-
-  const config = await getConfig();
-  const tokenEndpoint = `${config.issuer}/protocol/openid-connect/token`;
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    client_id: config.client_id,
-    redirect_uri: callbackUrl(),
-    code,
-    code_verifier: verifier,
-  });
-
-  const tokenResponse = await fetch(tokenEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
-  if (!tokenResponse.ok) throw new Error('Token exchange failed.');
-  const tokens = await tokenResponse.json() as TokenResponse;
-
-  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
-  sessionStorage.removeItem(OIDC_STATE_KEY);
-
-  const me = await httpClient.get<Me>('/me', {
-    headers: { Authorization: `Bearer ${tokens.access_token}` },
-  });
-  const primaryRole = roleMap[me.panel];
-
-  return {
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    idToken: tokens.id_token,
-    expiresAt: Date.now() + (tokens.expires_in * 1000),
-    user: {
-      id: me.sub,
-      displayName: me.full_name || me.mobile,
-      primaryRole,
-    },
-  };
 }
 
 function finishLogin(): Promise<AuthSession> {
-  callbackPromise ??= completeLogin().catch((error) => {
+  callbackPromise ??= completeLogin().finally(() => {
     callbackPromise = null;
-    throw error;
   });
   return callbackPromise;
+}
+
+async function retryCallback(flow: AuthFlow) {
+  return flow === 'registration'
+    ? authFlowStarter.beginRegistration()
+    : authFlowStarter.beginLogin();
 }
 
 async function logout(idToken?: string) {
   sessionStorage.removeItem(PKCE_VERIFIER_KEY);
   sessionStorage.removeItem(OIDC_STATE_KEY);
+  sessionStorage.removeItem(OIDC_FLOW_KEY);
   try {
     const config = await getConfig();
     const url = new URL(config.end_session_url);
@@ -176,4 +185,11 @@ async function logout(idToken?: string) {
   }
 }
 
-export const authApi = { getConfig, beginLogin, finishLogin, logout };
+export const authApi = {
+  getConfig,
+  beginLogin: authFlowStarter.beginLogin,
+  beginRegistration: authFlowStarter.beginRegistration,
+  finishLogin,
+  retryCallback,
+  logout,
+};

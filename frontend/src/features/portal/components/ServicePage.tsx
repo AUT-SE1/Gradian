@@ -1,3 +1,7 @@
+import { usePanelServices } from '../hooks/usePanelData';
+import { serviceKeys } from '../api/serviceRoutes';
+import { serviceHref } from '../api/panelApi';
+import { PanelDataState } from './PanelDataState';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PortalIcon } from './PortalIcon';
@@ -7,15 +11,27 @@ export function ServicePage({
   titleKey,
   descriptionKey,
   icon = 'briefcase',
-  serviceUrl,
 }: {
   titleKey: string;
   descriptionKey: string;
   icon?: NavigationIcon;
-  serviceUrl?: string;
 }) {
   const { t } = useTranslation('portal');
   const location = useLocation();
+  const { t: tn } = useTranslation('navigation');
+  const services = usePanelServices();
+  const service = services.data?.find(entry => entry.key === serviceKeys[location.pathname.replace(/\/$/, '')]);
+  const serviceUrl = !services.isError ? serviceHref(service) : undefined;
+  const embedded = !!serviceUrl && service?.mode === 'embed';
+  // Preserve storage for cross-origin services; never combine scripts and same-origin
+  // privileges for a service sharing the portal origin.
+  const frameSandbox = 'allow-scripts allow-forms allow-popups' + (serviceUrl && new URL(serviceUrl).origin !== window.location.origin ? ' allow-same-origin' : '');
+  const destination = serviceUrl && <>
+    <p role="status">{tn('serviceAvailable')}</p>
+    {embedded && <><p>{tn('embedNotice')}</p><iframe key={serviceUrl} className="portal-service-frame" src={serviceUrl} title={t(titleKey)} sandbox={frameSandbox} referrerPolicy="no-referrer" /></>}
+    <a className={location.pathname.startsWith('/student') ? 'student-service-open' : 'management-service-open'} href={serviceUrl} referrerPolicy="no-referrer">{tn(embedded ? 'openServiceSeparately' : 'openService')} ←</a>
+  </>;
+  const state = <><PanelDataState pending={services.isPending} error={services.error} retry={services.refetch} />{services.isSuccess && !serviceUrl && <p role="status">{tn('serviceUnavailable')}</p>}</>;
   const isStudent = location.pathname.startsWith('/student');
 
   if (!isStudent) {
@@ -25,7 +41,8 @@ export function ServicePage({
           <span className="service-icon service-icon--blue"><PortalIcon name={icon} size={24} /></span>
           <h1>{t(titleKey)}</h1>
           <p>{t(descriptionKey)}</p>
-          {serviceUrl && <a className="management-service-open" href={serviceUrl}>ورود به سرویس ←</a>}
+          {state}
+          {destination}
         </section>
       </div>
     );
@@ -40,9 +57,9 @@ export function ServicePage({
       <p>{t(descriptionKey)}</p>
       <section className="student-service-placeholder">
         <PortalIcon name={icon} size={42} />
-        <h2>{t('servicePage.readyTitle')}</h2>
-        <p>{t('servicePage.readyDescription')}</p>
-        {serviceUrl && <a className="student-service-open" href={serviceUrl}>ورود به سرویس ←</a>}
+        <h2>{tn('openService')}</h2>
+        {state}
+          {destination}
       </section>
     </div>
   );

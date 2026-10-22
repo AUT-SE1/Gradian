@@ -14,44 +14,19 @@
     }
   },
   "studentDashboard": {
-    "welcomeTitle": "Welcome to your academic panel",
-    "welcomeSubtitle": "Your academic monitoring plan based on the latest exam coefficients and records.",
     "streakLabel": "Study streak",
     "countdownLabel": "Exam countdown",
     "day": "days",
     "servicesTitle": "Educational services desk",
     "communityTitle": "Experience exchange community",
-    "tabTop": "Top experiences",
-    "tabMy": "Following",
-    "tabAll": "All experiences",
+    "tabTop": "Trending experiences",
+    "tabMy": "Top rankers",
+    "tabAll": "Study methods",
     "communityCta": "Have a question or experience to share with candidates and top rankers?",
     "communityAction": "Open discussions",
-    "posts": {
-      "rahbar": {
-        "initial": "M",
-        "name": "Mira Mohammadi",
-        "meta": "Rank 14 • Medicine, Tehran • 2 hours ago",
-        "title": "How I raised biology from 55% to 88%",
-        "text": "In the final months I focused on visual biology and textbook annotations instead of scattered tests.",
-        "tags": "#top_ranker #review #biology"
-      },
-      "amirhossein": {
-        "initial": "A",
-        "name": "Amirhossein Kazemi",
-        "meta": "Rank 29 • Sharif EE • yesterday",
-        "title": "Planning and stress management during final review",
-        "text": "A simple weekly structure helped balance review, testing and analysis.",
-        "tags": "#planning #time_management"
-      },
-      "zahra": {
-        "initial": "Z",
-        "name": "Zahra Rafiei",
-        "meta": "Rank 45 • Law, Beheshti • 2 days ago",
-        "title": "Fast keyword notes for memory-heavy subjects",
-        "text": "Drawing concept trees before practice worked best for Arabic and sociology.",
-        "tags": "#humanities #study_method"
-      }
-    }
+    "previewNotice": "Study streak and experiences are currently backend demo content; filters and interactions are unavailable.",
+    "previewStats": "Preview statistics",
+    "widgetUnavailable": "No data available"
   },
   "cards": {
     "mockExam": {

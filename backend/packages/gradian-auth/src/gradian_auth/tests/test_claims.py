@@ -61,6 +61,6 @@ class NameValidationTests(SimpleTestCase):
                 self.assertTrue(is_valid_name(name))
 
     def test_invalid_names(self) -> None:
-        for name in ["", "ا" * 101, "علی1", "a@b", "<script>"]:
+        for name in ["", "   ", "\u200c", " \u200c ", "ا" * 101, "علی1", "a@b", "<script>"]:
             with self.subTest(name=name):
                 self.assertFalse(is_valid_name(name))

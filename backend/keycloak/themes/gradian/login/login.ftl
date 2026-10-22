@@ -1,5 +1,5 @@
 <#import "template.ftl" as layout>
-<@layout.registrationLayout displayInfo=false; section>
+<@layout.registrationLayout displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
   <#if section = "header">
     ورود به سامانه
   <#elseif section = "form">
@@ -34,5 +34,9 @@
         });
       });
     </script>
+  <#elseif section = "info">
+    <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
+      <span>حساب کاربری ندارید؟ <a href="${url.registrationUrl}">ثبت‌نام</a></span>
+    </#if>
   </#if>
 </@layout.registrationLayout>

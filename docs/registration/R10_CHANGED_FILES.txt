@@ -1,0 +1,71 @@
+R10 cumulative changed-file manifest
+Baseline: Gradian-main (2).zip
+Candidate: R10 working tree based on Gradian-R09.zip
+Generated: 2026-10-21
+
+ADDED (25)
++ backend/keycloak/themes/gradian/login/messages/messages_fa.properties
++ backend/scripts/tests/test_r05_theme_contract.py
++ backend/scripts/tests/test_r07_identity_contract.py
++ backend/scripts/tests/test_r08_theme_accessibility.py
++ backend/scripts/tests/test_r09_registration_contract.py
++ backend/scripts/tests/test_registration_identity_rules.py
++ docs/registration/R01_BASELINE.md
++ docs/registration/R03_IDENTITY_RULES.md
++ docs/registration/R04_PKCE_START.md
++ docs/registration/R05_KEYCLOAK_FORM.md
++ docs/registration/R06_PUBLIC_ENTRY.md
++ docs/registration/R07_IDENTITY.md
++ docs/registration/R08_ACCESSIBILITY_ERRORS.md
++ docs/registration/R09_VERIFICATION.md
++ docs/registration/R10_CHANGED_FILES.txt
++ docs/registration/R10_FINAL_ACCEPTANCE.md
++ frontend/src/features/auth/api/authCallback.ts
++ frontend/src/features/auth/api/authFlow.ts
++ frontend/src/features/auth/pages/RegisterPage.tsx
++ frontend/tests/r04-auth-flow.cjs
++ frontend/tests/r06-public-registration.cjs
++ frontend/tests/r07-callback.cjs
++ frontend/tests/r08-auth-accessibility.cjs
++ frontend/tests/r09-registration-contract.cjs
++ scripts/r09-registration-preflight.sh
+
+MODIFIED (28)
+~ GRADIAN_REGISTRATION_TASKS.md
+~ GRADIAN_SESSION_CONTEXT.md
+~ backend/core/accounts/authentication.py
+~ backend/core/accounts/profiles.py
+~ backend/core/accounts/tests/test_authentication.py
+~ backend/core/accounts/tests/test_me.py
+~ backend/keycloak/realm-template.json
+~ backend/keycloak/themes/gradian/README.md
+~ backend/keycloak/themes/gradian/login/login.ftl
+~ backend/keycloak/themes/gradian/login/register.ftl
+~ backend/keycloak/themes/gradian/login/resources/css/gradian.css
+~ backend/keycloak/themes/gradian/login/template.ftl
+~ backend/keycloak/themes/gradian/login/theme.properties
+~ backend/keycloak/user-profile.json
+~ backend/packages/gradian-auth/src/gradian_auth/claims.py
+~ backend/packages/gradian-auth/src/gradian_auth/tests/test_claims.py
+~ backend/packages/gradian-keycloak/src/gradian_keycloak/admin_client.py
+~ backend/packages/gradian-keycloak/src/gradian_keycloak/tests/test_admin_client.py
+~ backend/packages/gradian-testing/src/gradian_testing/fakes.py
+~ backend/packages/gradian-testing/src/gradian_testing/tests/test_tokens.py
+~ backend/scripts/tests/test_scripts_production_guard.py
+~ frontend/src/app/router/AppRouter.tsx
+~ frontend/src/features/auth/api/authApi.ts
+~ frontend/src/features/auth/pages/AuthCallbackPage.tsx
+~ frontend/src/features/auth/pages/LoginPage.tsx
+~ frontend/src/locales/en/auth.json
+~ frontend/src/locales/fa/auth.json
+~ frontend/src/shared/styles/globals.css
+
+REMOVED (0)
+
+R10-specific changes
++ docs/registration/R10_FINAL_ACCEPTANCE.md
++ docs/registration/R10_CHANGED_FILES.txt
+~ GRADIAN_REGISTRATION_TASKS.md
+~ GRADIAN_SESSION_CONTEXT.md
+
+No product-code file was changed by R10 itself.

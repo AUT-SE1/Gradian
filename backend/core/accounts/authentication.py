@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 from typing import Any
 
 from accounts.errors import AccountDisabledError
-from accounts.models import Profile
 from accounts.principals import CoreUserPrincipal
 from accounts.profiles import grant_default_role, sync_profile
 from gradian_auth.claims import extract_roles
@@ -24,15 +23,13 @@ def build_principal(claims: Mapping[str, Any]) -> Principal:
         return principal
 
     identity = principal.identity
-    registered_just_now = not any(role in PANEL_ROLES for role in extract_roles(claims)) and not (
-        Profile.objects.filter(sub=identity.sub).exists()
-    )
+    token_has_panel_role = any(role in PANEL_ROLES for role in extract_roles(claims))
     iat = claims.get("iat")
     issued_at = datetime.fromtimestamp(iat, UTC) if isinstance(iat, int | float) else None
     profile = sync_profile(identity, issued_at)
-    if registered_just_now:
-        grant_default_role(str(identity.sub))
     if not profile.is_active:
         logger.info("disabled account refused", extra={"event": "account_disabled"})
         raise AccountDisabledError
+    if not token_has_panel_role:
+        grant_default_role(str(identity.sub))
     return CoreUserPrincipal(identity=identity, panel=principal.panel, profile=profile)

@@ -12,6 +12,7 @@
   "editUsernameAllowed": false,
   "verifyEmail": false,
   "rememberMe": true,
+  "passwordPolicy": "length(8)",
 
   "accessTokenLifespan": 600,
   "ssoSessionIdleTimeout": 1800,

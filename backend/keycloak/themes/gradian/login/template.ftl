@@ -18,7 +18,11 @@
       <h1><#nested "header"></h1>
     </header>
     <#if displayMessage && message?has_content && (message.type != "warning" || !isAppInitiatedAction??)>
-      <div class="alert alert-${message.type}">${kcSanitize(message.summary)?no_esc}</div>
+      <#if message.type == "error">
+        <div class="alert alert-${message.type}" role="alert" aria-live="assertive" aria-atomic="true">${kcSanitize(message.summary)?no_esc}</div>
+      <#else>
+        <div class="alert alert-${message.type}" role="status" aria-live="polite" aria-atomic="true">${kcSanitize(message.summary)?no_esc}</div>
+      </#if>
     </#if>
     <#nested "form">
     <#if displayInfo>

@@ -1,13 +1,24 @@
-import { Link } from 'react-router-dom';
+import { countdownText } from '@/features/portal/api/panelAdapters';
+import { usePanelServices, useStudentDashboard } from '../hooks/usePanelData';
+import { serviceKeys } from '../api/serviceRoutes';
+import { ServiceLink } from './ServiceLink';
+import { serviceStateKey } from '../api/serviceNavigation';
+import { serviceHref } from '../api/panelApi';
+import { PanelDataState } from './PanelDataState';
 import { useTranslation } from 'react-i18next';
 import type { PortalRole } from '@/shared/types/portal';
 import { dashboardCards } from '@/features/portal/config/portalContent';
 import { PortalIcon } from './PortalIcon';
-
-const postKeys = ['rahbar', 'amirhossein', 'zahra'] as const;
+import { StudentIcon } from './StudentIcon';
 
 export function PortalHome({ portal }: { portal: PortalRole }) {
-  const { t } = useTranslation('portal');
+  const { t, i18n } = useTranslation('portal');
+  const { t: tn } = useTranslation('navigation');
+  const services = usePanelServices();
+  const dashboard = useStudentDashboard();
+  const data = dashboard.isError ? undefined : dashboard.data;
+  const community = !services.isError && !services.isPending ? services.data?.find(entry => entry.key === serviceKeys['/student/community']) : undefined;
+  const number = (value: number) => value.toLocaleString(i18n.language);
 
   if (portal !== 'student') {
     return <div className="management-empty-canvas"><span className="sr-only">{t(`home.${portal}.title`)}</span></div>;
@@ -15,67 +26,72 @@ export function PortalHome({ portal }: { portal: PortalRole }) {
 
   return (
     <div className="student-dashboard-page">
+      <PanelDataState pending={dashboard.isPending} error={dashboard.error} retry={dashboard.refetch} />
       <section className="student-welcome-card">
         <div className="student-welcome-copy">
-          <h1>{t('studentDashboard.welcomeTitle')}</h1>
-          <p>{t('studentDashboard.welcomeSubtitle')}</p>
+          <h1>{data?.welcome?.message ?? t('home.student.title')}</h1>
+          {data?.welcome?.tip && <p>{data.welcome.tip}</p>}
         </div>
         <div className="student-welcome-widgets">
-          <article><span>◇</span><div><small>{t('studentDashboard.streakLabel')}</small><strong>۱۸ {t('studentDashboard.day')}</strong></div></article>
-          <article><span>▣</span><div><small>{t('studentDashboard.countdownLabel')}</small><strong>۹۴ {t('studentDashboard.day')}</strong></div></article>
+          <article><span><StudentIcon name="streak" /></span><div><small>{t('studentDashboard.streakLabel')}</small><strong title={data?.study_streak?.message}>{data?.study_streak ? `${number(data.study_streak.current_days)} ${t('studentDashboard.day')}` : t('studentDashboard.widgetUnavailable')}</strong></div></article>
+          <article><span><PortalIcon name="calendar" size={20} /></span><div><small>{t('studentDashboard.countdownLabel')}</small><strong>{data?.countdown ? countdownText(data.countdown, i18n.language) : tn('countdownUnavailable')}</strong></div></article>
         </div>
       </section>
 
       <div className="student-section-heading">
-        <span>⌘</span><h2>{t('studentDashboard.servicesTitle')}</h2>
+        <span><StudentIcon name="grid" /></span><h2>{t('studentDashboard.servicesTitle')}</h2>
       </div>
 
+      <PanelDataState pending={services.isPending} error={services.error} retry={services.refetch} empty={services.data?.length === 0} />
       <section className="student-service-grid">
-        {dashboardCards.student.map((card) => {
+        {!services.isPending && !services.isError && services.data?.length !== 0 && dashboardCards.student.map((card) => {
+          const service = services.data?.find(entry => entry.key === serviceKeys[card.path]);
+          const href = serviceHref(service);
           const content = (
             <>
               <div className="student-service-card-top">
                 <span className={`service-icon service-icon--${card.accent || 'blue'}`}><PortalIcon name={card.icon} size={18} /></span>
-                <small>{card.eyebrowKey ? t(card.eyebrowKey) : ''}</small>
+                <small>{!href ? tn(serviceStateKey(services, service)) : ''}</small>
               </div>
               <h3>{t(card.titleKey)}</h3>
-              <p>{t(card.descriptionKey)}</p>
+              <p>{service?.description || t(card.descriptionKey)}</p>
               <div className="student-service-card-footer">
-                <span>{card.metaKey ? t(card.metaKey) : ''}</span>
-                <strong>{card.actionKey ? t(card.actionKey) : ''} ←</strong>
+                <span aria-hidden="true" />
+                <strong>{href ? (service?.button_label || (card.actionKey ? t(card.actionKey) : '')) : tn('serviceUnavailable')} {href ? '←' : ''}</strong>
               </div>
             </>
           );
-          return card.serviceUrl ? (
-            <a className="student-service-card" href={card.serviceUrl} key={card.titleKey}>{content}</a>
-          ) : (
-            <Link className="student-service-card" to={card.path} key={card.titleKey}>{content}</Link>
-          );
+          return <ServiceLink className={`student-service-card student-service-card--${card.accent}`} service={service} path={card.path} key={card.titleKey}>{content}</ServiceLink>;
         })}
       </section>
 
       <section className="student-community-section">
         <div className="student-community-heading">
-          <div><span>▣</span><h2>{t('studentDashboard.communityTitle')}</h2></div>
-          <div className="student-community-tabs"><span className="active">{t('studentDashboard.tabTop')}</span><span>{t('studentDashboard.tabMy')}</span><span>{t('studentDashboard.tabAll')}</span></div>
+          <div><span><StudentIcon name="community" /></span><h2>{t('studentDashboard.communityTitle')}</h2></div>
+          </div>
+        <div className="student-community-controls">
+          <div className="student-community-tabs" role="group" aria-label={t('studentDashboard.communityTitle')}>
+            {['tabTop', 'tabMy', 'tabAll'].map((tab, index) => <button key={tab} type="button" disabled className={index === 0 ? 'active' : undefined}>{t(`studentDashboard.${tab}`)}</button>)}
+          </div>
+          <small className="student-preview-note">{t('studentDashboard.previewNotice')}</small>
         </div>
+        {!dashboard.isPending && !dashboard.isError && <PanelDataState pending={false} error={null} retry={dashboard.refetch} empty={!data?.experience_feed?.length} />}
         <div className="student-post-grid">
-          {postKeys.map((key, index) => (
-            <article className="student-post-card" key={key}>
+          {data?.experience_feed?.map((post, index) => (
+            <article className="student-post-card" key={post.id}>
               <div className="post-author-row">
-                <span className={`post-avatar post-avatar--${index + 1}`}>{t(`studentDashboard.posts.${key}.initial`)}</span>
-                <div><strong>{t(`studentDashboard.posts.${key}.name`)}</strong><small>{t(`studentDashboard.posts.${key}.meta`)}</small></div>
+                <span className={`post-avatar post-avatar--${index % 3 + 1}`} aria-hidden="true">{Array.from(post.author.trim())[0]}</span>
+                <div><strong>{post.author}</strong><small>{post.author_title}</small></div>
               </div>
-              <h3>{t(`studentDashboard.posts.${key}.title`)}</h3>
-              <p>{t(`studentDashboard.posts.${key}.text`)}</p>
-              <small className="post-tags">{t(`studentDashboard.posts.${key}.tags`)}</small>
-              <div className="post-stats"><span>♡ {index === 0 ? '۳۳۹' : index === 1 ? '۷۳' : '۵۳'}</span><span>□ {index === 0 ? '۶۵' : index === 1 ? '۳۳' : '۲۸'}</span><span>⌑</span></div>
+              <h3>{post.title}</h3>
+              <p>{post.excerpt}</p>
+              <div className="post-stats" aria-label={t('studentDashboard.previewStats')}><span><StudentIcon name="heart" /> {number(post.likes)}</span><span><StudentIcon name="comment" /> {number(post.comments)}</span></div>
             </article>
           ))}
         </div>
-        <a className="student-community-cta" href="http://localhost:8010/app">
-          <span>{t('studentDashboard.communityCta')}</span><strong>{t('studentDashboard.communityAction')} ←</strong>
-        </a>
+        <ServiceLink className="student-community-cta" service={community} path="/student/community">
+          <span>{t('studentDashboard.communityCta')}</span><strong>{serviceHref(community) ? `${t('studentDashboard.communityAction')} ←` : tn(serviceStateKey(services, community))}</strong>
+        </ServiceLink>
       </section>
     </div>
   );

@@ -2,7 +2,8 @@ import type { PortalRole } from '@/shared/types/portal';
 
 export type NavigationIcon =
   | 'home' | 'exam' | 'book' | 'calendar' | 'users' | 'chart' | 'message'
-  | 'briefcase' | 'video' | 'star' | 'plus' | 'store' | 'settings' | 'target';
+  | 'briefcase' | 'video' | 'star' | 'plus' | 'store' | 'settings' | 'target'
+  | 'course' | 'classroom' | 'dashboard' | 'experience' | 'help' | 'headset' | 'library' | 'alarm' | 'verified';
 
 export type NavigationItem = {
   id: string;
@@ -31,23 +32,23 @@ export const portalNavigation: Record<PortalRole, NavigationItem[]> = {
     { id: 'community', labelKey: 'menu.community', path: '/student/community', icon: 'users' },
   ],
   instructor: [
-    { id: 'progress', labelKey: 'menu.educationalProgress', path: '/instructor/progress', icon: 'chart' },
+    { id: 'progress', labelKey: 'menu.educationalProgress', path: '/instructor/progress', icon: 'dashboard' },
     { id: 'questions', labelKey: 'menu.questionManagement', path: '/instructor/questions', icon: 'exam' },
-    { id: 'courses', labelKey: 'menu.courseCreation', path: '/instructor/courses', icon: 'video' },
-    { id: 'private-class', labelKey: 'menu.privateClass', path: '/instructor/private-class', icon: 'users' },
-    { id: 'resources', labelKey: 'menu.resourceHub', path: '/instructor/resources', icon: 'book' },
+    { id: 'courses', labelKey: 'menu.courseCreation', path: '/instructor/courses', icon: 'course' },
+    { id: 'private-class', labelKey: 'menu.privateClass', path: '/instructor/private-class', icon: 'classroom' },
+    { id: 'resources', labelKey: 'menu.resourceHub', path: '/instructor/resources', icon: 'library' },
   ],
   counsellor: [
-    { id: 'students', labelKey: 'menu.studentReports', path: '/counsellor/students', icon: 'chart' },
-    { id: 'experiences', labelKey: 'menu.experiences', path: '/counsellor/experiences', icon: 'message' },
-    { id: 'troubleshooting', labelKey: 'menu.troubleshooting', path: '/counsellor/troubleshooting', icon: 'book' },
-    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/counsellor/sessions', icon: 'message' },
-    { id: 'resources', labelKey: 'menu.resourceHub', path: '/counsellor/resources', icon: 'book' },
+    { id: 'students', labelKey: 'menu.studentReports', path: '/counsellor/students', icon: 'dashboard' },
+    { id: 'experiences', labelKey: 'menu.experiences', path: '/counsellor/experiences', icon: 'experience' },
+    { id: 'troubleshooting', labelKey: 'menu.troubleshooting', path: '/counsellor/troubleshooting', icon: 'help' },
+    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/counsellor/sessions', icon: 'headset' },
+    { id: 'resources', labelKey: 'menu.resourceHub', path: '/counsellor/resources', icon: 'library' },
   ],
   admin: [
     { id: 'exams', labelKey: 'menu.examBank', path: '/admin/exams', icon: 'exam' },
-    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/admin/sessions', icon: 'message' },
-    { id: 'products', labelKey: 'menu.products', path: '/admin/products', icon: 'store' },
+    { id: 'sessions', labelKey: 'menu.consultationSessions', path: '/admin/sessions', icon: 'headset' },
+    { id: 'products', labelKey: 'menu.products', path: '/admin/products', icon: 'library' },
   ],
 };
 

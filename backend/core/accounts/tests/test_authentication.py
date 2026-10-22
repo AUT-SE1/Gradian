@@ -108,6 +108,34 @@ class RoleResolutionTests(ApiTestCase):
         self.get_as(ME, roles=())
         self.assertEqual(len(self.idp.granted), 1)  # only on first sight
 
+    def test_roleless_grant_failure_is_502_and_the_next_request_retries(self) -> None:
+        self.idp.fail_with = KeycloakError("down")
+        failed = self.get_as(ME, roles=())
+        self.assertEqual(failed.status_code, 502)
+        self.assertEqual(failed.json()["code"], "identity_provider_unavailable")
+        # Profile creation happened before the provider write, so retry must not depend on
+        # "first sight" or the role could be lost forever.
+        self.assertTrue(Profile.objects.filter(sub=SUB).exists())
+        self.assertEqual(self.idp.granted, [])
+
+        self.idp.fail_with = None
+        recovered = self.get_as(ME, roles=())
+        self.assertEqual(recovered.status_code, 200)
+        self.assertEqual(recovered.json()["panel"], "student")
+        self.assertEqual(self.idp.granted, [(str(SUB), "student")])
+
+    def test_existing_profile_with_a_roleless_token_still_ensures_student(self) -> None:
+        self.assertEqual(self.get_as(ME, roles=("student",)).status_code, 200)
+        self.assertEqual(self.idp.granted, [])
+        self.assertEqual(self.get_as(ME, roles=()).status_code, 200)
+        self.assertEqual(self.idp.granted, [(str(SUB), "student")])
+
+    def test_fresh_student_token_after_relogin_needs_no_default_role_write(self) -> None:
+        self.assertEqual(self.get_as(ME, roles=()).status_code, 200)
+        self.assertEqual(len(self.idp.granted), 1)
+        self.assertEqual(self.get_as(ME, roles=("student",)).status_code, 200)
+        self.assertEqual(len(self.idp.granted), 1)
+
     def test_two_panel_roles(self) -> None:
         response = self.get_as(ME, roles=("student", "admin"))
         self.assertEqual(response.status_code, 403)

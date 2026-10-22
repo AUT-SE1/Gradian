@@ -14,10 +14,14 @@ NAME_MAX_LENGTH = 100
 
 
 def is_valid_name(value: str) -> bool:
-    """1 to 100 characters: Unicode letters and marks, spaces and ZWNJ (section 3.1)."""
+    """1 to 100 characters, with at least one Unicode letter/mark; spaces and ZWNJ are allowed."""
     if not value or len(value) > NAME_MAX_LENGTH:
         return False
-    return all(unicodedata.category(ch)[0] in {"L", "M"} or ch in {" ", "\u200c"} for ch in value)
+    categories = [unicodedata.category(ch)[0] for ch in value]
+    return any(category in {"L", "M"} for category in categories) and all(
+        category in {"L", "M"} or ch in {" ", "\u200c"}
+        for ch, category in zip(value, categories, strict=True)
+    )
 
 
 @dataclass(frozen=True)

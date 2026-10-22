@@ -21,7 +21,7 @@
       "required": {"roles": ["admin", "user"]},
       "validations": {
         "length": {"min": 1, "max": 100},
-        "pattern": {"pattern": "^[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام فقط می‌تواند شامل حروف باشد."}
+        "pattern": {"pattern": "^(?=.*[\\p{L}\\p{M}])[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام فقط می‌تواند شامل حروف باشد."}
       },
       "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
     },
@@ -31,7 +31,7 @@
       "required": {"roles": ["admin", "user"]},
       "validations": {
         "length": {"min": 1, "max": 100},
-        "pattern": {"pattern": "^[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام خانوادگی فقط می‌تواند شامل حروف باشد."}
+        "pattern": {"pattern": "^(?=.*[\\p{L}\\p{M}])[\\p{L}\\p{M}\\u200c ]+$", "error-message": "نام خانوادگی فقط می‌تواند شامل حروف باشد."}
       },
       "permissions": {"view": ["admin", "user"], "edit": ["admin", "user"]}
     },

@@ -18,6 +18,7 @@ class FakeIdentityAdmin:
         self.roles: list[tuple[str, str, str]] = []
         self.enabled: list[tuple[str, bool]] = []
         self.granted: list[tuple[str, str]] = []
+        self.assigned_roles: dict[str, set[str]] = {}
 
     def update_user(self, sub: str, changes: Mapping[str, str]) -> None:
         if self.fail_with:
@@ -44,6 +45,14 @@ class FakeIdentityAdmin:
         if self.fail_with:
             raise self.fail_with
         self.granted.append((sub, role))
+        self.assigned_roles.setdefault(sub, set()).add(role)
+
+    def ensure_role(self, sub: str, role: str) -> None:
+        if self.fail_with:
+            raise self.fail_with
+        if role in self.assigned_roles.get(sub, set()):
+            return
+        self.grant_role(sub, role)
 
     def list_panel_users(self) -> list[KeycloakUser]:
         if self.fail_with:

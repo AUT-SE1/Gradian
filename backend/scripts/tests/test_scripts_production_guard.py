@@ -69,6 +69,27 @@ class RenderRealmTests(unittest.TestCase):
         self.assertLessEqual(self.template["accessTokenLifespan"], 600)
         self.assertEqual(self.template["failureFactor"], 5)
 
+    def test_registration_identity_rules_are_enforced_by_keycloak_config(self) -> None:
+        self.assertEqual(self.template["passwordPolicy"], "length(8)")
+        self.assertFalse(self.template["duplicateEmailsAllowed"])
+
+        attributes = {attribute["name"]: attribute for attribute in self.profile["attributes"]}
+        self.assertEqual(
+            attributes["username"]["validations"]["pattern"]["pattern"], r"^09\d{9}$"
+        )
+        expected_name_pattern = r"^(?=.*[\p{L}\p{M}])[\p{L}\p{M}\u200c ]+$"
+        for field in ("firstName", "lastName"):
+            with self.subTest(field=field):
+                attribute = attributes[field]
+                self.assertEqual(attribute["required"]["roles"], ["admin", "user"])
+                self.assertEqual(
+                    attribute["validations"]["pattern"]["pattern"], expected_name_pattern
+                )
+        self.assertEqual(attributes["email"]["required"]["roles"], ["admin", "user"])
+        self.assertIn("email", attributes["email"]["validations"])
+        self.assertEqual(attributes["mobile"]["permissions"]["edit"], ["admin"])
+        self.assertEqual(attributes["consultant_type"]["permissions"]["edit"], ["admin"])
+
     def test_web_client_uses_pkce_and_no_password_grant(self) -> None:
         web = next(c for c in self.template["clients"] if c["clientId"] == "gradian-web")
         self.assertTrue(web["publicClient"])
