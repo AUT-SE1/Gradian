@@ -154,6 +154,47 @@ async function completeLogin(): Promise<AuthSession> {
     // retry always starts a fresh PKCE flow and a repeated callback cannot consume it again.
     clearCallbackAttempt(sessionStorage);
   }
+
+  const config = await getConfig();
+  const tokenEndpoint = `${config.issuer}/protocol/openid-connect/token`;
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: config.client_id,
+    redirect_uri: callbackUrl(),
+    code,
+    code_verifier: verifier,
+  });
+
+  const tokenResponse = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  if (!tokenResponse.ok) throw new Error('Token exchange failed.');
+  const tokens = await tokenResponse.json() as TokenResponse;
+
+  sessionStorage.removeItem(PKCE_VERIFIER_KEY);
+  sessionStorage.removeItem(OIDC_STATE_KEY);
+
+  const me = await httpClient.get<Me>('/me', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+  const primaryRole = Object.hasOwn(roleMap, me.panel) ? roleMap[me.panel] : undefined;
+  if (!primaryRole) throw new Error('Unsupported account role.');
+
+  const session: AuthSession = {
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token,
+    idToken: tokens.id_token,
+    expiresAt: Date.now() + (tokens.expires_in * 1000),
+    user: {
+      id: me.sub,
+      displayName: me.full_name || me.mobile,
+      primaryRole,
+    },
+  };
+  if (!isUsableSession(session)) throw new Error('Invalid authentication response.');
+  return session;
 }
 
 function finishLogin(): Promise<AuthSession> {

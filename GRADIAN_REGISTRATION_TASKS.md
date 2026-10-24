@@ -1,12 +1,12 @@
 # برنامه مرحله‌ای ثبت‌نام گرادیان
 
-تاریخ: 2026-10-21 — نسخه 1.8 — مرور نهایی R10 انجام شد؛ release candidate آماده است ولی پذیرش نهایی به R02/build/browser/live وابسته و هنوز باز است.
+تاریخ: 2026-10-20 — نسخه 1.0 — فقط برنامه‌ریزی؛ هیچ تسک پیاده‌سازی اجرا نشده است.
 
 ## دستور اصلی برای سشن جدید
 
 این سند برای تکمیل ثبت‌نام در پروژه موجود است. هر بار فقط تسک R انتخاب‌شده را انجام بده؛ پروژه، احراز هویت و داشبوردها را از صفر نساز. ابتدا همین سند، `GRADIAN_SESSION_CONTEXT.md` و آخرین کد را بخوان. `GRADIAN_DASHBOARD_TASKS.md` فقط سابقه و مرز کار داشبوردهاست؛ شناسه‌های R مستقل از T هستند.
 
-اگر تنها این فایل موجود است، درباره مشاهده کد یا طرح ادعا نکن. برای اجرا، آخرین zip/checkout لازم است. شواهد baseline اولیه از `Gradian(20261020-125433).zip` تهیه شده بودند؛ R01 با ورودی تازه `Gradian-main (2).zip` دوباره روی کد جاری ممیزی شد و کد تازه بر گزارش قبلی مقدم است.
+اگر تنها این فایل موجود است، درباره مشاهده کد یا طرح ادعا نکن. برای اجرا، آخرین zip/checkout لازم است. شواهد این نسخه از `Gradian(20261020-125433).zip` استخراج شده‌اند؛ در سشن بعد کد تازه بر این گزارش مقدم است.
 
 وضعیت‌ها: TODO، IN_PROGRESS، BLOCKED_DESIGN، BLOCKED_API و DONE. مانع محیط زنده را جدا در گزارش ذکر کن؛ شبیه‌سازی موفق جای پذیرش زنده نیست. تسک فقط با تکمیل معیار پذیرش DONE می‌شود. وابستگی‌ها به معنی اجرای خودکار چند تسک در یک سشن نیستند.
 
@@ -43,7 +43,7 @@
 
 ### اختلاف‌های مهم مستندات و اجرا
 
-1. R01 نشان داد README قالب حداقل رمز ۸ کاراکتر را می‌گوید ولی template آن را enforce نمی‌کرد. در R03 و پس از تأیید صریح کاربر، `passwordPolicy=length(8)` به `realm-template.json` اضافه شد. اعمال روی realm زنده موجود هنوز باید بدون حذف volume تأیید شود.
+1. README قالب، حداقل رمز ۸ کاراکتر را می‌گوید، اما در `realm-template.json` بررسی‌شده `passwordPolicy` وجود ندارد. min_length در `UserCreateSerializer` مربوط به API ادمین است و سیاست self-registration را ثابت نمی‌کند. R01 سیاست واقعی را مشخص کند و R03 آن را در Keycloak اعمال/تأیید کند.
 2. `user-profile.json` برای username الگوی `^09\d{9}$` دارد؛ نرمال‌سازی ارقام فارسی/عربی و پیشوند +98/0098 در `gradian_auth/mobile.py` برای بک‌اند وجود دارد، اما این به معنی پشتیبانی فرم Keycloak از همان ورودی‌ها نیست. رفتار فرم باید صریح تعیین و آزمایش شود؛ در حالت فعلی راهنمای شماره استاندارد با ارقام انگلیسی لازم است.
 3. macro مشترک `register.ftl` مقدار `register.formData[name]` را برای همه فیلدها، حتی نوع password، به input می‌دهد. R05 باید بازپرکردن رمز و تکرار رمز را حذف کند؛ رمز در HTML پاسخ، log یا storage بازتاب داده نشود.
 4. اعطای student بعد از صدور توکن اولیه رخ می‌دهد؛ توکن موجود خودکار تغییر نمی‌کند. سازگاری با سرویس‌های دیگر نیازمند آزمون مستقل R07 است؛ موفقیت داشبورد Core معادل SSO همه سرویس‌ها نیست.
@@ -60,39 +60,32 @@
 
 | فیلد فرم Keycloak | مرجع | انتظار |
 | --- | --- | --- |
-| firstName و lastName | `keycloak/user-profile.json` و قواعد نام در claims | الزامی، ۱ تا ۱۰۰، حروف Unicode/علامت ترکیبی/فاصله/نیم‌فاصله؛ از R03 حداقل یک letter/mark لازم است و فقط فاصله/ZWNJ رد می‌شود. |
+| firstName و lastName | `keycloak/user-profile.json` و قواعد نام در claims | الزامی، ۱ تا ۱۰۰، حروف Unicode/علامت ترکیبی/فاصله/نیم‌فاصله؛ ورودی صرفاً فاصله در R03 با Core سازگار شود. |
 | username | `user-profile.json` | موبایل استاندارد `09` و ۹ رقم بعد؛ یکتا. پذیرش شکل‌های دیگر فقط پس از تعیین رفتار R01. |
 | email | user profile و تنظیم duplicateEmailsAllowed | الزامی، آدرس معتبر، حداکثر ۲۵۴ و یکتا؛ پیام خطای واقعی ارائه‌دهنده نمایش یابد. |
-| password | سیاست اجرایی Keycloak | الزامی؛ از R03 template دارای `passwordPolicy=length(8)` است. قواعد اضافی پیچیده اختراع نشود؛ پذیرش live realm جداگانه باقی است. |
+| password | سیاست اجرایی Keycloak | الزامی؛ سیاست حداقل ۸ در مستندات نیازمند تطبیق اجرایی R03 است. قواعد اضافی پیچیدگی اختراع نشود. |
 | password-confirm | جریان ثبت‌نام Keycloak | برابر رمز؛ پس از خطا خالی و بدون value بازتاب‌شده. |
 | role و consultant_type | مدیریت هویت | در ثبت‌نام عمومی قابل انتخاب/اعطای دلخواه نباشند. |
 | field_of_study | `PATCH /me` در Core | جزء فرم پایه نیست؛ افزودن فقط با تصمیم/طرح و تسک مستقل. |
 
 ## ترتیب و وضعیت تسک‌ها
 
-| شناسه | عنوان | اولویت | وابستگی | وضعیت جاری |
+| شناسه | عنوان | اولویت | وابستگی | وضعیت اولیه |
 | --- | --- | --- | --- | --- |
-| R01 | ممیزی و تثبیت قرارداد ثبت‌نام | P0 | آخرین کد | DONE |
+| R01 | ممیزی و تثبیت قرارداد ثبت‌نام | P0 | آخرین کد | TODO |
 | R02 | تثبیت مرجع بصری و حالت‌های UX | P0 | R01 | BLOCKED_DESIGN |
-| R03 | سازگاری قواعد Keycloak و هویت Core | P0 | R01 | IN_PROGRESS (IMPLEMENTED / PENDING_LIVE) |
-| R04 | شروع ثبت‌نام با PKCE در لایه Auth | P1 | R01 | DONE |
-| R05 | تکمیل فرم و قالب واقعی Keycloak | P1 | R02، R03 | IN_PROGRESS (FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_LIVE) |
-| R06 | مسیر عمومی و ورودی‌های ثبت‌نام | P1 | R02، R04 | IN_PROGRESS (FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_BROWSER) |
-| R07 | callback، نقش دانشجو و نشست پس از ثبت‌نام | P0 | R03، R04 | IN_PROGRESS (IMPLEMENTED / PENDING_LIVE) |
-| R08 | خطاها، دسترس‌پذیری و حالت‌های نمایش | P1 | R05، R06، R07 | IN_PROGRESS (FUNCTIONAL HARDENED / BLOCKED_DESIGN / PENDING_BROWSER_LIVE) |
-| R09 | آزمون یکپارچه و regression | P1 | R08 | IN_PROGRESS (STATIC/CONTRACT PRECHECK COMPLETE / BLOCKED_BY_R08 / PENDING_BUILD_BROWSER_LIVE) |
-| R10 | پذیرش نهایی و تحویل مرحله ثبت‌نام | P1 | R09 و همه معیارهای مستقل | IN_PROGRESS (RELEASE-CANDIDATE REVIEW COMPLETE / FINAL ACCEPTANCE BLOCKED) |
+| R03 | سازگاری قواعد Keycloak و هویت Core | P0 | R01 | TODO |
+| R04 | شروع ثبت‌نام با PKCE در لایه Auth | P1 | R01 | TODO |
+| R05 | تکمیل فرم و قالب واقعی Keycloak | P1 | R02، R03 | TODO |
+| R06 | مسیر عمومی و ورودی‌های ثبت‌نام | P1 | R02، R04 | TODO |
+| R07 | callback، نقش دانشجو و نشست پس از ثبت‌نام | P0 | R03، R04 | TODO |
+| R08 | خطاها، دسترس‌پذیری و حالت‌های نمایش | P1 | R05، R06، R07 | TODO |
+| R09 | آزمون یکپارچه و regression | P1 | R08 | TODO |
+| R10 | پذیرش نهایی و تحویل مرحله ثبت‌نام | P1 | R09 و همه معیارهای مستقل | TODO |
 
 مانع طراحی، R01/R03/R04 و بخش مستقل R07 را متوقف نمی‌کند. تسک وابسته پیش از آمادگی پیش‌نیاز انتخاب نشود. R05/R06 بدون مرجع با سلیقه عامل نهایی نشوند.
 
 ## R01 — ممیزی و تثبیت قرارداد ثبت‌نام
-
-- وضعیت: **DONE** در 2026-10-21 برای ورودی `Gradian-main (2).zip`.
-- نتیجه: authApi/router/Landing، قالب‌ها و پیکربندی Keycloak، realm/user-profile/render، claims/mobile/roles و sync profile ممیزی شدند؛ کد محصول تغییر نکرد. گزارش کامل: `docs/registration/R01_BASELINE.md`.
-- یافته‌های کلیدی R01 (تاریخی، پیش از R03): `/register` و شروع registration در React هنوز وجود ندارند؛ `registration_endpoint` فقط در config حاضر است؛ login.ftl برخلاف README لینک ثبت‌نام ندارد؛ در baseline آن زمان realm template `passwordPolicy` نداشت و نام فقط فاصله با Core ناسازگار بود؛ register.ftl مقدار password را مثل سایر فیلدها بازتاب می‌داد؛ grant اولیه student در صورت شکست مسیر retry تضمین‌شده نداشت. دو مورد policy رمز و نام در R03 در سطح کد/config اصلاح شدند و پذیرش live باقی است.
-- وضعیت محیط: JSONهای realm/user-profile parse شدند؛ realm زنده، build/lint و self-registration زنده اجرا نشدند و موفق اعلام نمی‌شوند.
-- تصمیم سیاست رمز در 2026-10-21 بسته شد: حداقل ۸ کاراکتر سیاست رسمی self-registration است. R03 آن را در template پیاده‌سازی کرده است.
-- قدم بعد پیشنهادی: پذیرش زنده R03 روی realm موجود با روش غیرمخرب و/یا تأمین مرجع R02. R04 انجام شده است؛ R05/R06 بدون مرجع R02 نهایی نشوند.
 
 - محدوده: آخرین authApi، router، Landing، قالب‌ها، realm، user profile، render_realm، مدل/serializer، claims، نقش و sync profile خوانده شوند. کد محصول تغییر نکند.
 - کار: endpointها و خطاهای واقعی، سیاست رمز، فرمت موبایل، مقدارهای الزامی و رفتار نشست موجود ثبت شوند. اختلاف README و کد را با اولویت کد روشن کن. تنظیمات فایل، realm اجراشده و تصمیم محصول را جدا ثبت کن.
@@ -108,7 +101,6 @@
 
 ## R03 — سازگاری قواعد Keycloak و هویت Core
 
-- وضعیت: **IN_PROGRESS (IMPLEMENTED / PENDING_LIVE)** در 2026-10-21. تصمیم محصول حداقل رمز ۸ کاراکتر تأیید و در `realm-template.json` با `passwordPolicy=length(8)` اعمال شد. name pattern در user-profile و validator Core هم‌تراز شدند تا ورودی فقط فاصله/ZWNJ رد شود. تست استاتیک جدید ۴ مورد موفق است. گزارش: `docs/registration/R03_IDENTITY_RULES.md`. Keycloak زنده در این محیط اجرا نشد؛ بنابراین تا رد واقعی رمز کوتاه/نام نامعتبر/تکرار موبایل و ایمیل روی realm موجود مشاهده نشود، R03 DONE نیست.
 - کار: قواعد نام/موبایل/ایمیل، الزامی‌بودن فیلدها و سیاست رمز واقعی با قرارداد R01 تطبیق داده شوند. اعتبارسنجی باید سمت ارائه‌دهنده انجام شود، نه صرفاً HTML. شماره معتبر فرم باید هویت قابل قبول Core بسازد.
 - مسیرهای محتمل: `backend/keycloak/user-profile.json`، `realm-template.json`، `scripts/render_realm.py` و تست مرتبط. فقط فایل واقعاً لازم تغییر کند؛ بازنویسی principal/مجوزها پیش‌فرض نیست.
 - معیار پذیرش: نام معتبر فارسی و نیم‌فاصله قبول؛ خالی/فقط فاصله و مقدار نامعتبر رد؛ شماره/ایمیل تکراری و رمز خلاف سیاست با خطای واقعی رد شوند. ایمیل و نام‌های ثبت‌شده در claims مورد نیاز Core حاضر باشند؛ role/subtype با ورودی عمومی قابل ارتقا نباشد.
@@ -117,13 +109,6 @@
 
 ## R04 — شروع ثبت‌نام با PKCE در لایه Auth
 
-- وضعیت: **DONE** در 2026-10-21 روی خروجی R03. گزارش: `docs/registration/R04_PKCE_START.md`.
-- نتیجه: `authApi.beginRegistration()` اضافه شد و ورود/ثبت‌نام هر دو از helper مشترک `authFlow.ts` برای تولید verifier/state، S256 و پارامترهای Authorization Code استفاده می‌کنند. endpoint ثبت‌نام فقط از `registration_endpoint` config گرفته می‌شود و قبل از ذخیره PKCE/redirect با issuer از نظر protocol/origin/path سازگار می‌شود.
-- همزمانی: یک lock مشترک شروع login/registration مانع overwrite شدن verifier/state در double click یا اجرای دوباره effect می‌شود؛ در شکست config یا URL نامعتبر lock آزاد می‌شود و retry تازه مجاز است. در موفقیت تا navigation قفل باز نمی‌شود.
-- امنیت: verifier فقط در `sessionStorage` می‌ماند و در URL نیست؛ secret/password/token تازه‌ای وارد این flow نشده و logging حساس اضافه نشده است. callback موجود و token exchange حفظ شدند.
-- آزمون اجراشده: `frontend/tests/r04-auth-flow.cjs` با source واقعی `authFlow.ts`، شش گروه سناریو را پوشش داد و موفق شد: URL/challenge، state/verifier تازه، شروع همزمان، retry پس از config failure، endpoint ناسازگار، و regression ورود عادی. این تست اثبات رندر فرم زنده Keycloak نیست.
-- خارج از R04: `/register` و CTA عمومی هنوز در R06 هستند؛ template فرم در R05 است؛ ساخت حساب در backend اضافه نشد و dependency جدیدی نصب نشد.
-
 - کار: در authApi موجود، شروع ثبت‌نام افزوده شود؛ منطق مشترک تولید verifier/state و پارامترهای OIDC با ورود بازاستفاده شود. endpoint از config بیاید و سازگاری URL/issuer پیش از انتقال بررسی شود.
 - کار: double click و اجرای effect در StrictMode درخواست‌های موازی متناقض نسازد؛ شکست شروع، قفل جریان را آزاد و retry را ممکن کند. URL، client secret، رمز و توکن در log افشا نشوند.
 - معیار پذیرش: درخواست به endpoint واقعی registration با S256 و state تازه ساخته شود؛ redirect_uri با callback ثبت‌شده برابر باشد؛ verifier در URL نباشد. شکست config/URL نامعتبر قابل بازیابی باشد. ورود عادی همچنان authorization endpoint را مصرف کند؛ بدون نصب کتابخانه جدید یا backend ساخت حساب تازه.
@@ -131,29 +116,19 @@
 
 ## R05 — تکمیل فرم و قالب واقعی Keycloak
 
-- وضعیت: **IN_PROGRESS (FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_LIVE)** در 2026-10-21 روی خروجی R04. گزارش: `docs/registration/R05_KEYCLOAK_FORM.md`.
-- انجام‌شده: قرارداد `url.registrationAction`/نام فیلدها حفظ شد؛ retry فقط داده‌های غیرحساس را repopulate می‌کند و هر دو password بدون `value` و با `autocomplete=new-password` هستند؛ خطاهای field/general sanitize و به input مرتبط شدند؛ label/required/focus-visible/autocomplete/inputmode و responsive پایه تکمیل شد.
-- انجام‌شده: لینک Login→Registration فقط با `realm.password && realm.registrationAllowed && !registrationDisabled??` نمایش داده می‌شود و از `${url.registrationUrl}` استفاده می‌کند؛ Registration→Login از `${url.loginUrl}` استفاده می‌کند. URL ثابت ساخته نشد.
-- عمداً انجام‌نشده: password toggle تازه یا بازطراحی بصری فرم ثبت‌نام؛ چون R02 هنوز مرجع تأییدشده ندارد.
-- باقی‌مانده برای DONE: رندر و submit واقعی FreeMarker در Keycloak زنده، acceptance زنده R03، retry/conflict/registrationDisabled/keyboard/mobile smoke و مقایسه تصویری با مرجع R02. تست source به‌تنهایی جای این پذیرش‌ها نیست.
-- معیار اصلی تسک همچنان برقرار است: `register.ftl`، `login.ftl`، `template.ftl` و CSS قالب موجود طبق R02 نهایی شوند؛ شش فیلد با ارسال واقعی و خطای قابل مشاهده کار کنند؛ رمز پس از خطا خالی بماند و لینک نامعتبر در registration disabled دیده نشود.
+- کار: `register.ftl`، `login.ftl`، `template.ftl` و CSS قالب موجود طبق R02 تکمیل شوند؛ لینک ثبت‌نام از ورود با توجه به `realm.registrationAllowed` و لینک برگشت با URLهای خود Keycloak باشد.
+- حفظ الزامی: `url.registrationAction`، `url.loginAction` و نام فیلدهای Keycloak؛ state/session جریان شکسته نشود. خطاهای فیلد و عمومی با sanitization معتبر نمایش داده شوند.
+- کار: input رمز و تأیید آن هرگز value بازیابی‌شده نداشته باشند؛ autocomplete مناسب، label، پیام مرتبط و focus قابل مشاهده فراهم شود. رفتار نمایش رمز فقط در صورت طرح تأییدشده اضافه شود.
+- معیار پذیرش: شش فیلد فرم پایه با ارسال واقعی و خطای قابل مشاهده کار کنند؛ retry داده غیرحساس را طبق سیاست حفظ کند و رمز را خالی کند؛ در ثبت‌نام غیرفعال لینک فعال نامعتبر دیده نشود. فرم با کیبورد و موبایل قابل استفاده باشد؛ ظاهر در ابعاد مرجع مقایسه شود.
+- خروجی: تصویر مقایسه‌ای و گزارش؛ HTML نمونه به‌تنهایی اثبات رندر FreeMarker در Keycloak نیست.
 
 ## R06 — مسیر عمومی و ورودی‌های ثبت‌نام
 
-- وضعیت: **IN_PROGRESS — FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_BROWSER** در 2026-10-21 روی خروجی R07. گزارش: `docs/registration/R06_PUBLIC_ENTRY.md`.
-- انجام‌شده: مسیر مستقیم `/register` در PublicLayout و صفحه انتقال به `beginRegistration()` اضافه شد؛ نشست معتبر به خانه نقش خودش برمی‌گردد، نشست منقضی توسط validator فعلی معتبر محسوب نمی‌شود، loading/error/retry promiseها مدیریت می‌شوند و Back از Keycloak با PKCE رهاشده وارد loop انتقال خودکار نمی‌شود. `/login` دست‌نخورده مانده است.
-- مانع: CTA لندینگ عمداً اضافه/تغییر نکرد، چون R02 هنوز `BLOCKED_DESIGN` است و محل/متن ورودی ثبت‌نام تأیید نشده. بنابراین R06 هنوز DONE نیست.
 - کار: مسیر پیشنهادی `/register` در PublicLayout و صفحه انتقال مناسب با لایه R04 اضافه شود؛ CTA و متن مطابق R02 به آن وصل شوند. ورود `/login` حفظ شود.
 - معیار پذیرش: مسیر مستقیم، refresh، back و CTAها کار کنند؛ loading/error/retry نمایش داده شود؛ retry خطای تازه را هم مدیریت کند و rejected promise بی‌رسیدگی نماند. نشست معتبر به پنل خودش برود؛ نشست منقضی ورود به ثبت‌نام را اشتباهاً مسدود نکند. لینک ثبت‌نام Keycloak نیز همان جریان معتبر را نگه دارد.
 - خروجی: تغییر محدود router/page/CTA و کلیدهای ترجمه React؛ بازطراحی کل لندینگ یا منوها خارج از این تسک است.
 
 ## R07 — callback، نقش دانشجو و نشست پس از ثبت‌نام
-
-- وضعیت: **IN_PROGRESS (IMPLEMENTED / PENDING_LIVE)** در 2026-10-21. گزارش: `docs/registration/R07_IDENTITY.md`.
-- callback اکنون state را حتی برای خطای provider بررسی می‌کند، flow آغازشده (`login`/`registration`) را نگه می‌دارد، در همه خروجی‌های نهایی verifier/state/flow را پاک می‌کند و retry را با PKCE تازه از همان نوع flow شروع می‌کند.
-- نشست قبلی و cache خصوصی قبل از تکمیل callback پاک می‌شوند. نشست تازه فقط پس از token exchange موفق، `/me` موفق، role mapping معتبر و `isUsableSession` ساخته/ذخیره می‌شود. 400/401/403/409 و outage ارائه‌دهنده پیام/حالت مجزا دارند.
-- backend برای token بدون panel role دیگر grant دانشجو را فقط به «اولین مشاهده profile» وابسته نمی‌کند. نقش `student` به‌صورت idempotent در Keycloak ensure می‌شود؛ شکست provider به 502 تبدیل می‌شود تا درخواست بعدی بتواند retry کند و profile موجود باعث جاافتادن دائمی role نشود.
-- تست‌های مستقل R07 پاس شدند؛ تست کامل Django/Keycloak و اثبات role در realm زنده + توکن تازه بعد از ورود مجدد در این محیط اجرا نشد، بنابراین DONE اعلام نمی‌شود. refresh خودکار یا SSO جدید اضافه نشده است.
 
 - کار: callback فعلی برای ثبت‌نام بازاستفاده و خطاهای آن کامل شوند. تنها پس از token exchange، `/me` موفق و validator نشست، ذخیره و انتقال انجام شود. برای 401/403/409/اختلال ارائه‌دهنده پاسخ واقعی و راه بازیابی روشن باشد.
 - کار: ایجاد profile در اولین درخواست، grant نقش student، شکست grant و توکن اولیه بدون نقش با کد واقعی بررسی شوند. اگر ایراد retry فعلی در grant باعث جاافتادن دائمی نقش می‌شود، اصلاح محدود و قابل تکرار پیشنهاد/اجرا شود؛ موفقیت نمایشی کافی نیست.
@@ -162,12 +137,6 @@
 - خروجی: گزارش `docs/registration/R07_IDENTITY.md` و تغییر محدود لازم؛ نبود محیط زنده صریح ثبت شود.
 
 ## R08 — خطاها، دسترس‌پذیری و حالت‌های نمایش
-
-- وضعیت: **IN_PROGRESS (FUNCTIONAL HARDENED / BLOCKED_DESIGN / PENDING_BROWSER_LIVE)** در 2026-10-21 روی خروجی R06. گزارش: `docs/registration/R08_ACCESSIBILITY_ERRORS.md`.
-- React: Login/Register/Callback وضعیت انتظار را با live region، خطا را با alert و focus برنامه‌ای، retry را با disabled/aria-disabled و copy کامل fa/en نمایش می‌دهند. auth cardها برای RTL/LTR و light/dark از direction/theme موجود تبعیت می‌کنند و guard عرض 360px/overflow دارند.
-- Keycloak theme: خطاهای field با aria-invalid/describedby/errormessage و focus اولین invalid متصل‌اند؛ mobile/email در صفحه فارسی LTR باقی می‌مانند؛ passwordها بعد از خطا repopulate نمی‌شوند؛ پیام‌های عمومی error/status semantics جدا دارند. پیام فارسی قابل‌فهم برای duplicate username/mobile، duplicate email، mismatch/short password و required/invalid value اضافه شده است.
-- scope: `theme.properties` فقط `locales=fa` را اعلام می‌کند؛ انگلیسی/dark Keycloak بدون R02 ادعا نمی‌شود. CTA لندینگ و pixel-match ثبت‌نام همچنان به R02 وابسته‌اند.
-- آزمون source/contract جدید: React R08 = 28 check موفق؛ Keycloak theme R08 = 7 تست موفق. regressionهای R04/R05/R06/R07/R03 نیز پاس شدند. `node_modules` در archive نبود، پس build/lint کامل و browser/Keycloak live اجرا نشده‌اند.
 
 - کار: کل سفر لندینگ → انتقال → فرم → خطا/موفقیت → پنل با کیبورد، برچسب‌ها، focus و پیام‌های قابل فهم بررسی شود. پیام فنی خام یا موفقیت ثبت‌نام پیش از موفقیت واقعی نشان داده نشود.
 - معیار پذیرش: شماره/ایمیل تکراری، رمز نامنطبق، فیلد خالی، قطع شبکه و سرویس خاموش راه اصلاح/تلاش مجدد روشن داشته باشند؛ متن/فرم در عرض کوچک سرریز نکند. موبایل و ایمیل LTR در صفحه فارسی RTL خوانا باشند. locale/themeهای پشتیبانی‌شده React خراب نشوند؛ پشتیبانی Keycloak فقط مطابق R02 ادعا شود.
@@ -210,6 +179,8 @@
 - 2026-10-21 / R09: به‌علت ناتمام‌بودن R08، فقط precheck غیرزنده و تکرارپذیر اجرا شد. تست جدید frontend = 22 check، backend R09 = 5 تست و کل `backend/scripts/tests` = 125 تست موفق؛ runner `scripts/r09-registration-preflight.sh` اضافه شد. npm registry در محیط DNS نداشت، Playwright نصب نبود و Docker موجود نبود؛ بنابراین build/lint/typecheck، browser matrix و self-registration زنده موفق اعلام نمی‌شوند. R09 = IN_PROGRESS و گزارش `docs/registration/R09_VERIFICATION.md` است.
 - 2026-10-21 / R10: مرور نهایی release candidate روی `Gradian-R09.zip` انجام شد. `./scripts/r09-registration-preflight.sh` دوباره موفق بود و 125 تست backend script پاس شد. `npm ping` timeout شد و `npm ci` کامل نشد؛ Playwright نصب نیست و Docker executable موجود نیست، بنابراین build/lint/typecheck، browser matrix و live registration همچنان پذیرش نشده‌اند. R02 نیز BLOCKED_DESIGN است. هیچ کد محصول در R10 تغییر نکرد؛ گزارش `docs/registration/R10_FINAL_ACCEPTANCE.md` و manifest `R10_CHANGED_FILES.txt` اضافه شد. R10 = IN_PROGRESS و FINAL ACCEPTANCE BLOCKED.
 - قدم بعد پیشنهادی: R11 تعریف نشده است. ابتدا R02 و پذیرش live/browser/build باز بسته شوند، سپس R09 به DONE برسد و R10 دوباره برای پذیرش نهایی اجرا شود.
+- 2026-10-20: آخرین zip، اسناد داشبورد و زمینه و کد مرتبط ثبت‌نام بررسی شدند؛ فقط این برنامه تهیه شد. هیچ کد، realm یا سند قبلی تغییر نکرد؛ build/test و ثبت‌نام زنده اجرا نشده‌اند. R01 تا R10 پیاده‌سازی نشده‌اند؛ R02 منتظر مرجع است.
+- قدم بعد پیشنهادی: R01 برای تثبیت اختلاف‌های قواعد و وضعیت واقعی، سپس R02 با طرح ثبت‌نام. R03/R04 مستقل از مانع بصری قابل انتخاب‌اند.
 
 ## متن آماده شروع سشن بعد
 
@@ -251,3 +222,11 @@ R10 مرور نهایی release candidate را انجام داده ولی DONE �
 - R02 هنوز `BLOCKED_DESIGN` است؛ CTA لندینگ و pixel acceptance فرم ثبت‌نام حدس زده نشدند. R08 و R09 DONE نیستند، پس R10 نیز DONE نیست.
 - گزارش نهایی: `docs/registration/R10_FINAL_ACCEPTANCE.md`. فهرست تجمعی دقیق تغییرات نسبت به baseline: `docs/registration/R10_CHANGED_FILES.txt`.
 - وضعیت: `IN_PROGRESS — RELEASE-CANDIDATE REVIEW COMPLETE / FINAL ACCEPTANCE BLOCKED`. R11 تعریف نشده؛ قدم بعد بستن blockerهای R02/build/browser/live و سپس rerun R09 و R10 است.
+ابتدا GRADIAN_SESSION_CONTEXT.md و GRADIAN_REGISTRATION_TASKS.md را بخوان.
+فقط تسک R01 را انجام بده؛ فعلاً سراغ تسک‌های بعدی نرو.
+کد موجود و جریان Keycloak را مبنا بگیر؛ endpoint، سیاست اعتبارسنجی یا جزئیات طرح را حدس نزن.
+معیار پذیرش همین تسک را بررسی کن و خروجی آن و هر دو سند به‌روز را تحویل بده.
+اگر ورودی لازم موجود نیست، مانع را دقیق ثبت کن و نتیجه انجام‌نشده را موفق اعلام نکن.
+```
+
+برای سشن‌های بعد R01 را با شناسه همان تسک جایگزین کن و آخرین کد/دو سند و مرجع لازم را همراهش بده.

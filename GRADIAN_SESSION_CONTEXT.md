@@ -7,6 +7,11 @@
 مرحله جاری پروژه، پذیرش و تحویل ثبت‌نام روی همان معماری موجود است. ابتدا `GRADIAN_REGISTRATION_TASKS.md` و گزارش‌های `docs/registration/R01_BASELINE.md` تا `R10_FINAL_ACCEPTANCE.md` را بخوان؛ پروژه، احراز هویت یا داشبوردها را از صفر نساز. R01 و R04 DONE هستند. R02 همچنان BLOCKED_DESIGN است. R03، R05، R06، R07 و R08 از نظر کد/contract جلو رفته‌اند ولی پذیرش live/browser/design باز دارند. R09 preflight غیرزنده را کامل کرده اما به‌علت R08 و نبود build/browser/live هنوز IN_PROGRESS است. R10 release-candidate review را انجام داده ولی FINAL ACCEPTANCE BLOCKED است. برای این برنامه R11 تعریف نشده؛ قدم بعد بستن blockerها و rerun R09/R10 است. تصمیم رمز بسته شده: حداقل ۸ کاراکتر policy رسمی self-registration است.
 
 سابقه داشبوردها در `GRADIAN_DASHBOARD_TASKS.md` معتبر است: T01 تا T05 و T07 تا T11 DONE، T06 و پذیرش کامل T12 به‌دلیل مرجع ناقص پایین دانشجو BLOCKED_DESIGN هستند. تغییر ثبت‌نام نباید این وضعیت‌ها یا UI پنل‌ها را خودسرانه بازنویسی کند.
+تاریخ: 2026-10-20 — نسخه 1.12 — پس از بررسی نهایی T12
+
+## دستور اصلی به عامل سشن بعد
+
+کاربر می‌خواهد منو و داشبورد دانشجو، مشاور، استاد و ادمین عین طرح‌های فیگمای خودش پیاده شوند. پروژه موجود است؛ از صفر نساز. هر بار فقط یک تسک از `GRADIAN_DASHBOARD_TASKS.md` انجام بده و هر دو سند را در پایان به‌روز کن. T01 تا T05 تکمیل شده‌اند. T06 برای بخش قابل مشاهده اصلاح شد؛ تأیید نهایی پایین فریم BLOCKED_DESIGN است. T07 تا T11 تکمیل شدند. گزارش جاری: `docs/T12_FINAL_REVIEW.md`. گزارش‌های T01 تا T04 در ورودی این سشن موجود نبودند و مربوط به تحویل‌های قبلی‌اند؛ تست T04 در ورودی موجود بود و دوباره اجرا شد.
 
 برای شروع، آخرین نسخه پروژه و اسناد را بخوان. مسیرهای موقت محیط قبلی پایدار نیستند. اگر فقط این Markdown را داری، به کد و تصاویر واقعی دسترسی نداری و نباید ادعا کنی آن‌ها را دیده‌ای. برای پیاده‌سازی دقیق، آخرین zip/checkout و تصاویر اصلی باید در سشن جدید در دسترس باشند.
 
@@ -32,6 +37,10 @@
 ## منابع بررسی‌شده
 
 - ورودی جاری ثبت‌نام R01: `Gradian-main (2).zip`؛ auth، router/Landing، Core identity و فایل‌های Keycloak ممیزی شدند. گزارش `docs/registration/R01_BASELINE.md`. هیچ build/test زنده یا تغییر محصول انجام نشد.
+در این مرحله هدف، تکمیل UI، ناوبری، دسترسی و اتصال APIهای آماده است؛ ساخت همه میکروسرویس‌ها در دامنه این درخواست نیست. کاربر در سشن جاری فقط T12 را درخواست کرد؛ بررسی نهایی و تحویل مرحله‌ای انجام شد. T12 بررسی شد؛ تحویل مرحله‌ای و تست‌ها موفق‌اند، ولی پذیرش نهایی کامل آن به دلیل مرجع ناقص T06، BLOCKED_DESIGN است. T06 برای پایین فریم همچنان BLOCKED_DESIGN است؛ این مانع اتصال مستقل T07 نیست.
+
+## منابع بررسی‌شده
+
 - ورودی جاری T12: `Gradian(20261020-122909).zip`؛ چهار مرجع نام‌برده بازیابی، مشاهده و در `docs/t12-verification/` حفظ شدند. نتیجه جاری در انتهای این سند و گزارش T12 است.
 
 - ورودی جاری T11: `Gradian(20261020-121042).zip`؛ کد و دو سند خوانده شدند. تصویر مرجع در این ورودی وجود ندارد؛ چیدمان پنل‌ها بازطراحی نشده و تطابق پیکسلی تازه ادعا نمی‌شود.
@@ -74,6 +83,7 @@
 - `src/shared/api/queryClient.ts`: factory مشترک QueryClient؛ بدون retry روی 401/403.
 - `src/features/auth/api/authApi.ts`: دریافت پیکربندی Auth، شروع login/registration، callback، دریافت /me و logout.
 - `src/features/auth/api/authFlow.ts`: helper مشترک R04 برای validation issuer/registration endpoint، ساخت PKCE S256 و lock شروع همزمان login/registration.
+- `src/features/auth/api/authApi.ts`: دریافت پیکربندی Auth، PKCE، callback، دریافت /me و logout.
 - `src/features/auth/pages/LoginPage.tsx` و `AuthCallbackPage.tsx`: ورود و callback.
 - `src/features/portal/pages/PortalHomePage.tsx` و `components/PortalHome.tsx`: خانه هر نقش؛ دانشجو محتوا دارد، سه نقش دیگر بوم خالی دارند.
 - `src/features/portal/config/portalContent.ts`: داده و مقصد کارت‌های داشبورد.

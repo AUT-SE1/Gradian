@@ -1,0 +1,650 @@
+[
+  {
+    "id": "student-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 1978,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 1280,
+      "height": 80,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": null,
+    "card": {
+      "width": 1232,
+      "height": 112,
+      "x": 24,
+      "y": 104,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "dir": "rtl"
+  },
+  {
+    "id": "instructor-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 927,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 992,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 927,
+      "x": 992,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "counsellor-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 800,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 992,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 800,
+      "x": 992,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "admin-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 800,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 992,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 800,
+      "x": 992,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "student-en-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 1242.21875,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 1280,
+      "height": 80,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": null,
+    "card": {
+      "width": 1232,
+      "height": 112,
+      "x": 24,
+      "y": 104,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "dir": "ltr"
+  },
+  {
+    "id": "counsellor-en-light-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 800,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 992,
+      "height": 64,
+      "x": 288,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 800,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "ltr"
+  },
+  {
+    "id": "student-fa-dark-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 1242.21875,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(17, 26, 39)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "header": {
+      "width": 1280,
+      "height": 80,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(24, 35, 51)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "sidebar": null,
+    "card": {
+      "width": 1232,
+      "height": 112,
+      "x": 24,
+      "y": 104,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(24, 35, 51)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "dir": "rtl"
+  },
+  {
+    "id": "counsellor-fa-dark-1280",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 1280,
+      "height": 800,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(17, 26, 39)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "header": {
+      "width": 992,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(24, 35, 51)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 800,
+      "x": 992,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(24, 35, 51)",
+      "color": "rgb(238, 244, 255)"
+    },
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "student-fa-light-390",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 390,
+      "height": 3120.09375,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 390,
+      "height": 80,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": null,
+    "card": {
+      "width": 362,
+      "height": 312.6875,
+      "x": 14,
+      "y": 96,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "dir": "rtl"
+  },
+  {
+    "id": "counsellor-fa-light-390",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 390,
+      "height": 844,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 390,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 844,
+      "x": 102,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "counsellor-en-light-390",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 390,
+      "height": 844,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 390,
+      "height": 64,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": {
+      "width": 288,
+      "height": 844,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "card": null,
+    "dir": "ltr"
+  },
+  {
+    "id": "student-en-light-320",
+    "overflow": false,
+    "fontLoaded": 2,
+    "loadedWeights": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "resources": [
+      {
+        "name": "/src/assets/fonts/vazirmatn-arabic-wght-normal.woff2",
+        "bytes": 46608
+      },
+      {
+        "name": "/src/assets/fonts/vazirmatn-latin-wght-normal.woff2",
+        "bytes": 34824
+      }
+    ],
+    "shell": {
+      "width": 320,
+      "height": 3136.40625,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(247, 249, 251)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "header": {
+      "width": 320,
+      "height": 80,
+      "x": 0,
+      "y": 0,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "sidebar": null,
+    "card": {
+      "width": 292,
+      "height": 312.6875,
+      "x": 14,
+      "y": 96,
+      "font": "\"Gradian Portal\", Tahoma, Arial, sans-serif",
+      "background": "rgb(255, 255, 255)",
+      "color": "rgb(52, 59, 73)"
+    },
+    "dir": "ltr"
+  },
+  {
+    "id": "public-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 0,
+    "loadedWeights": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "resources": [],
+    "shell": null,
+    "header": null,
+    "sidebar": null,
+    "card": null,
+    "dir": "rtl"
+  },
+  {
+    "id": "login-fa-light-1280",
+    "overflow": false,
+    "fontLoaded": 0,
+    "loadedWeights": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "resources": [],
+    "shell": null,
+    "header": null,
+    "sidebar": null,
+    "card": null,
+    "dir": "rtl"
+  }
+]
