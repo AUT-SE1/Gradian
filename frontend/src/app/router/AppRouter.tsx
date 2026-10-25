@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { PublicLayout } from '@/app/layouts/PublicLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { AuthCallbackPage } from '@/features/auth/pages/AuthCallbackPage';
 import { LandingPage } from '@/features/landing/pages/LandingPage';
 import { PortalHomePage } from '@/features/portal/pages/PortalHomePage';
@@ -31,6 +32,7 @@ export function AppRouter() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Route>
 

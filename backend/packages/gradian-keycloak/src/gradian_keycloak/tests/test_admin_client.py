@@ -80,6 +80,18 @@ class AdminClientTests(KeycloakSettingsTestCase):
         sent = next(kw["json"] for m, _, kw in self.api.calls if m == "POST")
         self.assertEqual(sent, [role])
 
+    def test_ensure_role_grants_when_missing(self) -> None:
+        self.api.on("GET", "/users/u1/role-mappings/realm", FakeResponse(200, [{"name": "offline_access"}]))
+        self.api.on("GET", "/roles/student", FakeResponse(200, {"id": "r1", "name": "student"}))
+        self.api.on("POST", "/users/u1/role-mappings/realm", FakeResponse(204))
+        self.client_under_test.ensure_role("u1", "student")
+        self.assertEqual(self.api.paths("POST"), ["/users/u1/role-mappings/realm"])
+
+    def test_ensure_role_is_a_noop_when_already_assigned(self) -> None:
+        self.api.on("GET", "/users/u1/role-mappings/realm", FakeResponse(200, [{"name": "student"}]))
+        self.client_under_test.ensure_role("u1", "student")
+        self.assertEqual(self.api.paths("POST"), [])
+
     def new_user(self, **changes: str) -> NewUser:
         values = {
             "mobile": "09000100001",

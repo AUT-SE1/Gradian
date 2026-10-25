@@ -1,5 +1,12 @@
 # زمینه پروژه گرادیان برای سشن جدید
 
+تاریخ: 2026-10-21 — نسخه 1.17 — پس از مرور نهایی R10؛ release candidate آماده است ولی پذیرش نهایی build/browser/live/design باز است
+
+## دستور اصلی به عامل سشن بعد
+
+مرحله جاری پروژه، پذیرش و تحویل ثبت‌نام روی همان معماری موجود است. ابتدا `GRADIAN_REGISTRATION_TASKS.md` و گزارش‌های `docs/registration/R01_BASELINE.md` تا `R10_FINAL_ACCEPTANCE.md` را بخوان؛ پروژه، احراز هویت یا داشبوردها را از صفر نساز. R01 و R04 DONE هستند. R02 همچنان BLOCKED_DESIGN است. R03، R05، R06، R07 و R08 از نظر کد/contract جلو رفته‌اند ولی پذیرش live/browser/design باز دارند. R09 preflight غیرزنده را کامل کرده اما به‌علت R08 و نبود build/browser/live هنوز IN_PROGRESS است. R10 release-candidate review را انجام داده ولی FINAL ACCEPTANCE BLOCKED است. برای این برنامه R11 تعریف نشده؛ قدم بعد بستن blockerها و rerun R09/R10 است. تصمیم رمز بسته شده: حداقل ۸ کاراکتر policy رسمی self-registration است.
+
+سابقه داشبوردها در `GRADIAN_DASHBOARD_TASKS.md` معتبر است: T01 تا T05 و T07 تا T11 DONE، T06 و پذیرش کامل T12 به‌دلیل مرجع ناقص پایین دانشجو BLOCKED_DESIGN هستند. تغییر ثبت‌نام نباید این وضعیت‌ها یا UI پنل‌ها را خودسرانه بازنویسی کند.
 تاریخ: 2026-10-20 — نسخه 1.12 — پس از بررسی نهایی T12
 
 ## دستور اصلی به عامل سشن بعد
@@ -12,6 +19,24 @@
 
 گرادیان یک پورتال خدمات آمادگی آزمون با چهار پنل است. کاربر مسئول فرانت‌اند در پروژه تیمی/TA است؛ بک‌اند و سرویس‌های تیم‌ها موجود یا در حال توسعه‌اند. محتوای فعلی طرح‌ها درباره کنکور سراسری است؛ موضوع و متن محصول را خودسرانه با یک حوزه دیگر جایگزین نکن.
 
+مرحله جاری پس از تحویل داشبوردها، برنامه ثبت‌نام است. R01 ممیزی قرارداد را بست؛ R03 قواعد هویت را در سطح کد/config پیاده کرد و هنوز پذیرش live می‌خواهد؛ R04 شروع registration با PKCE را در auth layer تکمیل کرد. سابقه UI/ناوبری/API داشبوردها همچنان معتبر است: T12 بررسی مرحله‌ای شده ولی پذیرش نهایی کامل به دلیل مرجع ناقص T06، BLOCKED_DESIGN است؛ T06 برای پایین فریم همچنان BLOCKED_DESIGN است. ساخت همه میکروسرویس‌ها یا بازطراحی داشبوردها در دامنه ثبت‌نام نیست.
+
+## وضعیت جاری ثبت‌نام
+
+- baseline ثبت‌نام: `Gradian-main (2).zip`; release candidate فعلی: خروجی R10 روی `Gradian-R09.zip`.
+- R01 audit baseline را بست؛ R04 شروع registration با PKCE را DONE کرد.
+- R03: `passwordPolicy=length(8)` و قواعد نام هم‌تراز شده‌اند؛ runtime realm موجود هنوز PENDING_LIVE است.
+- R05: قالب Keycloak از password repopulation جلوگیری می‌کند، خطاها/semantics را دارد و لینک registration provider-owned است؛ R02 و FreeMarker/live smoke هنوز بازند.
+- R06: route عمومی `/register` وجود دارد، session معتبر به خانه نقش خودش می‌رود و retry/Back با PKCE تازه مدیریت می‌شود؛ CTA لندینگ عمداً تا R02 اضافه نشده و browser acceptance باز است.
+- R07: callback flow-aware و یک‌بارمصرف است؛ session فقط پس از token exchange و `/me` معتبر ذخیره می‌شود. grant نقش `student` retry-safe/idempotent شده و failure provider به موفقیت نمایشی تبدیل نمی‌شود؛ durable role/token تازه هنوز PENDING_LIVE است.
+- R08: loading/error/focus/accessibility و fa/en/light/dark React states و Keycloak field errors سخت‌گیری شده‌اند؛ design/browser/live هنوز باز است.
+- R09: preflight source/contract قابل‌تکرار موفق است و کل `backend/scripts/tests` در آخرین اجرا 125 تست پاس دارد؛ build/lint/typecheck، browser matrix و self-registration live هنوز پذیرش نشده‌اند.
+- R10: final review و release handoff انجام شده، اما DONE نیست. در R10 دوباره preflight موفق بود؛ npm registry timeout شد، Playwright نصب نبود و Docker executable موجود نبود. گزارش: `docs/registration/R10_FINAL_ACCEPTANCE.md`.
+- هیچ stage بعدی R11 در برنامه تعریف نشده است. بسته‌شدن R02 + build/browser/live و سپس rerun R09/R10 لازم است.
+
+## منابع بررسی‌شده
+
+- ورودی جاری ثبت‌نام R01: `Gradian-main (2).zip`؛ auth، router/Landing، Core identity و فایل‌های Keycloak ممیزی شدند. گزارش `docs/registration/R01_BASELINE.md`. هیچ build/test زنده یا تغییر محصول انجام نشد.
 در این مرحله هدف، تکمیل UI، ناوبری، دسترسی و اتصال APIهای آماده است؛ ساخت همه میکروسرویس‌ها در دامنه این درخواست نیست. کاربر در سشن جاری فقط T12 را درخواست کرد؛ بررسی نهایی و تحویل مرحله‌ای انجام شد. T12 بررسی شد؛ تحویل مرحله‌ای و تست‌ها موفق‌اند، ولی پذیرش نهایی کامل آن به دلیل مرجع ناقص T06، BLOCKED_DESIGN است. T06 برای پایین فریم همچنان BLOCKED_DESIGN است؛ این مانع اتصال مستقل T07 نیست.
 
 ## منابع بررسی‌شده
@@ -56,6 +81,8 @@
 - `src/shared/auth/session.ts`: runtime validation نقش/ساختار/انقضا؛ expiresAt ضروری است.
 - `src/shared/auth/authEvents.ts`: 401 با token اولیه درخواست؛ پاسخ قدیمی نشست جدید را باطل نمی‌کند.
 - `src/shared/api/queryClient.ts`: factory مشترک QueryClient؛ بدون retry روی 401/403.
+- `src/features/auth/api/authApi.ts`: دریافت پیکربندی Auth، شروع login/registration، callback، دریافت /me و logout.
+- `src/features/auth/api/authFlow.ts`: helper مشترک R04 برای validation issuer/registration endpoint، ساخت PKCE S256 و lock شروع همزمان login/registration.
 - `src/features/auth/api/authApi.ts`: دریافت پیکربندی Auth، PKCE، callback، دریافت /me و logout.
 - `src/features/auth/pages/LoginPage.tsx` و `AuthCallbackPage.tsx`: ورود و callback.
 - `src/features/portal/pages/PortalHomePage.tsx` و `components/PortalHome.tsx`: خانه هر نقش؛ دانشجو محتوا دارد، سه نقش دیگر بوم خالی دارند.
@@ -309,3 +336,87 @@ APIهای استفاده‌شده:
 - ورود/callback چهار نقش، خروج، انقضا، 401/403، اختلال API/retry، خدمات unavailable، redirect/embed، مقصد و cache با قراردادهای واقعی و پاسخ کنترل‌شده بررسی شدند. API زنده، Docker، Keycloak واقعی و SSO بین سرویس‌ها اجرا نشده‌اند. موفقیت این تست‌ها تأیید استقرار نیست.
 - تفاوت مجاز با مرجع: نام/شمارش/تعداد feed از داده API می‌آیند؛ درصد پروفایل فاقد قرارداد نمایش داده نمی‌شود؛ active تابع URL است. فونت/آیکن اصلی طراحی موجود نیست و تطابق پیکسلی تأیید نمی‌شود. برای dark/LTR/موبایل طرح مستقلی نداریم و بررسی آن‌ها عملکردی است.
 - گزارش کامل و فهرست تغییرات: `docs/T12_FINAL_REVIEW.md`. گام بعدی، دریافت export کامل پایین فریم دانشجو برای نهایی‌سازی T06 و سپس بستن پذیرش بصری T12 است؛ smoke زنده روی محیط کاربر نیز جداگانه لازم است. هیچ تسک تازه‌ای خودکار آغاز نشد.
+
+
+## تحویل جاری R01 — 2026-10-21
+
+- ورودی: `Gradian-main (2).zip`؛ فقط R01 انجام شد و وضعیت آن DONE است.
+- محصول، endpoint، dependency، realm template، theme و داده کاربر تغییر نکردند؛ فقط گزارش و دو سند جاری به‌روز شدند.
+- `realm-template.json` و `user-profile.json` با `python3 -m json.tool` parse شدند. `backend/build/realm-gradian.json` و `frontend/node_modules` در archive حاضر نبودند؛ build/lint و محیط زنده اجرا نشدند.
+- گزارش baseline: `docs/registration/R01_BASELINE.md`. اختلاف README و کد، قواعد فیلدها، session/PKCE، نقش تازه‌وارد و تفاوت template با realm زنده در آن ثبت شده‌اند.
+- R02 همچنان BLOCKED_DESIGN. R03 از نظر وابستگی آماده است، ولی برای password policy تصمیم حداقل ۸ کاراکتر لازم است. R04 نیز مستقل از مانع طراحی قابل انتخاب است. هیچ‌کدام در این سشن شروع نشدند.
+
+
+## تحویل جاری R03 — 2026-10-21
+
+- ورودی: `Gradian-R01.zip`. کاربر policy حداقل ۸ کاراکتر را تأیید کرد.
+- تغییر محصول محدود: `backend/keycloak/realm-template.json`، `backend/keycloak/user-profile.json` و validator نام در `backend/packages/gradian-auth/.../claims.py`. endpoint، PKCE، role mapping، dashboard و session بازنویسی نشدند.
+- `passwordPolicy` اکنون `length(8)` است. نام باید حداقل یک Unicode letter/mark داشته باشد؛ space/ZWNJ در کنار نام معتبر مجازند ولی به‌تنهایی معتبر نیستند. mobile/email rules و ممنوعیت edit عمومی subtype حفظ شدند.
+- تست مستقل R03 چهار مورد موفق؛ JSON parse، py_compile و sanity check نام موفق. تست کامل Django/Keycloak و self-registration زنده در این محیط اجرا نشدند.
+- روش اعمال/rollback بدون حذف volume و backup قبل از تغییر در `docs/registration/R03_IDENTITY_RULES.md` ثبت شده است. `make reset` برای R03 استفاده نشود.
+- وضعیت: R03 = IN_PROGRESS (IMPLEMENTED / PENDING_LIVE)، R02 = BLOCKED_DESIGN، R04 = TODO و قابل شروع.
+
+## تحویل جاری R04 — 2026-10-21
+
+- ورودی: `Gradian-R03.zip`. فقط R04 انجام شد؛ R05/R06/R07 شروع نشدند.
+- کد محصول: `frontend/src/features/auth/api/authFlow.ts` اضافه شد و `authApi.ts` برای استفاده از helper مشترک تغییر کرد. `beginRegistration()` اکنون endpoint ثبت‌نام را از config واقعی می‌گیرد؛ هیچ URL ثابت localhost، endpoint ساخت حساب Core یا کتابخانه OIDC تازه اضافه نشد.
+- validation: issuer باید URL مطلق HTTP(S) بدون credential/query/hash باشد. registration endpoint باید HTTP(S)، بدون credential/query/hash، هم-origin با issuer و دقیقاً مسیر `${issuer}/protocol/openid-connect/registrations` باشد. validation قبل از ذخیره verifier/state و redirect انجام می‌شود.
+- PKCE: login و registration هر دو `response_type=code`، `scope=openid`، callback موجود، state تصادفی، verifier تصادفی و `code_challenge_method=S256` دارند. verifier در URL قرار نمی‌گیرد و فقط در sessionStorage موجود ذخیره می‌شود.
+- همزمانی/retry: lock مشترک یک شروع در حال اجرا را حفظ می‌کند تا double click/StrictMode جفت PKCE را overwrite نکند. config failure یا endpoint نامعتبر lock را آزاد می‌کند؛ retry بعدی از state/verifier تازه استفاده می‌کند.
+- regression: login عادی همچنان `/protocol/openid-connect/auth` را استفاده می‌کند. callback/token exchange/session/role mapping و backend تغییر نکردند. `/register` عمومی و CTA هنوز بخشی از R06 و قالب واقعی فرم بخشی از R05 هستند.
+- تست: `frontend/tests/r04-auth-flow.cjs` با source واقعی helper و TypeScript سیستم اجرا شد؛ ۶ گروه سناریو موفق: URL+S256، freshness، dedupe، retry، endpoint ناسازگار و login regression. transpile syntax برای `authFlow.ts` و `authApi.ts` نیز موفق بود. npm dependency install کامل به‌دلیل timeout محیط انجام نشد، بنابراین build کامل frontend در این سشن موفق اعلام نمی‌شود. Keycloak زنده نیز اجرا نشد؛ این تست نمایش واقعی فرم ثبت‌نام را اثبات نمی‌کند.
+- وضعیت: R04 = DONE؛ R03 = IN_PROGRESS (IMPLEMENTED / PENDING_LIVE)؛ R02 = BLOCKED_DESIGN.
+
+
+## تحویل جاری R05 — 2026-10-21
+
+- ورودی: `Gradian-R04.zip`. فقط بخش مستقل و قابل‌پیاده‌سازی R05 انجام شد؛ R06/R07 شروع نشدند.
+- theme: `register.ftl` برای عدم بازتاب password، autocomplete، aria/error linking و inputmode اصلاح شد. `login.ftl` لینک ثبت‌نام conditional با `${url.registrationUrl}` دارد و back link ثبت‌نام `${url.loginUrl}` است. `template.ftl` پیام عمومی sanitize‌شده را با live region نمایش می‌دهد؛ CSS focus-visible/footer/mobile پایه را پوشش می‌دهد.
+- امنیت: هیچ password در value/log/storage جدید قرار نگرفت؛ هیچ endpoint یا URL ثبت‌نام دستی ساخته نشد؛ `url.registrationAction` و `url.loginAction` حفظ شدند.
+- تست مستقل `backend/scripts/tests/test_r05_theme_contract.py` قرارداد source را بررسی می‌کند. رندر FreeMarker/Keycloak زنده، submit واقعی، conflictها و policy runtime هنوز اجرا نشده‌اند.
+- طراحی: R02 همچنان BLOCKED_DESIGN است؛ بنابراین password toggle تازه و بازطراحی بصری ثبت‌نام اضافه نشد و screenshot comparison موفق ادعا نمی‌شود.
+- وضعیت: R05 = IN_PROGRESS (FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_LIVE)، R03 = IN_PROGRESS (IMPLEMENTED / PENDING_LIVE)، R04 = DONE. گزارش: `docs/registration/R05_KEYCLOAK_FORM.md`.
+
+
+## تحویل جاری R07 — 2026-10-21
+
+- ورودی: `Gradian-R05.zip`. R06 به‌دلیل R02/BLOCKED_DESIGN شروع نشد؛ بخش مستقل R07 اجرا شد.
+- frontend: `gradian.auth.oidc_flow` کنار verifier/state ذخیره می‌شود تا callback بداند retry باید login یا registration باشد. state پیش از اعتماد به provider error بررسی می‌شود؛ callback تکراری/ناقص/mismatch code exchange نمی‌کند و transient PKCE در همه پایان‌ها پاک می‌شود.
+- callback UI: session قبلی و React Query cache قبل از verification پاک می‌شوند. 400/401/403/409 و provider outage به حالت‌های `invalid/unauthorized/forbidden/conflict/provider` نگاشت شده‌اند. دکمه retry callback مصرف‌شده را دوباره استفاده نمی‌کند و flow تازه هم‌نوع آغاز می‌کند.
+- session: access token ابتدا exchange می‌شود، سپس `/me` خوانده می‌شود، panel معتبر به role فرانت نگاشت می‌شود و فقط بعد از `isUsableSession`، AuthProvider آن را persist می‌کند. token payload ناقص/منقضی نشست نمی‌سازد.
+- backend: roleless token همچنان student resolve می‌شود، اما `/me` اکنون پیش از موفقیت `student` را در Keycloak با `ensure_role` idempotent تضمین می‌کند. شکست Admin API دیگر فقط log نمی‌شود؛ 502 `identity_provider_unavailable` می‌دهد و درخواست بعدی حتی با Profile از قبل ساخته‌شده دوباره تلاش می‌کند.
+- توکن همان callback ممکن است هنوز claim نقش `student` نداشته باشد؛ Core فقط پس از تضمین role durable اجازه `/me` می‌دهد. برای سرویس‌هایی که نقش را از token می‌خوانند، ورود مجدد/توکن تازه لازم است. refresh flow خودکار یا قرارداد SSO جدید در R07 اضافه نشد.
+- تست اجراشده: `frontend/tests/r07-callback.cjs` = 6 گروه موفق؛ regression `frontend/tests/r04-auth-flow.cjs` = 6 گروه موفق؛ `backend/scripts/tests/test_r07_identity_contract.py` = 5 تست موفق؛ `py_compile` فایل‌های تغییرکرده و parse JSONهای Keycloak موفق. تست کامل Django و Keycloak زنده در این محیط اجرا نشد.
+- وضعیت: R07 = IN_PROGRESS (IMPLEMENTED / PENDING_LIVE). برای DONE باید روی stack واقعی ثبت‌نام roleless، 502/retry در outage کنترل‌شده، role `student` در Keycloak و claim نقش در token تازه بعد از login مجدد تأیید شوند.
+
+## تحویل جاری R06 — 2026-10-21
+
+- ورودی: `Gradian-R07.zip`. چون R08 به R06 وابسته است، بخش مستقل R06 قبل از R08 تکمیل شد؛ R02 هنوز BLOCKED_DESIGN است.
+- frontend: مسیر `/register` زیر PublicLayout و `RegisterPage` اضافه شد. صفحه فقط `authApi.beginRegistration()` از R04 را فراخوانی می‌کند و `/login` حفظ شده است.
+- session: فقط `isUsableSession` ثبت‌نام را bypass می‌کند و مقصد، خانه نقش معتبر همان session است؛ نشست منقضی مانع ورود به registration نمی‌شود.
+- UX functional: loading/error/retry با promise handling کامل و semantics قابل‌دسترسی اضافه شد. fa/en هر دو کلیدهای transition ثبت‌نام دارند.
+- Back: اگر state/verifier/flow ثبت‌نام از تلاش رهاشده باقی باشد، route دوباره auto-redirect نمی‌کند؛ پیام تلاش ناتمام و ادامه با PKCE تازه نشان می‌دهد. retry material قبلی را پاک می‌کند. lock R04 بعد از assign آزاد می‌شود تا bfcache restore به lock دائمی نخورد.
+- CTA: LandingPage عمداً تغییر نکرد چون محل/متن CTA نیازمند R02 است. بنابراین R06 = IN_PROGRESS (FUNCTIONAL IMPLEMENTED / BLOCKED_DESIGN / PENDING_BROWSER)، نه DONE.
+- تست اجراشده: `frontend/tests/r06-public-registration.cjs` = 17 check موفق؛ regression `r04-auth-flow.cjs` = 7 گروه و `r07-callback.cjs` = 6 گروه موفق. مرورگر/Keycloak واقعی اجرا نشده است.
+- گزارش: `docs/registration/R06_PUBLIC_ENTRY.md`.
+
+
+## تحویل جاری R08 — 2026-10-21
+
+- ورودی: `Gradian-R06.zip`. فقط بخش R08 اجرا شد؛ معماری PKCE/role/dashboard و CTA لندینگ بازطراحی نشدند.
+- React: `LoginPage` پیام‌های hard-coded فارسی را به i18n منتقل کرد؛ Login/Register/Callback برای pending از status/live-region و برای failure از alert + focus programmatic استفاده می‌کنند. retryها busy/disabled semantics دارند و success قبل از session معتبر نمایش داده نمی‌شود.
+- display: auth cardهای React از `text-align:start`، theme variableها، dark error state، wrap متن بلند و guard 360px استفاده می‌کنند. fa/en React حفظ شده‌اند؛ Keycloak فقط fa در scope ادعا می‌شود.
+- Keycloak: field errorها به input با aria-invalid/describedby/errormessage وصل‌اند؛ اولین invalid focus می‌گیرد؛ mobile/email در RTL فارسی LTR هستند؛ password value بعد از خطا بازتاب نمی‌شود. general error/status live semantics جدا و پیام‌های فارسی duplicate mobile/email، invalid email، required، mismatch و min-length افزوده شدند.
+- تست واقعی اجراشده: `frontend/tests/r08-auth-accessibility.cjs` = 28 check؛ `backend/scripts/tests/test_r08_theme_accessibility.py` = 7 تست؛ regression R04=7 گروه، R06=17 check، R07=6 گروه، R07 backend=5، R05 theme=6، R03 rules=4؛ همه موفق.
+- `frontend/node_modules` در archive حاضر نبود، بنابراین npm build/lint و browser matrix اجرا نشده‌اند. Keycloak/realm زنده، submit واقعی duplicate/mismatch/password policy و outage واقعی نیز اجرا نشده‌اند.
+- R02 همچنان BLOCKED_DESIGN است؛ screenshot comparison مطابق مرجع ثبت‌نام/CTA ممکن نبود. R08 = IN_PROGRESS (FUNCTIONAL HARDENED / BLOCKED_DESIGN / PENDING_BROWSER_LIVE)، نه DONE.
+- گزارش: `docs/registration/R08_ACCESSIBILITY_ERRORS.md`. R09 طبق وابستگی رسمی تا DONE شدن R08 نباید به‌عنوان verification نهایی شروع شود.
+
+
+## تحویل جاری R09 — 2026-10-21
+
+- ورودی `Gradian-R08.zip`. وابستگی رسمی R09 یعنی R08 هنوز بسته نشده، پس فقط precheck non-live انجام شد؛ R09 DONE نیست.
+- هیچ کد محصول/endpoint/dependency/realm data تغییر نکرد. دو تست contract جدید و runner `scripts/r09-registration-preflight.sh` اضافه شدند.
+- نتایج واقعی: R04=7 گروه، R06=17 check، R07=6 گروه، R08 frontend=28 check، R09 frontend=22 check؛ R03=4، R05=6، R07 backend=5، R08 backend=7، R09 backend=5 و suite `backend/scripts/tests`=125 تست موفق. parse JSON، py_compile و syntax check موفق.
+- npm registry در این محیط با `EAI_AGAIN` در دسترس نبود و cache هم کامل نبود؛ build/lint/typecheck با dependency ناقص پذیرفته نشدند. Playwright نصب نبود و Docker executable وجود نداشت؛ بنابراین browser matrix و ثبت‌نام/Keycloak/Core زنده اجرا نشدند.
+- گزارش کامل: `docs/registration/R09_VERIFICATION.md`. وضعیت R09: `IN_PROGRESS (STATIC/CONTRACT PRECHECK COMPLETE / BLOCKED_BY_R08 / PENDING_BUILD_BROWSER_LIVE)`.

@@ -29,6 +29,11 @@ class MePanelTests(ApiTestCase):
                 self.assertEqual(body["panel"], role)
                 self.assertEqual(body["home_path"], f"/{role}")
 
+    def test_new_student_can_enter_with_an_empty_field_of_study(self) -> None:
+        body = self.get_as(ME, roles=()).json()
+        self.assertEqual(body["panel"], "student")
+        self.assertEqual(body["field_of_study"], "")
+
     def test_top_ranker_uses_the_consultant_panel(self) -> None:
         body = self.get_as(ME, roles=("consultant",), consultant_type="top_ranker").json()
         self.assertEqual((body["panel"], body["consultant_type"]), ("consultant", "top_ranker"))

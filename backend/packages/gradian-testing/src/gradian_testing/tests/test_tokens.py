@@ -56,12 +56,19 @@ class FakeIdentityAdminTests(SimpleTestCase):
         self.assertEqual(len(fake.created), 1)
         self.assertTrue(sub)
 
+    def test_ensure_role_is_idempotent(self) -> None:
+        fake = FakeIdentityAdmin()
+        fake.ensure_role("u1", "student")
+        fake.ensure_role("u1", "student")
+        self.assertEqual(fake.granted, [("u1", "student")])
+
     def test_it_can_be_told_to_fail_every_call(self) -> None:
         fake = FakeIdentityAdmin()
         fake.fail_with = KeycloakError("down", 502)
         calls = (
             lambda: fake.update_user("u", {}),
             lambda: fake.grant_role("u", "student"),
+            lambda: fake.ensure_role("u", "student"),
             lambda: fake.set_enabled("u", True),
             lambda: fake.set_panel_role("u", "admin", ""),
             lambda: fake.list_panel_users(),

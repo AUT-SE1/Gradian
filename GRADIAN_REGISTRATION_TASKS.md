@@ -172,6 +172,13 @@
 
 ## دفتر پیشرفت
 
+- 2026-10-20: آخرین zip، اسناد داشبورد و زمینه و کد مرتبط ثبت‌نام بررسی شدند؛ فقط این برنامه تهیه شد. هیچ کد، realm یا سند قبلی تغییر نکرد؛ build/test و ثبت‌نام زنده اجرا نشده‌اند. R01 تا R10 پیاده‌سازی نشده بودند؛ R02 منتظر مرجع است.
+- 2026-10-21 / R01: DONE برای `Gradian-main (2).zip`؛ ممیزی قرارداد ثبت‌نام بدون تغییر محصول انجام شد. گزارش `docs/registration/R01_BASELINE.md`. realm زنده و self-registration اجرا نشدند. اختلاف policy رمز، نام فقط فاصله، لینک مفقود login→register، بازتاب password در register.ftl و شکاف retry نقش student ثبت شدند.
+- 2026-10-21 / R04: DONE روی `Gradian-R03.zip`؛ شروع registration با endpoint واقعی config و PKCE مشترک login پیاده شد. تست `frontend/tests/r04-auth-flow.cjs` شش گروه سناریو را موفق کرد. گزارش `docs/registration/R04_PKCE_START.md`. `/register` و UI/CTA شروع نشدند.
+- 2026-10-21 / R08: روی `Gradian-R06.zip` بخش functional/accessibility سخت‌گیری شد. React status/error/focus/retry و fa/en/light/dark auth states، Keycloak field/general error semantics، LTR mobile/email، narrow viewport و پیام‌های فارسی خطا پوشش گرفتند. `frontend/tests/r08-auth-accessibility.cjs` = 28 check و `backend/scripts/tests/test_r08_theme_accessibility.py` = 7 تست موفق؛ regressionهای R03/R04/R05/R06/R07 نیز پاس شدند. R08 به‌علت R02/BLOCKED_DESIGN و نبود browser/Keycloak live همچنان IN_PROGRESS است. گزارش: `docs/registration/R08_ACCESSIBILITY_ERRORS.md`.
+- 2026-10-21 / R09: به‌علت ناتمام‌بودن R08، فقط precheck غیرزنده و تکرارپذیر اجرا شد. تست جدید frontend = 22 check، backend R09 = 5 تست و کل `backend/scripts/tests` = 125 تست موفق؛ runner `scripts/r09-registration-preflight.sh` اضافه شد. npm registry در محیط DNS نداشت، Playwright نصب نبود و Docker موجود نبود؛ بنابراین build/lint/typecheck، browser matrix و self-registration زنده موفق اعلام نمی‌شوند. R09 = IN_PROGRESS و گزارش `docs/registration/R09_VERIFICATION.md` است.
+- 2026-10-21 / R10: مرور نهایی release candidate روی `Gradian-R09.zip` انجام شد. `./scripts/r09-registration-preflight.sh` دوباره موفق بود و 125 تست backend script پاس شد. `npm ping` timeout شد و `npm ci` کامل نشد؛ Playwright نصب نیست و Docker executable موجود نیست، بنابراین build/lint/typecheck، browser matrix و live registration همچنان پذیرش نشده‌اند. R02 نیز BLOCKED_DESIGN است. هیچ کد محصول در R10 تغییر نکرد؛ گزارش `docs/registration/R10_FINAL_ACCEPTANCE.md` و manifest `R10_CHANGED_FILES.txt` اضافه شد. R10 = IN_PROGRESS و FINAL ACCEPTANCE BLOCKED.
+- قدم بعد پیشنهادی: R11 تعریف نشده است. ابتدا R02 و پذیرش live/browser/build باز بسته شوند، سپس R09 به DONE برسد و R10 دوباره برای پذیرش نهایی اجرا شود.
 - 2026-10-20: آخرین zip، اسناد داشبورد و زمینه و کد مرتبط ثبت‌نام بررسی شدند؛ فقط این برنامه تهیه شد. هیچ کد، realm یا سند قبلی تغییر نکرد؛ build/test و ثبت‌نام زنده اجرا نشده‌اند. R01 تا R10 پیاده‌سازی نشده‌اند؛ R02 منتظر مرجع است.
 - قدم بعد پیشنهادی: R01 برای تثبیت اختلاف‌های قواعد و وضعیت واقعی، سپس R02 با طرح ثبت‌نام. R03/R04 مستقل از مانع بصری قابل انتخاب‌اند.
 
@@ -179,6 +186,42 @@
 
 ```text
 این آخرین نسخه کد گرادیان و اسناد آن است.
+ابتدا GRADIAN_SESSION_CONTEXT.md و GRADIAN_REGISTRATION_TASKS.md و گزارش‌های `docs/registration/R01_BASELINE.md` تا `R10_FINAL_ACCEPTANCE.md` را بخوان.
+R10 مرور نهایی release candidate را انجام داده ولی DONE نیست؛ R02 BLOCKED_DESIGN و R03/R05/R06/R07/R08/R09 پذیرش‌های live/browser/build/design باز دارند. برای این برنامه R11 تعریف نشده است.
+کد موجود و جریان Keycloak را مبنا بگیر؛ endpoint، سیاست اعتبارسنجی یا جزئیات طرح را حدس نزن.
+معیار پذیرش همان تسک را بررسی کن و خروجی آن و هر دو سند به‌روز را تحویل بده.
+اگر ورودی لازم موجود نیست، مانع را دقیق ثبت کن و نتیجه انجام‌نشده را موفق اعلام نکن.
+```
+
+برای سشن‌های بعد شناسه تسک داخل متن را با R خواسته‌شده جایگزین کن و آخرین کد/دو سند و مرجع لازم را همراهش بده.
+
+
+## تحویل جاری R03 — 2026-10-21
+
+- تصمیم کاربر: حداقل رمز ۸ کاراکتر، policy رسمی self-registration.
+- `realm-template.json`: `passwordPolicy=length(8)`. `user-profile.json`: نام/نام خانوادگی باید حداقل یک Unicode letter/mark داشته باشند و فقط حروف/mark/فاصله/ZWNJ مجاز است. `gradian_auth.claims.is_valid_name` نیز همین شرط پایه را enforce می‌کند.
+- تست استاتیک مستقل `backend/scripts/tests/test_registration_identity_rules.py`: چهار تست موفق. JSONها parse، Pythonها compile و sanity check نام موفق. مجموعه کامل Django/Keycloak در این محیط اجرا نشد.
+- گزارش و apply/rollback غیرمخرب: `docs/registration/R03_IDENTITY_RULES.md`. `make reset` و حذف volume برای اعمال/rollback ممنوع است.
+- وضعیت R03: IN_PROGRESS (IMPLEMENTED / PENDING_LIVE). پذیرش زنده realm موجود هنوز لازم است. R04 قابل شروع است؛ R02 همچنان BLOCKED_DESIGN.
+
+
+## تحویل جاری R09 — 2026-10-21
+
+- ورودی: `Gradian-R08.zip`. چون R08 هنوز DONE نیست، R09 فقط در حد precheck غیرزنده و قابل‌تکرار اجرا شد و پذیرش نهایی یکپارچه ادعا نمی‌شود.
+- کد محصول، endpoint، dependency، realm data و حساب کاربر تغییر نکردند. تست‌های جدید `frontend/tests/r09-registration-contract.cjs` و `backend/scripts/tests/test_r09_registration_contract.py` و runner `scripts/r09-registration-preflight.sh` اضافه شدند.
+- نتیجه runner: R04=7 گروه، R06=17 check، R07=6 گروه، R08=28 check، R09 frontend=22 check؛ R03=4، R05=6، R07 backend=5، R08 backend=7، R09 backend=5 و کل `backend/scripts/tests`=125 تست موفق. JSON parse، py_compile و node syntax check نیز موفق.
+- `npm ci` به‌علت DNS `EAI_AGAIN registry.npmjs.org` کامل نشد؛ build/lint/typecheck به‌علت dependency نصب‌نشده قابل پذیرش نیستند. Playwright در محیط موجود نبود و Docker executable نیز موجود نبود؛ browser/live matrix اجرا نشد.
+- وضعیت: R09 = IN_PROGRESS (STATIC/CONTRACT PRECHECK COMPLETE / BLOCKED_BY_R08 / PENDING_BUILD_BROWSER_LIVE). گزارش: `docs/registration/R09_VERIFICATION.md`.
+
+
+## تحویل جاری R10 — 2026-10-21
+
+- ورودی: `Gradian-R09.zip`. فقط final acceptance review و handoff انجام شد؛ کد محصول، endpoint، dependency، realm data و داده کاربر تغییر نکردند.
+- `./scripts/r09-registration-preflight.sh` دوباره موفق شد: frontend contractهای R04/R06/R07/R08/R09 و backend contractهای R03/R05/R07/R08/R09 پاس شدند؛ کل `backend/scripts/tests` = 125 تست موفق.
+- `npm ping` پس از ۲۰ ثانیه timeout شد و `npm ci` کامل نشد؛ build/lint/typecheck معتبر اجرا نشدند. Chromium موجود است ولی Playwright نصب نیست؛ Docker executable نیز موجود نیست. بنابراین browser/live acceptance همچنان باز است.
+- R02 هنوز `BLOCKED_DESIGN` است؛ CTA لندینگ و pixel acceptance فرم ثبت‌نام حدس زده نشدند. R08 و R09 DONE نیستند، پس R10 نیز DONE نیست.
+- گزارش نهایی: `docs/registration/R10_FINAL_ACCEPTANCE.md`. فهرست تجمعی دقیق تغییرات نسبت به baseline: `docs/registration/R10_CHANGED_FILES.txt`.
+- وضعیت: `IN_PROGRESS — RELEASE-CANDIDATE REVIEW COMPLETE / FINAL ACCEPTANCE BLOCKED`. R11 تعریف نشده؛ قدم بعد بستن blockerهای R02/build/browser/live و سپس rerun R09 و R10 است.
 ابتدا GRADIAN_SESSION_CONTEXT.md و GRADIAN_REGISTRATION_TASKS.md را بخوان.
 فقط تسک R01 را انجام بده؛ فعلاً سراغ تسک‌های بعدی نرو.
 کد موجود و جریان Keycloak را مبنا بگیر؛ endpoint، سیاست اعتبارسنجی یا جزئیات طرح را حدس نزن.

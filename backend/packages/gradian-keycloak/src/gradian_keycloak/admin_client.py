@@ -60,6 +60,8 @@ class IdentityAdmin(Protocol):
 
     def grant_role(self, sub: str, role: str) -> None: ...
 
+    def ensure_role(self, sub: str, role: str) -> None: ...
+
 
 class KeycloakAdminClient:
     def __init__(self, tokens: ServiceTokenClient | None = None) -> None:
@@ -98,6 +100,17 @@ class KeycloakAdminClient:
     def grant_role(self, sub: str, role: str) -> None:
         representation = self._call("GET", f"/roles/{role}")
         self._call("POST", f"/users/{sub}/role-mappings/realm", json=[representation])
+
+    def ensure_role(self, sub: str, role: str) -> None:
+        """Idempotently ensure a realm role is assigned.
+
+        This is used by self-registration recovery: the caller's current token can still be
+        roleless after the role was granted, so repeating /me must not create duplicate work.
+        """
+        current: list[dict[str, Any]] = self._call("GET", f"/users/{sub}/role-mappings/realm")
+        if any(item.get("name") == role for item in current):
+            return
+        self.grant_role(sub, role)
 
     def create_user(self, user: NewUser) -> str:
         """Create the account with its role. If the role cannot be assigned the account is

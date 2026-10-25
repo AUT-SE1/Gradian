@@ -76,6 +76,8 @@ login/
 - **Other pages.** Keycloak also shows an error page and an info page. They reuse `template.ftl`, so
   they take on your look automatically.
 - **Direction and language.** The pages are Persian and right-to-left (`dir="rtl"` in `template.ftl`).
+- **Registration retry safety.** Keycloak may repopulate non-sensitive registration fields after a validation error, but `password` and `password-confirm` intentionally never render a `value` attribute. Both use `autocomplete="new-password"`.
+- **Registration link.** The login page shows the registration link only when `realm.registrationAllowed` is true and registration is not disabled for the request; the link uses `${url.registrationUrl}` rather than a hand-built URL.
 
 ## Trying your changes
 

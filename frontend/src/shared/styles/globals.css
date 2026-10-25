@@ -280,3 +280,41 @@ body, button, input, textarea, select {
     font-size: 8.5px;
   }
 }
+
+
+/* === Registration R08: accessible auth states, bidirectional text, small-screen safety === */
+.auth-page {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  background: var(--page);
+}
+.auth-figma-card {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--line);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.auth-figma-card h1 { color: var(--navy); }
+.auth-redirect-message { color: var(--muted) !important; overflow-wrap: anywhere; }
+.auth-info-message { padding: 8px 10px; border-radius: 8px; background: var(--soft-blue); }
+.form-error { overflow-wrap: anywhere; }
+.auth-figma-submit:focus-visible,
+.auth-figma-card [tabindex="-1"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 40%, transparent);
+  outline-offset: 3px;
+}
+.auth-figma-card [tabindex="-1"]:focus { scroll-margin-block: 24px; }
+:root[data-theme='dark'] .auth-figma-card { box-shadow: var(--shadow); }
+:root[data-theme='dark'] .form-error { color: #ffb9bf; background: #4a232b; }
+:root[data-theme='dark'] .auth-info-message { background: var(--soft-blue); }
+
+@media (max-width: 360px) {
+  .auth-page { padding: 8px; }
+  .auth-figma-card { padding: 22px 14px; border-radius: 12px; }
+  .auth-figma-card h1 { font-size: 22px; }
+  .auth-figma-submit { min-height: 44px; }
+}

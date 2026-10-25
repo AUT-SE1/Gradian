@@ -9,6 +9,7 @@ from django.utils import timezone
 from accounts.errors import IdentityConflictError
 from accounts.models import Profile
 from gradian_auth.claims import Identity
+from gradian_auth.errors import IdentityProviderUnavailableError
 from gradian_auth.roles import DEFAULT_PANEL
 from gradian_keycloak import admin_client
 from gradian_keycloak.errors import KeycloakError
@@ -69,13 +70,18 @@ def sync_profile(identity: Identity, issued_at: datetime | None = None) -> Profi
 
 
 def grant_default_role(sub: str) -> None:
-    """Give a newly registered person the `student` role in Keycloak, so that group services,
-    which read the role from the token, see it too. Core treats such a person as a student
-    already, so a failure here is logged and not fatal."""
+    """Ensure a roleless self-registered person has the real `student` realm role.
+
+    The access token that returns from registration can be roleless. Core may resolve that token
+    as the student panel, but /me is not allowed to succeed until the durable Keycloak role is
+    confirmed. A provider failure is therefore retryable (502), rather than being logged and
+    forgotten after the Profile row has already been created.
+    """
     try:
-        admin_client.get_admin_client().grant_role(sub, DEFAULT_PANEL)
+        admin_client.get_admin_client().ensure_role(sub, DEFAULT_PANEL)
     except KeycloakError as exc:
         logger.warning(
-            "default role grant failed",
+            "default role ensure failed",
             extra={"event": "default_role_failed", "status": exc.status},
         )
+        raise IdentityProviderUnavailableError from None
