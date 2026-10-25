@@ -73,3 +73,9 @@ docker compose up --build
 
 راهنمای اجرای فرانت‌اند: [`frontend/README.md`](frontend/README.md)  
 راهنمای معماری و قرارداد استفاده از AI: [`frontend/GRADIAN_FRONTEND_PROJECT_GUIDE.md`](frontend/GRADIAN_FRONTEND_PROJECT_GUIDE.md)
+
+## Independent frontend team applications
+
+The shared React application lives in `frontend/src`. Each project group also has an independent frontend application in `frontend/teams/teamN`. A team may use React, Angular, Vue, Svelte or plain HTML/CSS/JavaScript. The shell opens the URL from the Core Service registry, and the team application authenticates with Keycloak using Authorization Code + PKCE before calling its backend service.
+
+Run `npm run teams:check` from `frontend/` to validate the team application contract. Run `npm run build:teams` after installing dependencies in the team folders. The optional `frontend/docker-compose.teams.yml` builds the ten starter applications on ports 8101-8110.

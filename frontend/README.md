@@ -1,5 +1,14 @@
 # Gradian Frontend
 
+## Architecture
+
+The repository has two frontend layers:
+
+- `src/` is the shared Gradian shell. It owns the landing page, authentication entry points, role panels, navigation and the service registry.
+- `teams/teamN/` contains independent team applications. A team can use React, Angular, Vue, Svelte or plain HTML/CSS/JavaScript. A team application is opened by redirect from the shell and authenticates with Keycloak using Authorization Code + PKCE.
+
+The team applications do not import the shell's React components. Shared integration rules are documented in `teams/README.md` and `packages/contracts/`. Run `npm run teams:check` to validate that all ten team application folders contain the required starter contract. `npm run build:teams` builds each team application after that team has installed its own dependencies.
+
 فرانت‌اند پروژه‌ی Gradian با **React 19، TypeScript، Vite و React Router** ساخته شده است. این پوشه Compose مستقل خودش را دارد و از طریق شبکه‌ی مشترک `gradian` به سرویس `core` در بک‌اند متصل می‌شود.
 
 ## شروع سریع

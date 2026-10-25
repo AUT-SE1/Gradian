@@ -104,6 +104,12 @@
 
 در فاز فعلی، یک React application مشترک برای Landing، Authentication و تمام Portalها توصیه می‌شود. جداسازی میکروسرویس‌های Backend نباید باعث تکثیر کدهای مشترک Frontend شود.
 
+### 4.1.1 آزادی تکنولوژی برای تیم‌ها
+
+این React application فقط Shell مرکزی است. اگر یک تیم بخواهد از Angular، Vue یا HTML/CSS/JavaScript خام استفاده کند، پروژه مستقل خود را در `frontend/teams/teamN/` می‌سازد. Shell با `service.url` سرویس را باز می‌کند و هر تیم احراز هویت و ارتباط با Backend خودش را در همان پروژه انجام می‌دهد. بنابراین تیم‌ها به React وابسته نیستند و در عین حال کد مشترک Shell نیز تکثیر نمی‌شود.
+
+Redirect روش پیش‌فرض اتصال است. Embed با iframe فقط بعد از بررسی CORS، CSP، Cookie و ارتباط امن `postMessage` فعال می‌شود.
+
 ```mermaid
 flowchart TD
     A[Public Landing] --> B[Central Authentication]
@@ -273,6 +279,14 @@ frontend/
 │   └── assets/
 │       ├── images/
 │       └── icons/
+├── teams/
+│   ├── README.md
+│   ├── team1/
+│   ├── team2/
+│   ├── ...
+│   └── team10/
+├── packages/
+│   └── contracts/
 ├── .env.example
 ├── Dockerfile
 ├── Dockerfile.dev
@@ -283,6 +297,8 @@ frontend/
 ├── vite.config.ts
 └── README.md
 ```
+
+هر پوشه `teams/teamN` یک پروژه مستقل است و می‌تواند `package.json`، ابزار Build و Framework متفاوت داشته باشد. این پروژه‌ها نباید Componentهای React یا فایل‌های داخلی `src` را Import کنند. فقط قرارداد API، احراز هویت و کلید پایدار سرویس مشترک است.
 
 ### 6.1 قاعده Feature-based
 

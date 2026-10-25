@@ -1,0 +1,48 @@
+name: gradian-frontend-teams
+
+services:
+  team1-frontend:
+    build: ./teams/team1
+    ports: ["8101:80"]
+    networks: [gradian]
+  team2-frontend:
+    build: ./teams/team2
+    ports: ["8102:80"]
+    networks: [gradian]
+  team3-frontend:
+    build: ./teams/team3
+    ports: ["8103:80"]
+    networks: [gradian]
+  team4-frontend:
+    build: ./teams/team4
+    ports: ["8104:80"]
+    networks: [gradian]
+  team5-frontend:
+    build: ./teams/team5
+    ports: ["8105:80"]
+    networks: [gradian]
+  team6-frontend:
+    build: ./teams/team6
+    ports: ["8106:80"]
+    networks: [gradian]
+  team7-frontend:
+    build: ./teams/team7
+    ports: ["8107:80"]
+    networks: [gradian]
+  team8-frontend:
+    build: ./teams/team8
+    ports: ["8108:80"]
+    networks: [gradian]
+  team9-frontend:
+    build: ./teams/team9
+    ports: ["8109:80"]
+    networks: [gradian]
+  team10-frontend:
+    build: ./teams/team10
+    ports: ["8110:80"]
+    networks: [gradian]
+
+networks:
+  gradian:
+    external: true
+    name: gradian
