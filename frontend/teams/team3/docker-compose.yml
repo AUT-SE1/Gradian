@@ -1,0 +1,14 @@
+name: gradian-team-3-frontend
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "${TEAM_FRONTEND_PORT:-8103}:80"
+    networks:
+      - gradian
+
+networks:
+  gradian:
+    external: true
+    name: gradian
